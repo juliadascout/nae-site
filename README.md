@@ -51,6 +51,18 @@ repo directly.
 
 ## Not in this repo
 
-The WordPress export used to plan the migration contains customer order records and
-several thousand email addresses. It is not committed here and should not be. No
-student, candidate or staff personal data belongs in this repository.
+**The WordPress export.** It contains customer order records and several thousand
+email addresses.
+
+**The 195 migrated editorial pages.** They are built and compliance-clean, but they
+name eight individuals and carry seven unidentified phone numbers that may be
+personal mobiles. No student, candidate or staff personal data goes into this
+repository - public or private - without a specific decision to put it there.
+
+Build them locally by pointing NAE_CLEAN at the cleaned corpus:
+
+```sh
+NAE_CLEAN=/path/to/clean python3 build/build.py
+```
+
+The generator handles them identically; only the commit is withheld.
