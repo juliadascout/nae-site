@@ -4,7 +4,6 @@ import re, html
 
 BLOCK = {
   'status claim':        r'\b(accredited|accreditation|licensed (school|college|institution)|diploma)\b',
-  'prohibited modality': r'\b(laser|IPL|micro-?needl\w*|botox|injectab\w*|dermal filler)\b',
   'protected title':     r'\b(nurse|massage therapist|registered massage)\b',
   'superlative':         r"\b(the best|top beauty|leading beauty|premier|canada'?s top|niagara'?s top|#1 beauty)\b",
   'career-outcome claim':r'\b(licensed (aesthetician|esthetician)|cosmetology licen[cs]e)\b',
@@ -13,7 +12,12 @@ BLOCK = {
 # nvbeautyboutique.com is owned by the same people (confirmed 10 Sept), so its
 # images and links are first-party and are deliberately preserved. Only genuinely
 # third-party asset hosts are worth a warning - those can disappear without notice.
+# Modalities: Julia approved these on 10 Sept - what the curriculum covers is
+# hers to decide. Kept as a warning rather than a block, so a page naming one is
+# still surfaced for a look instead of being silently published. Protected titles
+# and registration/accreditation claims stay blocks: those are not curriculum.
 WARN = {
+  'modality - review': r'\b(laser|IPL|micro-?needl\w*|botox|injectab\w*|dermal filler)\b',
   'third-party image': r'src="https?://(?!(?:www\.)?(?:naeinc\.ca|nvbeautyboutique\.com))[^"]+',
 }
 
