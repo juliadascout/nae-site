@@ -1,6 +1,7 @@
 # Images the migrated archive references, relative to the WordPress root.
 # Keep this exact folder structure - the paths are what the pages point at.
-# 213 files. Generated 2026-09-11.
+# Covers src, srcset candidates, and data-src/poster/meta attributes.
+# 215 files. Generated 2026-09-11.
 
 wp-content/uploads/2020/01/y.png
 wp-content/uploads/2020/01/y3.png
@@ -151,6 +152,8 @@ wp-content/uploads/2022/12/IMG_2573-1-768x1024.jpg
 wp-content/uploads/2022/12/IMG_2664-1024x768.jpg
 wp-content/uploads/2022/12/IMG_2738-rotated.jpg
 wp-content/uploads/2022/12/IMG_3193-2.jpg
+wp-content/uploads/2022/12/Screenshot-2021-07-20-5.18.50-PM-320x315.png
+wp-content/uploads/2022/12/Screenshot-2021-07-20-5.18.50-PM-480x472.png
 wp-content/uploads/2022/12/Screenshot-2021-07-20-5.18.50-PM-748x736.png
 wp-content/uploads/2022/12/Screenshot-2021-07-20-5.18.50-PM.png
 wp-content/uploads/2022/12/Screenshot-2022-09-28-5.50.42-PM.png
