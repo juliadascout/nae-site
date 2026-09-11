@@ -22,7 +22,10 @@ WARN = {
 }
 
 def check(text):
-    plain = html.unescape(re.sub(r'<[^>]+>', ' ', text))
+    # Stripping a tag leaves a space behind, so "the <strong>best</strong>"
+    # became "the  best" and slipped past every multi-word rule below. Collapse
+    # runs of whitespace first: inline markup must not be a way through the gate.
+    plain = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text)))
     blocks, warns = [], []
     for label, pat in BLOCK.items():
         hits = {m.group(0).lower() for m in re.finditer(pat, plain, re.I)}

@@ -534,12 +534,17 @@ if os.path.isdir(OUT): shutil.rmtree(OUT)
 os.makedirs(OUT, exist_ok=True)
 shutil.copy(os.path.join(HERE, "site.css"), os.path.join(OUT, "site.css"))
 
+# WordPress served the same front page at / and at /home/. Both URLs are worth
+# keeping, but only one may claim to be the home page, so /home/ points its
+# canonical at / rather than competing with it for the same searches.
+CANONICAL = {"/home/": "/"}
+
 written, quarantined, warned = 0, [], []
 seen = set()
 for path, title, desc, body in ALL:
     if path in seen: continue
     seen.add(path)
-    doc = shell(title, desc, path, body)
+    doc = shell(title, desc, path, body, canonical=CANONICAL.get(path))
     blocks, warns = check(doc)
     if blocks:
         quarantined.append((path, blocks)); continue
@@ -551,7 +556,8 @@ for path, title, desc, body in ALL:
 
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-  + "".join(f"  <url><loc>{SITE['domain']}{p}</loc></url>\n" for p in sorted(seen)) + "</urlset>\n")
+  + "".join(f"  <url><loc>{SITE['domain']}{p}</loc></url>\n"
+              for p in sorted(seen) if p not in CANONICAL) + "</urlset>\n")
 open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['domain']}/sitemap.xml\n")
 
 gen_n = len(PAGES)
