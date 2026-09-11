@@ -10,7 +10,12 @@ BLOCK = {
   # The legal name is "National Association of Estheticians Inc." Variants that
   # look plausible are the dangerous ones - the privacy policy carried
   # "…for Canada (NAEC)" for years without anyone noticing.
-  'wrong entity':        r'\b(new age beauty academy|estheticians for canada|NAEC)\b',
+  # Only "National Association of Estheticians Inc." names this company. The
+  # rest are variants that have each turned up in real copy at some point, so
+  # the pattern matches the stem rather than one exact phrasing: "New Age
+  # Beauty Academy", "New Age Beauty", "newagebeauty.ca", NABA, and the
+  # "…for Canada (NAEC)" wording that sat in the privacy policy for years.
+  'wrong entity':        r'\b(new[\s-]?age\s?beauty\w*|NABA|estheticians for canada|NAEC)\b',
 }
 # nvbeautyboutique.com is owned by the same people (confirmed 10 Sept), so its
 # images and links are first-party and are deliberately preserved. Only genuinely
