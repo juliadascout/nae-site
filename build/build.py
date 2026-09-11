@@ -527,7 +527,55 @@ def page_blog_index(entries):
             f'<h1 style="margin-bottom:.7rem">News &amp; notes</h1>'
             f'<p class="lede" style="margin-bottom:1.6rem">{n} posts from our studios.</p>{rows}</div>')
 
+def taxonomy_pages(entries):
+    """WordPress served a /category/<slug>/ and /tag/<slug>/ archive for every
+       term, and a large share of the site's search traffic lands on them. They
+       are rebuilt from the taxonomy captured alongside the corpus rather than
+       from the 17MB export, so the build needs nothing but this repo.
+
+       An archive only lists posts that actually got built: a term whose posts
+       were all retired produces no page at all, rather than an empty one."""
+    tax_file = os.path.join(CLEAN, "taxonomy.json")
+    if not os.path.isfile(tax_file): return []
+    tax = json.load(open(tax_file, encoding="utf-8"))
+    # The area pages are posts in WordPress but are generated here, so an
+    # archive has to be able to list them too - they are the pages the
+    # area-name categories exist for. Anything already built is eligible.
+    live = {p: (p, t, d) for p, t, d, _, ty in entries if ty == "post"}
+    for p_, t_, d_, _b in PAGES:
+        live.setdefault(p_, (p_, t_, d_))
+    terms = {}   # (kind, slug) -> [name, [(path,title,desc), ...]]
+    for path, rec in tax.items():
+        if path not in live: continue
+        for kind, key in (("category", "categories"), ("tag", "tags")):
+            for slug, name in rec.get(key, []):
+                terms.setdefault((kind, slug), [name, []])[1].append(live[path])
+    def display(n):
+        # WordPress stored some term names all-lowercase ("richmond hill"),
+        # which reads as a typo in a page heading. Only touch those: a name
+        # with any capital already is how someone chose to write it.
+        return n.title() if n == n.lower() else n
+
+    out = []
+    for (kind, slug), (name, posts) in sorted(terms.items()):
+        name = display(name)
+        posts.sort(key=lambda x: x[1])
+        rows = "".join(
+            f'<a class="crow" href="{p}"><div><h4>{E(t.rsplit(" | ",1)[0])}</h4>'
+            f'<p>{E(d[:96])}&hellip;</p></div></a>' for p, t, d in posts)
+        label = "Category" if kind == "category" else "Tag"
+        out.append((f"/{kind}/{slug}/", f"{name} | {SITE['short']}",
+                    f"{len(posts)} post{'s' if len(posts) != 1 else ''} on {name} "
+                    f"from {SITE['legal']}.",
+                    f'<div class="wrap pad"><p class="eyebrow">{label}</p>'
+                    f'<h1 style="margin-bottom:.7rem">{E(name)}</h1>'
+                    f'<p class="lede" style="margin-bottom:1.6rem">'
+                    f'{len(posts)} post{"s" if len(posts) != 1 else ""}. '
+                    f'<a href="/blog/">All posts</a></p>{rows}</div>'))
+    return out
+
 PAGES.append(page_blog_index(MIG))
+PAGES.extend(taxonomy_pages(MIG))
 ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 
 if os.path.isdir(OUT): shutil.rmtree(OUT)
