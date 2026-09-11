@@ -1,35 +1,44 @@
 
 :root{
-  --ink:#1A1420; --ink-2:#3B3442; --muted:#6B6472;
-  --paper:#FBFAF8; --paper-2:#F2EFEA; --card:#FFFFFF; --rail:#F7F4F0;
-  --rule:#D9D3CE; --rule-2:#E8E2DC;
-  --plum:#4A2545; --plum-lt:#6E3D66; --plum-soft:#F0E7EE;
-  --vir:#0F6B5C; --vir-ink:#0B5548; --vir-soft:#E2F0EC;
-  --good-bg:#E2F0EC; --good-fg:#0B5548;
+  /* Brand palette. Deep Berry is the working accent: it is the only one of the
+     named brand colours that clears 4.5:1 on white (5.31), so links, buttons and
+     anything carrying text use it. Vibrant Orchid as specified is 4.16 and fails,
+     so the token here is a darkened orchid that passes (6.46) while reading as
+     the same hue; the brand value itself is kept for decoration only. Success
+     stays green - semantic colour is not the accent's job. */
+  --ink:#2B2430; --ink-2:#574B5E; --muted:#857A8C;
+  --paper:#FFFFFF; --paper-2:#FDF6F9; --card:#FFFFFF; --rail:#FFF4F8;
+  --rule:#EADFE6; --rule-2:#F4ECF0;
+  --plum:#D11458; --plum-lt:#E4004F; --plum-soft:#FFEBF2;
+  --vir:#A81D91; --vir-ink:#8E1879; --vir-soft:#FBE9F7;
+  --orchid-deco:#DA2BBB;
+  --good-bg:#E4F1EA; --good-fg:#0B5D3B;
   --flag-bg:#FBEEDC; --flag-fg:#7A4A0B; --flag-rule:#E3C79A;
   --shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
-  --display:"Archivo",-apple-system,BlinkMacSystemFont,sans-serif;
-  --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --display:"Playfair Display",Georgia,"Times New Roman",serif;
+  --body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --wrap:1200px; --gut:clamp(1.1rem,3.5vw,2.2rem);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ink:#F3EFF4; --ink-2:#CFC7D2; --muted:#9C95A3;
-  --paper:#161119; --paper-2:#1E1824; --card:#221B29; --rail:#241D2C;
+  --ink:#F6F0F4; --ink-2:#D2C6D4; --muted:#9C8FA4;
+  --paper:#161119; --paper-2:#1F1826; --card:#241C2C; --rail:#271E30;
   --rule:#3B3244; --rule-2:#2E2637;
-  --plum:#CFA7C6; --plum-lt:#E0BFD8; --plum-soft:#2E2135;
-  --vir:#4FC7AD; --vir-ink:#6FDAC2; --vir-soft:#14332E;
-  --good-bg:#14332E; --good-fg:#6FDAC2;
+  --plum:#FF6C99; --plum-lt:#FF8FB4; --plum-soft:#3A1E2C;
+  --vir:#EE7BDF; --vir-ink:#F49BE6; --vir-soft:#342030;
+  --orchid-deco:#EE7BDF;
+  --good-bg:#16362A; --good-fg:#7FD6AC;
   --flag-bg:#3A2C15; --flag-fg:#E9C486; --flag-rule:#5C4620;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }}
 :root[data-theme="dark"]{
-  --ink:#F3EFF4; --ink-2:#CFC7D2; --muted:#9C95A3;
-  --paper:#161119; --paper-2:#1E1824; --card:#221B29; --rail:#241D2C;
+  --ink:#F6F0F4; --ink-2:#D2C6D4; --muted:#9C8FA4;
+  --paper:#161119; --paper-2:#1F1826; --card:#241C2C; --rail:#271E30;
   --rule:#3B3244; --rule-2:#2E2637;
-  --plum:#CFA7C6; --plum-lt:#E0BFD8; --plum-soft:#2E2135;
-  --vir:#4FC7AD; --vir-ink:#6FDAC2; --vir-soft:#14332E;
-  --good-bg:#14332E; --good-fg:#6FDAC2;
+  --plum:#FF6C99; --plum-lt:#FF8FB4; --plum-soft:#3A1E2C;
+  --vir:#EE7BDF; --vir-ink:#F49BE6; --vir-soft:#342030;
+  --orchid-deco:#EE7BDF;
+  --good-bg:#16362A; --good-fg:#7FD6AC;
   --flag-bg:#3A2C15; --flag-fg:#E9C486; --flag-rule:#5C4620;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
