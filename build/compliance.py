@@ -7,7 +7,10 @@ BLOCK = {
   'protected title':     r'\b(nurse|massage therapist|registered massage)\b',
   'superlative':         r"\b(the best|top beauty|leading beauty|premier|canada'?s top|niagara'?s top|#1 beauty)\b",
   'career-outcome claim':r'\b(licensed (aesthetician|esthetician)|cosmetology licen[cs]e)\b',
-  'wrong entity':        r'\b(new age beauty academy)\b',
+  # The legal name is "National Association of Estheticians Inc." Variants that
+  # look plausible are the dangerous ones - the privacy policy carried
+  # "…for Canada (NAEC)" for years without anyone noticing.
+  'wrong entity':        r'\b(new age beauty academy|estheticians for canada|NAEC)\b',
 }
 # nvbeautyboutique.com is owned by the same people (confirmed 10 Sept), so its
 # images and links are first-party and are deliberately preserved. Only genuinely
