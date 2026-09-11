@@ -28,6 +28,11 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+# ...but build/ here is the site generator's source, not a build artefact.
+# Without these the repo holds generated HTML and no way to regenerate it.
+!build/
+!build/*.py
+!build/*.css
 develop-eggs/
 dist/
 downloads/
