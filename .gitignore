@@ -240,3 +240,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# The migrated editorial corpus is source, not output: public/ is generated
+# from it, so losing it would leave the blog with no way to rebuild.
+!content/
+!content/editorial/*.html

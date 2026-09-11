@@ -7,7 +7,15 @@ BLOCK = {
   'protected title':     r'\b(nurse|massage therapist|registered massage)\b',
   'superlative':         r"\b(the best|top beauty|leading beauty|premier|canada'?s top|niagara'?s top|#1 beauty)\b",
   'career-outcome claim':r'\b(licensed (aesthetician|esthetician)|cosmetology licen[cs]e)\b',
-  'wrong entity':        r'\b(new age beauty academy)\b',
+  # The legal name is "National Association of Estheticians Inc." Variants that
+  # look plausible are the dangerous ones - the privacy policy carried
+  # "…for Canada (NAEC)" for years without anyone noticing.
+  # Only "National Association of Estheticians Inc." names this company. The
+  # rest are variants that have each turned up in real copy at some point, so
+  # the pattern matches the stem rather than one exact phrasing: "New Age
+  # Beauty Academy", "New Age Beauty", "newagebeauty.ca", NABA, and the
+  # "…for Canada (NAEC)" wording that sat in the privacy policy for years.
+  'wrong entity':        r'\b(new[\s-]?age\s?beauty\w*|NABA|estheticians for canada|NAEC)\b',
 }
 # nvbeautyboutique.com is owned by the same people (confirmed 10 Sept), so its
 # images and links are first-party and are deliberately preserved. Only genuinely
@@ -22,7 +30,10 @@ WARN = {
 }
 
 def check(text):
-    plain = html.unescape(re.sub(r'<[^>]+>', ' ', text))
+    # Stripping a tag leaves a space behind, so "the <strong>best</strong>"
+    # became "the  best" and slipped past every multi-word rule below. Collapse
+    # runs of whitespace first: inline markup must not be a way through the gate.
+    plain = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text)))
     blocks, warns = [], []
     for label, pat in BLOCK.items():
         hits = {m.group(0).lower() for m in re.finditer(pat, plain, re.I)}
