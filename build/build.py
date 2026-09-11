@@ -586,6 +586,15 @@ ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 if os.path.isdir(OUT): shutil.rmtree(OUT)
 os.makedirs(OUT, exist_ok=True)
 shutil.copy(os.path.join(HERE, "site.css"), os.path.join(OUT, "site.css"))
+# Static files that are served but not generated - the image library carried
+# over from WordPress. They live in assets/ rather than in public/, because the
+# build empties public/ on every run and would delete anything left there.
+ASSETS = os.path.join(ROOT, "assets")
+if os.path.isdir(ASSETS):
+    for name in sorted(os.listdir(ASSETS)):
+        src = os.path.join(ASSETS, name)
+        dst = os.path.join(OUT, name)
+        shutil.copytree(src, dst) if os.path.isdir(src) else shutil.copy(src, dst)
 
 # WordPress served the same front page at / and at /home/. Both URLs are worth
 # keeping, but only one may claim to be the home page, so /home/ points its
