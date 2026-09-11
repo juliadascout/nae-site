@@ -337,3 +337,9 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .partsum.now{color:var(--ink);font-size:1rem;padding-top:.2rem}
 .partsum.now b{color:var(--ink);text-decoration:none;font-size:1.15rem}
 .save{margin:.5rem 0 0;font-size:.9rem;font-weight:600;color:var(--vir-ink)}
+
+/* Brand mark in the header. The leaf reads on both the light and dark grounds,
+   so it is the part that ships as an image; the name stays as type, which keeps
+   it sharp at any size and needs no reversed artwork. */
+.brand img{display:block;width:28px;height:28px;object-fit:contain;flex:none}
+.brand{display:inline-flex;align-items:center;gap:.5rem}

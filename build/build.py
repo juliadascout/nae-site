@@ -112,9 +112,20 @@ def shell(title, desc, path, body, canonical=None):
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/site.css">
+<link rel="icon" href="/brand/nae-favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/nae-favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/brand/nae-favicon-16.png">
+<link rel="apple-touch-icon" href="/brand/nae-favicon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{E(SITE['legal'])}">
+<meta property="og:title" content="{E(title)}">
+<meta property="og:description" content="{E(desc)}">
+<meta property="og:url" content="{SITE['domain']}{canonical or path}">
+<meta property="og:image" content="{SITE['domain']}/brand/nae-og-share-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
 </head><body>
 <header class="hdr"><div class="wrap">
-  <a class="brand" href="/"><b>NAE</b><span>Ontario</span></a>
+  <a class="brand" href="/"><img src="/brand/nae-favicon-192.png" alt="" width="28" height="28" decoding="async"><b>NAE</b><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="btn btn-p" href="/contact/">Book a call</a>
 </div></header>
@@ -591,10 +602,15 @@ shutil.copy(os.path.join(HERE, "site.css"), os.path.join(OUT, "site.css"))
 # build empties public/ on every run and would delete anything left there.
 ASSETS = os.path.join(ROOT, "assets")
 if os.path.isdir(ASSETS):
+    def _skip(_d, names):
+        # originals/ holds the artwork as supplied - the served sizes are
+        # generated from it, so shipping it too would double the payload.
+        return {"originals"} & set(names)
     for name in sorted(os.listdir(ASSETS)):
         src = os.path.join(ASSETS, name)
         dst = os.path.join(OUT, name)
-        shutil.copytree(src, dst) if os.path.isdir(src) else shutil.copy(src, dst)
+        if os.path.isdir(src): shutil.copytree(src, dst, ignore=_skip)
+        else: shutil.copy(src, dst)
 
 # WordPress served the same front page at / and at /home/. Both URLs are worth
 # keeping, but only one may claim to be the home page, so /home/ points its
