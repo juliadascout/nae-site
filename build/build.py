@@ -484,7 +484,7 @@ PAGES += [page_area(*a) for a in AREAS]
 # Posts and pages carried over from WordPress, at the paths they already hold.
 # Content has been through the compliance pass; the gate still runs on each one,
 # so anything that slipped through is refused rather than published.
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 CLEAN = os.environ.get("NAE_CLEAN") or os.path.join(os.path.dirname(ROOT), "clean")
 GENERATED = {p for p,_,_,_ in PAGES}
 
@@ -498,7 +498,12 @@ def migrated_pages():
         if not m: continue
         title, url, ptype = (x.strip() for x in m.groups())
         body_html = raw[m.end():]
-        path = urlparse(url).path or "/"
+        # WordPress emoji slugs arrive percent-encoded. Kept that way, the
+        # directory on disk is literally named "%f0%9f%98%81…" while a browser
+        # asking for that URL sends the encoded emoji, which the host decodes
+        # back to the character - and finds nothing. Decode once, here, so the
+        # directory and the link both carry the character itself.
+        path = unquote(urlparse(url).path) or "/"
         if not path.endswith("/"): path += "/"
         if path in GENERATED: continue          # a generated page always wins
         plain = re.sub(r"<[^>]+>", " ", body_html)
