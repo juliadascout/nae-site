@@ -616,6 +616,32 @@ for path, title, desc, body in ALL:
     open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(doc)
     written += 1
 
+# Served for any URL that matches no page. Without it the host decides, and a
+# host that answers an unknown path with the home page tells a search engine
+# every wrong URL is a real page. Written as a bare file, not a directory, and
+# kept out of the sitemap and the link check because nothing links to it.
+_404 = shell(
+    f"Page not found | {SITE['short']}",
+    "That page is not here. Browse the courses, the studios, or the journal.",
+    "/404.html",
+    '<div class="wrap pad"><p class="eyebrow">404</p>'
+    '<h1 style="margin-bottom:.7rem">That page is not here</h1>'
+    '<p class="lede" style="margin-bottom:1.6rem">It may have been retired, or the '
+    'address may have a typo in it. These are the places most people are heading.</p>'
+    '<div class="two"><div class="stack">'
+    '<a class="crow" href="/courses/"><div><h4>All courses</h4>'
+    '<p>Every programme, with hours, fees and what the kit contains&hellip;</p></div></a>'
+    '<a class="crow" href="/locations/"><div><h4>Studios</h4>'
+    '<p>Where we teach, and which courses run at each one&hellip;</p></div></a>'
+    '<a class="crow" href="/blog/"><div><h4>Journal</h4>'
+    '<p>News and notes from the studios&hellip;</p></div></a>'
+    '<a class="crow" href="/contact/"><div><h4>Contact</h4>'
+    '<p>Book a call, or ask us a question&hellip;</p></div></a>'
+    '</div></div></div>')
+if check(_404)[0]:
+    raise SystemExit("the 404 page itself trips the compliance gate")
+open(f"{OUT}/404.html", "w", encoding="utf-8").write(_404)
+
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + "".join(f"  <url><loc>{SITE['domain']}{p}</loc></url>\n"
