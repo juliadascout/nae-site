@@ -94,6 +94,11 @@ for c in COURSES:
         raise SystemExit(f'{c["name"]}: includes unknown course id(s) {unknown}')
     c["parts"] = [BY_ID[i] for i in ids]
     c["partsValue"] = sum(p["price"] for p in c["parts"])
+    pre = c.get("prerequisiteIds") or []
+    unknown_pre = [i for i in pre if i not in BY_ID]
+    if unknown_pre:
+        raise SystemExit(f'{c["name"]}: prerequisiteIds unknown {unknown_pre}')
+    c["prereqs"] = [BY_ID[i] for i in pre]
 
 # A bundle's kit is written as an internal reference - "Kit (1) + Kit (2)",
 # "Kits 6-12" - which means nothing to a reader and produced an empty list. Where
@@ -257,7 +262,9 @@ def page_course(c):
              ("Kit", money(c["kitCost"]) if c["kitFixed"] else ("Options" if c["hasKit"] else "None"),
               "optional, yours to keep" if c["hasKit"] else ""),
              ("Studios", ", ".join(l["name"] for l in at) or "To confirm", ""),
-             ("Experience needed", "None", "starts from the beginning")]
+             ("Experience needed",
+              ", ".join(p["name"] for p in c["prereqs"]) if c["prereqs"] else "None",
+              "must be completed first" if c["prereqs"] else "starts from the beginning")]
     spec_html = "".join(f'<div><dt>{E(k)}</dt><dd>{E(v)}{f"<small>{E(s)}</small>" if s else ""}</dd></div>'
                         for k,v,s in specs)
     parts_html = ""
@@ -304,7 +311,11 @@ def page_course(c):
     faqs = [("What is included in the fee?", "Your sessions with the trainer, the materials used during them, and a certificate of completion."),
             ("Do I have to buy the kit?", "No. The kit is optional and is not part of the course fee. The price is the same without it."
                 if c["hasKit"] else "There is no kit for this course."),
-            ("Do I need experience?", "No. The course starts from the beginning."),
+            ("Do I need experience?",
+             ("You need to have completed "
+              + " and ".join(p["name"] for p in c["prereqs"])
+              + " first. Beyond that the course starts from the beginning.")
+             if c["prereqs"] else "No. The course starts from the beginning."),
             ("How long does it take?", c["duration"].replace(" / ", " of instruction, across ") + "."),
             ("What do I get at the end?", f"A certificate of completion from {SITE['legal']}, issued once you have finished the practical hours and the assessment."),
             ("If I pay now, when do I train?", "Book your training dates within two weeks of payment.")]
