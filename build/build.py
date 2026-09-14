@@ -138,6 +138,13 @@ def shell(title, desc, path, body, canonical=None):
 </div></footer></body></html>"""
 
 # ---------------------------------------------------------------- partials
+def mobile_bar(course):
+    """A fixed bar on phones only. The stylesheet already reserves 74px at the
+       foot of the page for it; without the bar that was just dead space."""
+    return (f'<div class="mbar"><div><b class="tnum">{money(course["price"])}</b>'
+            f'<span>excludes HST</span></div>'
+            f'<a class="btn btn-p" href="{SITE["booking"]}" rel="noopener">Book a call</a></div>')
+
 def booking_rail(course=None, location=None):
     price = ""
     if course:
@@ -147,11 +154,8 @@ def booking_rail(course=None, location=None):
                  f'{"Optional kit " + money(course["kitCost"]) + " &middot; " if course.get("kitCost") else ""}'
                  f'excludes HST</p><hr class="r">')
     return f"""<aside class="rail"><div class="card">{price}
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true">Buy now</button>
-    <button class="tab" role="tab" aria-selected="false">Book a call</button></div>
   <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:0 0 1rem">
-    Pay today, then book your training dates within two weeks.</p>
+    Talk it through first &mdash; dates, kit, and what the course covers.</p>
   <a class="btn btn-p btn-blk" href="{SITE['booking']}" rel="noopener">Book a 15-minute call</a>
   <ul class="bul">
     <li>Pick a time that suits you &mdash; no account needed.</li>
@@ -222,7 +226,7 @@ def page_course(c):
             f'<li><a href="/courses/{p["slug"]}/">{E(p["name"])}</a>'
             f'<span class="tnum">{money(p["price"])}</span></li>' for p in c["parts"])
         parts_html = (
-          f'<div class="card"><h2 style="margin-bottom:.4rem">What this programme covers</h2>'
+          f'<div class="card c-parts"><h2 style="margin-bottom:.4rem">What this programme covers</h2>'
           f'<p style="color:var(--ink-2);font-size:.92rem;margin:0 0 .9rem">'
           f'{len(c["parts"])} methods, taught as one programme. '
           + ("The shared foundation is taught once rather than repeated, so the "
@@ -242,7 +246,7 @@ def page_course(c):
           + '</div>')
     kit_html = ""
     if c.get("kitCost"):
-        kit_html = (f'<div class="card"><h2 style="margin-bottom:.8rem">Your kit &mdash; optional</h2>'
+        kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit &mdash; optional</h2>'
           f'<div class="kitbar"><div><em>Optional &middot; not part of the course fee</em>'
           f'<div style="margin-top:.2rem"><b>{money(c["kitCost"])}</b> '
           f'<span style="font-size:.85rem;color:var(--muted)">&mdash; yours to keep</span></div></div>'
@@ -269,14 +273,14 @@ def page_course(c):
     body = f"""<div class="wrap pad">
 <p class="bcrumb"><a href="/courses/">Courses</a><span>/</span><span>{E(c['name'])}</span></p>
 <div class="two"><div class="stack">
-  <div class="card"><span class="chip">{E(c['subject'].title())}</span>
+  <div class="card c-intro"><span class="chip">{E(c['subject'].title())}</span>
     <h1 style="margin:.7rem 0 .8rem">{E(c['name'])}</h1>
     <p class="lede">{E(BLURB[c['subject']])} The programme runs {E(c['duration'].replace(' / ',' across '))}, scheduled around your availability.</p></div>
-  <div class="card"><h2 style="margin-bottom:1rem">At a glance</h2><dl class="specs">{spec_html}</dl></div>
+  <div class="card c-specs"><h2 style="margin-bottom:1rem">At a glance</h2><dl class="specs">{spec_html}</dl></div>
   {parts_html}
   {kit_html}
-  <div class="card"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
-</div>{booking_rail(course=c)}</div></div>"""
+  <div class="card c-faq"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
+</div>{booking_rail(course=c)}</div>{mobile_bar(c)}</div>"""
     return (f"/courses/{c['slug']}/", f"{c['name']} Training | {SITE['short']}",
             f"{c['name']} training in {', '.join(l['name'] for l in at) or 'Ontario'}. "
             f"{c['duration']}. {money(c['price'])}, kit optional.", body)

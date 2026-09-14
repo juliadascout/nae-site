@@ -210,11 +210,6 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 
 
 /* ---------- tabs (book / buy) ---------- */
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;background:var(--paper-2);
-  border:1px solid var(--rule-2);border-radius:9px;padding:.28rem;margin-bottom:1rem}
-.tab{border:0;background:transparent;border-radius:6px;padding:.55rem .4rem;cursor:pointer;
-  font:600 .86rem/1 var(--body);color:var(--muted)}
-.tab[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
 /* ---------- kit callout ---------- */
 .kitbar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;justify-content:space-between;
   background:var(--plum-soft);border:1px solid var(--rule-2);border-radius:9px;
@@ -296,8 +291,8 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
      then the questions. Desktop keeps the two-column layout untouched. */
   .two{display:flex;flex-direction:column}
   .stack{display:contents}
-  .c-intro{order:1} .rail{order:2} .c-specs{order:3} .c-kit{order:4}
-  .cta{order:5} .c-faq{order:6} .c-ask{order:7}
+  .c-intro{order:1} .rail{order:2} .c-specs{order:3} .c-parts{order:4} .c-kit{order:5}
+  .cta{order:6} .c-faq{order:7} .c-ask{order:8}
   /* one tile, not five, so the booking box is a thumb-flick away */
   .gal{grid-template-columns:1fr!important;height:172px!important;grid-auto-rows:auto!important}
   .gal div:not(:first-child){display:none}
@@ -343,3 +338,19 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
    it sharp at any size and needs no reversed artwork. */
 .brand img{display:block;width:28px;height:28px;object-fit:contain;flex:none}
 .brand{display:inline-flex;align-items:center;gap:.5rem}
+
+/* Fixed booking bar, phones only. Desktop has the sticky rail instead. */
+.mbar{display:none}
+@media (max-width:1000px){
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;
+    align-items:center;justify-content:space-between;gap:.9rem;
+    padding:.7rem clamp(1rem,4vw,1.4rem);
+    background:var(--card);border-top:1px solid var(--rule);
+    box-shadow:0 -2px 14px -6px rgba(0,0,0,.25)}
+  .mbar b{font-size:1.15rem;color:var(--ink);display:block;line-height:1.1}
+  .mbar span{font-size:.74rem;color:var(--muted)}
+  .mbar .btn{flex:none;padding:.6rem 1.1rem}
+  @supports (padding:env(safe-area-inset-bottom)){
+    .mbar{padding-bottom:calc(.7rem + env(safe-area-inset-bottom))}
+  }
+}
