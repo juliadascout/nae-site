@@ -228,7 +228,7 @@ def booking_rail(course=None, location=None):
 def crow(c):
     kit = (f'+ optional kit {money(c["kitCost"])}' if c["kitFixed"]
            else ("optional kit options" if c["hasKit"] else "no kit"))
-    return (f'<a class="crow" href="/courses/{c["slug"]}/"><div><h4>{E(c["name"])}</h4>'
+    return (f'<a class="crow" href="/courses/{c["slug"]}/"><div><h3>{E(c["name"])}</h3>'
             f'<p>{E(c["duration"])}</p></div><div class="p">{money(c["price"])}<small>{kit}</small></div></a>')
 
 # The 21 area pages that already rank, at the exact paths they hold today.
@@ -263,6 +263,13 @@ def subject(n):
         if re.search(p,n): return d
     return "body"
 for c in COURSES: c["subject"] = subject(c["name"])
+
+# Display order and labels for the seven subjects. The key is what subject()
+# returns and is what the anchors and joins use; the label is display only, so
+# renaming one breaks nothing.
+SUBJECTS = [("lash","Lash"),("brow","Brow"),("hair","Hair extensions"),
+            ("skin","Skin"),("nails","Nails"),("remove","Hair removal"),
+            ("body","Body & other")]
 
 PAGES = []   # (path, title, description, body)
 
@@ -317,7 +324,7 @@ def page_course(c):
           + f'<p style="font-size:.9rem;color:var(--ink-2)">You can take this course without the kit. '
           f'The course fee is the same either way.</p>'
           f'<ul class="kit">{"".join(f"<li>{E(i[:1].upper()+i[1:])}</li>" for i in c["kitList"])}</ul>'
-          + (f'<hr class="r"><h4 style="margin-bottom:.5rem">Equipment you will train on</h4>'
+          + (f'<hr class="r"><h3 style="margin-bottom:.5rem">Equipment you will train on</h3>'
              f'<p style="color:var(--ink-2);font-size:.92rem;margin:0">{E(" · ".join(c["equipList"]))}</p>'
              if c["equipList"] else "") + '</div>')
     faqs = [("What is included in the fee?", "Your sessions with the trainer, the materials used during them, and a certificate of completion."),
@@ -385,15 +392,16 @@ def page_area(city, locid, path):
 def page_home():
     subs = {}
     for c in COURSES: subs.setdefault(c["subject"], []).append(c)
-    NAMES = {"lash":"Lash","brow":"Brow","hair":"Hair extensions","skin":"Skin",
-             "remove":"Hair removal","nails":"Nails","body":"Body & other"}
+    # Each tile lands on its own section of the course list. They all pointed at
+    # /courses/ before, so seven tiles that name seven subjects did one thing.
     tiles = "".join(
-        f'<a class="tile" href="/courses/"><p class="mono">{len(v)} course{"" if len(v)==1 else "s"}</p>'
-        f'<h3>{E(NAMES[k])}</h3><p>From {money(min(c["price"] for c in v))}</p></a>'
-        for k, v in subs.items())
+        f'<a class="tile" href="/courses/#{k}"><p class="mono">{len(subs[k])} course'
+        f'{"" if len(subs[k])==1 else "s"}</p>'
+        f'<h3>{E(label)}</h3><p>From {money(min(c["price"] for c in subs[k]))}</p></a>'
+        for k, label in SUBJECTS if subs.get(k))
     locs = "".join(
-        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph">{E(l["name"])}</div>'
-        f'<div class="bd"><p class="mono" style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--vir-ink)">'
+        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph" aria-hidden="true"></div>'
+        f'<div class="bd"><p class="lbadge">'
         f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p>'
         f'<h3>{E(l["name"])}</h3><p>{E(l["region"])}</p></div></a>' for l in LOCS)
     body = f"""<div class="wrap hero">
@@ -420,18 +428,24 @@ def page_home():
             f"{len(COURSES)} courses, optional kits, certificate of completion.", body)
 
 def page_courses():
+    subs = {}
+    for c in COURSES: subs.setdefault(c["subject"], []).append(c)
     body = (f'<div class="wrap pad"><p class="eyebrow">All courses</p><h1 style="margin-bottom:.7rem">Courses</h1>'
             f'<p class="lede" style="margin-bottom:1.6rem">Hours shown are the full programme. '
             f'<strong>Kits are optional</strong> and never part of the course fee.</p>'
-            + "".join(crow(c) for c in COURSES) + '</div>')
+            + "".join(
+                f'<section class="csec" id="{k}"><h2>{E(label)}</h2>'
+                + "".join(crow(c) for c in subs[k]) + '</section>'
+                for k, label in SUBJECTS if subs.get(k))
+            + '</div>')
     return ("/courses/", f"Beauty Courses &amp; Prices | {SITE['short']}",
             f"All {len(COURSES)} courses with hours, fees and optional kit prices.", body)
 
 def page_locations():
     cards = "".join(
-        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph">{E(l["name"])}</div>'
-        f'<div class="bd"><p class="mono" style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--vir-ink)">'
-        f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p><h3>{E(l["name"])}</h3>'
+        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph" aria-hidden="true"></div>'
+        f'<div class="bd"><p class="lbadge">'
+        f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p><h2>{E(l["name"])}</h2>'
         f'<p>{E(l["region"])}</p><p style="margin-top:auto;padding-top:.5rem">'
         f'{str(len(loc_courses(l))) + " courses taught here" if l["status"]=="open" else "Join the waiting list"}</p>'
         f'</div></a>' for l in LOCS)
@@ -450,8 +464,8 @@ def page_location(l):
   <p class="lede" style="margin-top:1.1rem">We are not teaching in {E(l['name'])} yet. Our other studios
     take students travelling in.</p>
   <div class="lcards" style="margin-top:1.4rem">{''.join(
-    f'<a class="lcard" href="/locations/{slugify(x["name"])}/"><div class="ph">{E(x["name"])}</div>'
-    f'<div class="bd"><h3>{E(x["name"])}</h3><p>{E(x["region"])}</p></div></a>' for x in OPEN)}</div>
+    f'<a class="lcard" href="/locations/{slugify(x["name"])}/"><div class="ph" aria-hidden="true"></div>'
+    f'<div class="bd"><h2>{E(x["name"])}</h2><p>{E(x["region"])}</p></div></a>' for x in OPEN)}</div>
 </div></div>"""
         return (f"/locations/{slugify(l['name'])}/", f"{l['name']} | {SITE['short']}",
                 f"Beauty training coming soon to {l['name']}.", body)
@@ -541,7 +555,7 @@ def avatar(i, size=74):
 def page_team():
     def grid(kind):
         return "".join(
-          f'<div class="tcard"><div class="av">{avatar(i)}</div><h4>{E(t)}</h4>'
+          f'<div class="tcard"><div class="av">{avatar(i)}</div><h3>{E(t)}</h3>'
           f'<p>{"Across all studios" if k=="lead" else "Teaches by subject"}</p></div>'
           for i,(t,k) in enumerate(TEAM) if k == kind)
     body = f"""<div class="wrap pad">
@@ -571,6 +585,33 @@ CLEAN = os.environ.get("NAE_CLEAN") or os.path.join(os.path.dirname(ROOT), "clea
 GENERATED = {p for p,_,_,_ in PAGES}
 
 refused = []
+def tidy_body(h):
+    """Three defects that came across with the WordPress content.
+
+       http:// assets. The site is served over https, so a browser blocks an
+       http image outright - 71 of them, silently missing. They are already
+       broken, so rewriting the scheme can only improve matters. Only src is
+       touched: an http href still works, and some of these hosts cannot be
+       reached from the build to confirm they answer on https.
+
+       Heading levels. The template sets the page h1 from the title, and the
+       article sits under it - but WordPress content picked levels by how the
+       heading looked, so posts arrived with their own h1 (six, on /media/) or
+       jumped straight from the title to an h3. The distinct levels a post
+       actually uses are remapped onto consecutive ones starting at h2, which
+       keeps whatever nesting the author intended and removes the skips.
+
+       img with no alt attribute at all, which is different from alt="": a
+       screen reader falls back to reading out the file name."""
+    h = re.sub(r'src="http://', 'src="https://', h)
+    used = sorted({int(m) for m in re.findall(r"<h([1-6])\b", h)})
+    if used:
+        lvl = {old: min(6, i + 2) for i, old in enumerate(used)}
+        h = re.sub(r"<(/?)h([1-6])\b",
+                   lambda m: f"<{m.group(1)}h{lvl[int(m.group(2))]}", h)
+    h = re.sub(r'<img(?![^>]*\balt=)', '<img alt=""', h)
+    return h
+
 def migrated_pages():
     out = []
     if not os.path.isdir(CLEAN): return out
@@ -579,7 +620,7 @@ def migrated_pages():
         m = re.match(r"<!--\s*title:\s*(.*?)\n\s*url:\s*(.*?)\n\s*type:\s*(.*?)\s*-->\s*", raw, re.S)
         if not m: continue
         title, url, ptype = (x.strip() for x in m.groups())
-        body_html = raw[m.end():]
+        body_html = tidy_body(raw[m.end():])
         # WordPress emoji slugs arrive percent-encoded. Kept that way, the
         # directory on disk is literally named "%f0%9f%98%81…" while a browser
         # asking for that URL sends the encoded emoji, which the host decodes
@@ -605,7 +646,7 @@ MIG = migrated_pages()
 
 def page_blog_index(entries):
     rows = "".join(
-        f'<a class="crow" href="{p}"><div><h4>{E(t.rsplit(" | ",1)[0])}</h4>'
+        f'<a class="crow" href="{p}"><div><h2>{E(t.rsplit(" | ",1)[0])}</h2>'
         f'<p>{E(d[:96])}&hellip;</p></div></a>' for p,t,d,_,ty in entries if ty == "post")
     n = sum(1 for e in entries if e[4] == "post")
     return ("/blog/", f"Journal | {SITE['short']}",
@@ -648,11 +689,21 @@ def taxonomy_pages(entries):
         name = display(name)
         posts.sort(key=lambda x: x[1])
         rows = "".join(
-            f'<a class="crow" href="{p}"><div><h4>{E(t.rsplit(" | ",1)[0])}</h4>'
+            f'<a class="crow" href="{p}"><div><h2>{E(t.rsplit(" | ",1)[0])}</h2>'
             f'<p>{E(d[:96])}&hellip;</p></div></a>' for p, t, d in posts)
         label = "Category" if kind == "category" else "Tag"
-        out.append((f"/{kind}/{slug}/", f"{name} | {SITE['short']}",
-                    f"{len(posts)} post{'s' if len(posts) != 1 else ''} on {name} "
+        # WordPress kept both a category and a tag for most terms, and in a few
+        # cases two categories reading the same. Rebuilt verbatim that gave 53
+        # groups of pages sharing a <title> and a description with each other,
+        # which is the one thing an archive page cannot afford. The kind goes in
+        # the title, and the slug disambiguates the same-kind collisions.
+        stem = slug.replace("-", " ")
+        extra = f" ({stem})" if stem != name.lower() and kind == "category" else ""
+        head = (f"{name}{extra}" if kind == "category"
+                else f"Posts tagged {name}")
+        out.append((f"/{kind}/{slug}/", f"{head} | {SITE['short']}",
+                    f"{len(posts)} post{'s' if len(posts) != 1 else ''} "
+                    f"{'filed under' if kind == 'category' else 'tagged'} {name} "
                     f"from {SITE['legal']}.",
                     f'<div class="wrap pad"><p class="eyebrow">{label}</p>'
                     f'<h1 style="margin-bottom:.7rem">{E(name)}</h1>'
@@ -716,13 +767,13 @@ _404 = shell(
     '<p class="lede" style="margin-bottom:1.6rem">It may have been retired, or the '
     'address may have a typo in it. These are the places most people are heading.</p>'
     '<div class="two"><div class="stack">'
-    '<a class="crow" href="/courses/"><div><h4>All courses</h4>'
+    '<a class="crow" href="/courses/"><div><h2>All courses</h2>'
     '<p>Every programme, with hours, fees and what the kit contains&hellip;</p></div></a>'
-    '<a class="crow" href="/locations/"><div><h4>Studios</h4>'
+    '<a class="crow" href="/locations/"><div><h2>Studios</h2>'
     '<p>Where we teach, and which courses run at each one&hellip;</p></div></a>'
-    '<a class="crow" href="/blog/"><div><h4>Journal</h4>'
+    '<a class="crow" href="/blog/"><div><h2>Journal</h2>'
     '<p>News and notes from the studios&hellip;</p></div></a>'
-    '<a class="crow" href="/contact/"><div><h4>Contact</h4>'
+    '<a class="crow" href="/contact/"><div><h2>Contact</h2>'
     '<p>Book a call, or ask us a question&hellip;</p></div></a>'
     '</div></div></div>')
 if check(_404)[0]:

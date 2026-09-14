@@ -201,7 +201,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .crow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;
   padding:.85rem 0;border-bottom:1px solid var(--rule-2);cursor:pointer;text-align:left;
   background:none;border-left:0;border-right:0;border-top:0;width:100%;font-family:var(--body);color:inherit}
-.crow:hover h4{color:var(--vir-ink)}
+.crow:hover h2,.crow:hover h3{color:var(--vir-ink)}
 .crow p{margin:.2rem 0 0;font-size:.92rem;color:var(--ink-2);font-family:var(--body)}
 .crow .p{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .crow .p small{display:block;font-weight:400;font-size:.82rem;color:var(--muted);margin-top:.1rem}
@@ -243,7 +243,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   display:grid;place-items:center;font:500 .64rem/1 var(--mono);letter-spacing:.1em;
   text-transform:uppercase;color:var(--plum)}
 .lcard .bd{padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.35rem;flex:1}
-.lcard h3{font-size:1.08rem} .lcard p{margin:0;font-size:.86rem;color:var(--muted)}
+.lcard h2,.lcard h3{font-size:1.08rem;line-height:1.3} .lcard p{margin:0;font-size:.86rem;color:var(--muted)}
 .acols{columns:3;column-gap:1.6rem}
 @media (max-width:800px){.acols{columns:2}}
 @media (max-width:520px){.acols{columns:1}}
@@ -259,7 +259,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .tcard .av{width:74px;height:74px;border-radius:50%;margin:0 auto .7rem;
   background:linear-gradient(135deg,var(--plum-soft),var(--vir-soft));display:grid;place-items:center;
   font:500 .58rem/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--plum)}
-.tcard h4{margin-bottom:.15rem}
+.tcard h3{font-size:1rem;margin-bottom:.15rem}
 .tcard p{margin:0;font-size:.8rem;color:var(--muted)}
 .bcrumb{font:500 .78rem/1 var(--body);color:var(--muted);margin-bottom:1rem;display:flex;gap:.45rem;flex-wrap:wrap}
 .bcrumb a{color:var(--vir-ink);text-decoration:none}
@@ -361,8 +361,8 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
    title, the hours and the price alike - everything looked like a link and
    nothing carried hierarchy. The row is the affordance; the title carries it. */
 .crow{text-decoration:none}
-.crow h4{font-size:1.06rem;line-height:1.3;margin:0}
-.crow:hover h4{text-decoration:underline;text-underline-offset:2px}
+.crow h2,.crow h3{font-size:1.06rem;line-height:1.3;margin:0}
+.crow:hover h2,.crow:hover h3{text-decoration:underline;text-underline-offset:2px}
 .crow .p{font-size:1.06rem}
 
 /* The count chip was drawing the success green. Green means "good" and this is
@@ -378,3 +378,27 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
    by antialiasing everywhere. Lora is the same family of shape at 2.1:1
    contrast instead of 7.3:1, so its thinnest stroke is 1.26px at 17px and holds
    at every size here. Serif kept for titles and figures; text set in Lato. */
+
+/* Seven subject tiles on the home page all linked to /courses/, so they named
+   seven things and did one. They now land on their own section, and the course
+   list is grouped to give them somewhere to land - 41 rows in one undivided
+   column was hard to scan even before the anchors needed it. */
+.csec{scroll-margin-top:80px}
+.csec h2{margin:2.2rem 0 .4rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule)}
+.csec:first-of-type h2{margin-top:.6rem}
+
+/* This was pasted inline on every studio card. */
+.lbadge{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--vir-ink);margin:0}
+
+/* Same defect the course rows had, on every other card that is a whole link:
+   the anchor's underline ran through the label, the title and the price, so
+   four unrelated things all read as separate links. The card is the
+   affordance; the title carries the hover. */
+.tile,.lcard{text-decoration:none}
+.tile:hover h3,.lcard:hover h2{text-decoration:underline;text-underline-offset:2px}
+
+/* Card titles sit at 17-18px. They are h2 and h3 for document structure - the
+   list they head is real - but the serif is for display sizes, and the level a
+   heading occupies says nothing about how big it is drawn. */
+.crow h2,.lcard h2{font-family:var(--body);font-weight:700;letter-spacing:0}
