@@ -51,7 +51,25 @@ def hours_hi(d):
 for c in COURSES:
     c["slug"]  = slugify(c["name"])
     c["hi"]    = hours_hi(c["duration"])
-    c["kitList"] = [x.strip() for x in re.split(r',(?![^(]*\))', c.get("kitItems") or "") if x.strip()]
+    raw = (c.get("kitItems") or "").strip()
+    # "Kit options: $400 A, $450 B" and "Custom kits ($500-$1200): tent, hose"
+    # both put the pricing before a colon and the list after it.
+    # Three shapes appear in the catalogue:
+    #   "Fan, 3 lash trays, glue"                  - a plain list of contents
+    #   "Kit options: $400 A, $450 B"              - pricing, then the options
+    #   "Product purchase guide ($250-$500)"       - a note, nothing to list
+    if ":" in raw:
+        head, _, rest = raw.partition(":")
+    elif "," in raw:
+        head, rest = "", raw
+    else:
+        head, rest = raw, ""
+    c["kitNote"]  = head.strip()
+    c["kitList"]  = [x.strip() for x in re.split(r',(?![^(]*\))', rest) if x.strip()]
+    # A course has a kit if it says so. Only an empty description, or one that
+    # opens by saying there is no kit, counts as none.
+    c["hasKit"]   = bool(raw) and not raw.lower().lstrip().startswith("no kit")
+    c["kitFixed"] = bool(c.get("kitCost"))
     c["equipList"] = [x.strip() for x in (c.get("equipment") or "").split(",") if x.strip()]
 
 # A course is only sellable while it stays under both ministry caps: under $2,000
@@ -76,6 +94,26 @@ for c in COURSES:
         raise SystemExit(f'{c["name"]}: includes unknown course id(s) {unknown}')
     c["parts"] = [BY_ID[i] for i in ids]
     c["partsValue"] = sum(p["price"] for p in c["parts"])
+
+# A bundle's kit is written as an internal reference - "Kit (1) + Kit (2)",
+# "Kits 6-12" - which means nothing to a reader and produced an empty list. Where
+# the components are known, the real contents are the union of their kits.
+KITREF = re.compile(r'^\s*Kits?\s*[\(0-9]')
+for c in COURSES:
+    if not KITREF.match(c.get("kitItems") or ""): continue
+    if c["parts"]:
+        seen, merged = set(), []
+        for part in c["parts"]:
+            for item in part["kitList"]:
+                k = item.lower()
+                if k not in seen: seen.add(k); merged.append(item)
+        c["kitList"], c["kitNote"] = merged, ""
+    else:
+        # No components to draw on. Keep whatever the line says after the
+        # reference - "Kit (18) - Basic Body Sugaring prerequisite" is only
+        # useful to a reader from the dash onwards.
+        tail = re.sub(r'^\s*Kits?\s*\(?\d+[\)\-0-9]*\s*[-\u2013\u2014]?\s*', '', c["kitItems"] or "")
+        c["kitList"], c["kitNote"] = [], tail.strip()
     c["partsHours"] = sum(p["hi"] for p in c["parts"])
     # Only claim a saving where the bundle delivers broadly the same instruction
     # time as its parts do separately. Where the programme compresses the hours
@@ -153,7 +191,7 @@ def booking_rail(course=None, location=None):
         price = (f'<div class="price"><span style="font-size:.9rem;color:var(--muted)">from</span>'
                  f'<b class="tnum">{money(course["price"])}</b><i>CAD</i></div>'
                  f'<p style="font-size:.85rem;color:var(--muted);margin:.25rem 0 0">'
-                 f'{"Optional kit " + money(course["kitCost"]) + " &middot; " if course.get("kitCost") else ""}'
+                 f'{"Optional kit " + money(course["kitCost"]) + " &middot; " if course["kitFixed"] else ("Kit options &middot; " if course["hasKit"] else "")}'
                  f'excludes HST</p><hr class="r">')
     return f"""<aside class="rail"><div class="card">{price}
   <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:0 0 1rem">
@@ -171,7 +209,8 @@ def booking_rail(course=None, location=None):
 </div></aside>"""
 
 def crow(c):
-    kit = f'+ optional kit {money(c["kitCost"])}' if c.get("kitCost") else "no kit"
+    kit = (f'+ optional kit {money(c["kitCost"])}' if c["kitFixed"]
+           else ("optional kit options" if c["hasKit"] else "no kit"))
     return (f'<a class="crow" href="/courses/{c["slug"]}/"><div><h4>{E(c["name"])}</h4>'
             f'<p>{E(c["duration"])}</p></div><div class="p">{money(c["price"])}<small>{kit}</small></div></a>')
 
@@ -215,8 +254,8 @@ def page_course(c):
     sessions = (c["duration"].split("/")[1].strip() if "/" in c["duration"] else "set with your trainer")
     specs = [("Hours", c["duration"].split("/")[0].strip(), "full programme"),
              ("Sessions", sessions, ""), ("Course fee", money(c["price"]), "excludes HST"),
-             ("Kit", money(c["kitCost"]) if c.get("kitCost") else "None",
-              "optional, yours to keep" if c.get("kitCost") else ""),
+             ("Kit", money(c["kitCost"]) if c["kitFixed"] else ("Options" if c["hasKit"] else "None"),
+              "optional, yours to keep" if c["hasKit"] else ""),
              ("Studios", ", ".join(l["name"] for l in at) or "To confirm", ""),
              ("Experience needed", "None", "starts from the beginning")]
     spec_html = "".join(f'<div><dt>{E(k)}</dt><dd>{E(v)}{f"<small>{E(s)}</small>" if s else ""}</dd></div>'
@@ -247,13 +286,16 @@ def page_course(c):
              f'<b class="tnum">{money(c["price"])}</b></div>')
           + '</div>')
     kit_html = ""
-    if c.get("kitCost"):
+    if c["hasKit"]:
         kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit &mdash; optional</h2>'
           f'<div class="kitbar"><div><em>Optional &middot; not part of the course fee</em>'
-          f'<div style="margin-top:.2rem"><b>{money(c["kitCost"])}</b> '
+          f'<div style="margin-top:.2rem"><b>{money(c["kitCost"]) if c["kitFixed"] else E(c["kitNote"] or "Options available")}</b> '
           f'<span style="font-size:.85rem;color:var(--muted)">&mdash; yours to keep</span></div></div>'
-          f'<span class="chip">{len(c["kitList"])} items</span></div>'
-          f'<p style="font-size:.9rem;color:var(--ink-2)">You can take this course without the kit. '
+          + (f'<span class="chip">{len(c["kitList"])} {"items" if c["kitFixed"] else "options"}</span>'
+             if c["kitList"] else "") + '</div>'
+          + (f'<p style="font-size:.9rem;color:var(--ink-2);margin:.1rem 0 0"><b>{E(c["kitNote"])}</b></p>'
+             if c["kitNote"] and c["kitFixed"] else "")
+          + f'<p style="font-size:.9rem;color:var(--ink-2)">You can take this course without the kit. '
           f'The course fee is the same either way.</p>'
           f'<ul class="kit">{"".join(f"<li>{E(i[:1].upper()+i[1:])}</li>" for i in c["kitList"])}</ul>'
           + (f'<hr class="r"><h4 style="margin-bottom:.5rem">Equipment you will train on</h4>'
@@ -261,7 +303,7 @@ def page_course(c):
              if c["equipList"] else "") + '</div>')
     faqs = [("What is included in the fee?", "Your sessions with the trainer, the materials used during them, and a certificate of completion."),
             ("Do I have to buy the kit?", "No. The kit is optional and is not part of the course fee. The price is the same without it."
-                if c.get("kitCost") else "There is no kit for this course."),
+                if c["hasKit"] else "There is no kit for this course."),
             ("Do I need experience?", "No. The course starts from the beginning."),
             ("How long does it take?", c["duration"].replace(" / ", " of instruction, across ") + "."),
             ("What do I get at the end?", f"A certificate of completion from {SITE['legal']}, issued once you have finished the practical hours and the assessment."),
