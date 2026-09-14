@@ -15,7 +15,7 @@
   --good-bg:#E4F1EA; --good-fg:#0B5D3B;
   --flag-bg:#FBEEDC; --flag-fg:#7A4A0B; --flag-rule:#E3C79A;
   --shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
-  --display:"Playfair Display",Georgia,"Times New Roman",serif;
+  --display:"Lora",Georgia,"Times New Roman",serif;
   --body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --wrap:1200px; --gut:clamp(1.1rem,3.5vw,2.2rem);
@@ -46,10 +46,11 @@
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
   font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
-h1,h2,h3,h4{font-family:var(--display);font-weight:700;line-height:1.08;margin:0;
-  letter-spacing:-.02em;text-wrap:balance}
-h1{font-size:clamp(2rem,4.4vw,3.1rem);font-stretch:110%}
-h2{font-size:clamp(1.4rem,2.6vw,1.95rem);font-stretch:106%}
+h1,h2,h3,h4{font-weight:700;margin:0;text-wrap:balance}
+h1,h2{font-family:var(--display);line-height:1.12;letter-spacing:-.02em}
+h3,h4{font-family:var(--body);line-height:1.35}
+h1{font-size:clamp(2rem,4.4vw,3.1rem)}
+h2{font-size:clamp(1.4rem,2.6vw,1.95rem)}
 h3{font-size:1.12rem} h4{font-size:.97rem}
 p{margin:0 0 1em}
 a{color:var(--vir-ink)}
@@ -70,7 +71,7 @@ a{color:var(--vir-ink)}
   backdrop-filter:saturate(160%) blur(9px);border-bottom:1px solid var(--rule)}
 .hdr .wrap{display:flex;align-items:center;gap:1.4rem;min-height:64px}
 .brand{display:flex;align-items:baseline;gap:.55rem;text-decoration:none;margin-right:auto;color:inherit}
-.brand b{font-family:var(--display);font-stretch:118%;font-weight:700;font-size:1.28rem;color:var(--plum)}
+.brand b{font-family:var(--display);font-weight:700;font-size:1.28rem;color:var(--plum)}
 .brand span{font-family:var(--mono);font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .nav{display:flex;gap:1.35rem;align-items:center}
 .nav a{text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:500;
@@ -140,7 +141,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 /* ---------- faq ---------- */
 .faq{border-top:1px solid var(--rule-2)}
 .faq details{border-bottom:1px solid var(--rule-2)}
-.faq summary{cursor:pointer;padding:.95rem 0;font-family:var(--display);font-weight:600;
+.faq summary{cursor:pointer;padding:.95rem 0;font-family:var(--body);font-weight:700;
   font-size:1.01rem;list-style:none;display:flex;justify-content:space-between;gap:1rem;align-items:center}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:"+";font-family:var(--mono);font-size:1.15rem;color:var(--vir);flex:none}
@@ -214,7 +215,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .kitbar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;justify-content:space-between;
   background:var(--plum-soft);border:1px solid var(--rule-2);border-radius:9px;
   padding:.8rem 1rem;margin-bottom:1rem}
-.kitbar b{font-family:var(--display);font-size:1.15rem;color:var(--plum)}
+.kitbar b{font-family:var(--body);font-weight:700;font-size:1.15rem;color:var(--plum)}
 .kitbar em{font-style:normal;font:500 .72rem/1 var(--mono);letter-spacing:.09em;
   text-transform:uppercase;color:var(--plum);opacity:.85}
 /* ---------- price breakdown ---------- */
@@ -268,7 +269,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 /* ---------- in-content call to action ---------- */
 .cta{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;
   background:var(--vir-soft);border:1px solid var(--rule-2);border-radius:12px;padding:1.05rem 1.25rem}
-.cta strong{display:block;font-family:var(--display);font-size:1.06rem;color:var(--ink)}
+.cta strong{display:block;font-family:var(--body);font-weight:700;font-size:1.06rem;color:var(--ink)}
 .cta span{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .ctab{display:flex;gap:.5rem;flex-wrap:wrap}
 /* ---------- avatars ---------- */
@@ -370,13 +371,10 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .chip{background:var(--paper-2);color:var(--ink-2)}
 .chip-q{background:var(--plum-soft);color:var(--plum)}
 
-/* Playfair Display is a high-contrast display face: its hairlines are drawn for
-   large sizes and go mushy small. It was carrying everything from 15.5px to
-   50px. Keep it where it earns its keep - page titles, section heads, the big
-   figures - and hand everything at text size to the body face, which is drawn
-   for exactly that. This is a size threshold, not a dislike of serifs. */
-h3,h4{font-family:var(--body);font-weight:700;line-height:1.35;letter-spacing:0}
-.faq summary{font-family:var(--body);font-weight:700}
-.kitbar b,.cta strong{font-family:var(--body);font-weight:700}
-.crow h4{font-family:var(--body);font-weight:700}
-h1,h2{line-height:1.12}
+/* Measured, not assumed: Playfair Display 700 draws a 0.42px hairline at 17px
+   and does not reach a full device pixel until 51px. The site's largest type is
+   a 32-50px h1; h2 tops out at 31px. So there was no size on this page where
+   that face rendered as drawn - the thin strokes were being smeared into grey
+   by antialiasing everywhere. Lora is the same family of shape at 2.1:1
+   contrast instead of 7.3:1, so its thinnest stroke is 1.26px at 17px and holds
+   at every size here. Serif kept for titles and figures; text set in Lato. */
