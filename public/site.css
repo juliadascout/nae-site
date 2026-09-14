@@ -286,7 +286,8 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   .mbar b{font-family:var(--display);font-size:1.24rem;display:block;line-height:1.1}
   .mbar span{font-size:.72rem;color:var(--muted)}
   .mbar .btn{padding:.62rem .85rem;font-size:.84rem}
-  body{padding-bottom:74px}
+  /* only where the fixed bar actually renders - it is course pages only */
+  body:has(.mbar){padding-bottom:74px}
   /* Order on mobile only: description, then the booking box, then the detail,
      then the questions. Desktop keeps the two-column layout untouched. */
   .two{display:flex;flex-direction:column}

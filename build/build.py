@@ -34,11 +34,13 @@ COURSES  = json.load(open(f"{DATA}/course-catalog.json"))["courses"]
 LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://naeinc.ca",
-        # A single Google appointment schedule - the free tier allows exactly one.
-        # Every booking link on the site points here. If a Workspace plan later
-        # allows per-course or per-studio schedules, change this one value (or make
-        # it a dict keyed by course id) and every page follows.
-        "booking":"https://calendar.app.google/J3xuLVH4VNyinAEa9"}
+        # Setmore. Every booking link on the site points here. It replaced a Google
+        # appointment schedule, whose free tier allowed only one schedule per
+        # account and could not see the rest of Kalleigh's calendar - so it offered
+        # slots she was not actually free for. To split booking by course or by
+        # studio later, make this a dict keyed by course or location id; every page
+        # reads it from here, so nothing else has to change.
+        "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27"}
 
 def slugify(s): return re.sub(r'[^a-z0-9]+','-',s.lower()).strip('-')
 def money(n):   return "$" + format(int(n), ",d")
