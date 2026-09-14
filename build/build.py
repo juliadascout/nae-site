@@ -94,6 +94,18 @@ for c in COURSES:
         raise SystemExit(f'{c["name"]}: includes unknown course id(s) {unknown}')
     c["parts"] = [BY_ID[i] for i in ids]
     c["partsValue"] = sum(p["price"] for p in c["parts"])
+    # Several nail courses share Basic Nail Training's kit menu. They reference
+    # it rather than repeating the prices, which is how the three published
+    # course lists drifted apart from each other in the first place.
+    same = c.get("kitSameAsId")
+    if same:
+        if same not in BY_ID:
+            raise SystemExit(f'{c["name"]}: kitSameAsId unknown {same}')
+        src = BY_ID[same]
+        c["kitList"], c["kitNote"] = list(src["kitList"]), src["kitNote"]
+        c["hasKit"]   = src["hasKit"]
+        c["kitFixed"] = src["kitFixed"]
+        if not c.get("kitCost"): c["kitCost"] = src.get("kitCost", 0)
     pre = c.get("prerequisiteIds") or []
     unknown_pre = [i for i in pre if i not in BY_ID]
     if unknown_pre:

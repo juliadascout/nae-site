@@ -6,7 +6,7 @@
      so the token here is a darkened orchid that passes (6.46) while reading as
      the same hue; the brand value itself is kept for decoration only. Success
      stays green - semantic colour is not the accent's job. */
-  --ink:#2B2430; --ink-2:#574B5E; --muted:#857A8C;
+  --ink:#2B2430; --ink-2:#574B5E; --muted:#6E6376;
   --paper:#FFFFFF; --paper-2:#FDF6F9; --card:#FFFFFF; --rail:#FFF4F8;
   --rule:#EADFE6; --rule-2:#F4ECF0;
   --plum:#D11458; --plum-lt:#E4004F; --plum-soft:#FFEBF2;
@@ -201,9 +201,9 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   padding:.85rem 0;border-bottom:1px solid var(--rule-2);cursor:pointer;text-align:left;
   background:none;border-left:0;border-right:0;border-top:0;width:100%;font-family:var(--body);color:inherit}
 .crow:hover h4{color:var(--vir-ink)}
-.crow p{margin:.15rem 0 0;font-size:.79rem;color:var(--muted);font-family:var(--mono)}
+.crow p{margin:.2rem 0 0;font-size:.92rem;color:var(--ink-2);font-family:var(--body)}
 .crow .p{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.crow .p small{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.crow .p small{display:block;font-weight:400;font-size:.82rem;color:var(--muted);margin-top:.1rem}
 .ftr{border-top:1px solid var(--rule);margin-top:3rem;padding-block:2rem;color:var(--muted);font-size:.83rem}
 .ftr .wrap{display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -355,3 +355,17 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
     .mbar{padding-bottom:calc(.7rem + env(safe-area-inset-bottom))}
   }
 }
+
+/* The whole row is one link, so an inherited underline struck through the
+   title, the hours and the price alike - everything looked like a link and
+   nothing carried hierarchy. The row is the affordance; the title carries it. */
+.crow{text-decoration:none}
+.crow h4{font-size:1.06rem;line-height:1.3;margin:0}
+.crow:hover h4{text-decoration:underline;text-underline-offset:2px}
+.crow .p{font-size:1.06rem}
+
+/* The count chip was drawing the success green. Green means "good" and this is
+   a neutral count, so it borrowed a meaning it does not have - and read as a
+   foreign colour in a pink palette. Neutral ground, brand ink. */
+.chip{background:var(--paper-2);color:var(--ink-2)}
+.chip-q{background:var(--plum-soft);color:var(--plum)}
