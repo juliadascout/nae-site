@@ -369,3 +369,14 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
    foreign colour in a pink palette. Neutral ground, brand ink. */
 .chip{background:var(--paper-2);color:var(--ink-2)}
 .chip-q{background:var(--plum-soft);color:var(--plum)}
+
+/* Playfair Display is a high-contrast display face: its hairlines are drawn for
+   large sizes and go mushy small. It was carrying everything from 15.5px to
+   50px. Keep it where it earns its keep - page titles, section heads, the big
+   figures - and hand everything at text size to the body face, which is drawn
+   for exactly that. This is a size threshold, not a dislike of serifs. */
+h3,h4{font-family:var(--body);font-weight:700;line-height:1.35;letter-spacing:0}
+.faq summary{font-family:var(--body);font-weight:700}
+.kitbar b,.cta strong{font-family:var(--body);font-weight:700}
+.crow h4{font-family:var(--body);font-weight:700}
+h1,h2{line-height:1.12}
