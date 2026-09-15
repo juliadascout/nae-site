@@ -182,7 +182,9 @@ def shell(title, desc, path, body, canonical=None):
 <meta name="twitter:card" content="summary_large_image">
 </head><body>
 <header class="hdr"><div class="wrap">
-  <a class="brand" href="/"><img src="/brand/nae-favicon-192.png" alt="" width="28" height="28" decoding="async"><b>NAE</b><span>Ontario</span></a>
+  <a class="brand" href="/"><picture>
+    <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
+    <img src="/brand/nae-wordmark-black.png" alt="NAE" width="80" height="38" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="btn btn-p" href="/contact/">Book a call</a>
 </div></header>
