@@ -184,7 +184,7 @@ def shell(title, desc, path, body, canonical=None):
 <header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
     <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
-    <img src="/brand/nae-wordmark-black.png" alt="NAE" width="80" height="38" decoding="async"></picture><span>Ontario</span></a>
+    <img src="/brand/nae-wordmark-black.png" alt="NAE Inc." width="137" height="38" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="btn btn-p" href="/contact/">Book a call</a>
 </div></header>
