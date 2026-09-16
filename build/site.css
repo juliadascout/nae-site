@@ -71,7 +71,7 @@ a{color:var(--vir-ink)}
   backdrop-filter:saturate(160%) blur(9px);border-bottom:1px solid var(--rule)}
 .hdr .wrap{display:flex;align-items:center;gap:1.4rem;min-height:64px}
 .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;margin-right:auto;color:inherit}
-.brand img{height:38px;width:auto;display:block;flex:none}
+.brand img{height:46px;width:auto;display:block;flex:none}
 .brand span{font-family:var(--mono);font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .nav{display:flex;gap:1.35rem;align-items:center}
 .nav a{text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:500;
