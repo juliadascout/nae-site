@@ -200,7 +200,7 @@ def shell(title, desc, path, body, canonical=None):
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/site.css">
-<link rel="icon" href="/brand/nae-favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/nae-favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/brand/nae-favicon-16.png">
 <link rel="apple-touch-icon" href="/brand/nae-favicon-180.png">
