@@ -154,6 +154,37 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 # ---------------------------------------------------------------- shell
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
        ("Our team","/our-team/"),("Contact","/contact/")]
+
+def ld(*objs):
+    """Structured data, emitted in the body because a page is a 4-tuple and
+       Google reads JSON-LD wherever it finds it.
+
+       Deliberately conservative about types. The organisation is an
+       Organization, not an EducationalOrganization, and nothing here names a
+       credential - the site does not characterise NAE's registration or
+       accreditation status and its structured data must not either, since that
+       is the copy a search engine is most likely to quote back."""
+    out = []
+    for o in objs:
+        if not o: continue
+        o = dict(o); o.setdefault("@context", "https://schema.org")
+        out.append('<script type="application/ld+json">'
+                   + json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+                   + '</script>')
+    return "".join(out)
+
+def ld_org():
+    return {"@type": "Organization", "name": SITE["legal"], "alternateName": SITE["short"],
+            "url": SITE["domain"] + "/", "logo": SITE["domain"] + "/brand/nae-favicon-512.png",
+            "telephone": SITE["phone"], "email": SITE["email"],
+            "areaServed": sorted({l["region"] for l in OPEN})}
+
+def ld_crumbs(*pairs):
+    return {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i + 1, "name": n,
+         **({"item": SITE["domain"] + u} if u else {})}
+        for i, (n, u) in enumerate(pairs)]}
+
 def shell(title, desc, path, body, canonical=None):
     nav_html = "".join(
         '<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == path else '', E(n))
@@ -184,7 +215,7 @@ def shell(title, desc, path, body, canonical=None):
 <header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
     <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
-    <img src="/brand/nae-wordmark-black.png" alt="NAE Inc." width="137" height="38" decoding="async"></picture><span>Ontario</span></a>
+    <img src="/brand/nae-wordmark-black.png" alt="NAE" width="137" height="38" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="btn btn-p" href="/contact/">Book a call</a>
 </div></header>
@@ -357,6 +388,21 @@ def page_course(c):
   {kit_html}
   <div class="card c-faq"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
 </div>{booking_rail(course=c)}</div>{mobile_bar(c)}</div>"""
+    body += ld(
+        {"@type": "Course", "name": c["name"],
+         "description": f"{c['name']} training. {c['duration']}.",
+         "url": f"{SITE['domain']}/courses/{c['slug']}/",
+         "provider": ld_org(),
+         "offers": {"@type": "Offer", "price": c["price"], "priceCurrency": "CAD",
+                    "category": "Tuition", "url": f"{SITE['domain']}/courses/{c['slug']}/"},
+         "hasCourseInstance": [
+             {"@type": "CourseInstance", "courseMode": "onsite",
+              "location": {"@type": "Place", "name": l["name"],
+                           "address": {"@type": "PostalAddress",
+                                       "addressLocality": l["name"],
+                                       "addressRegion": "ON", "addressCountry": "CA"}}}
+             for l in at]},
+        ld_crumbs(("Courses", "/courses/"), (c["name"], None)))
     return (f"/courses/{c['slug']}/", f"{c['name']} Training | {SITE['short']}",
             f"{c['name']} training in {', '.join(l['name'] for l in at) or 'Ontario'}. "
             f"{c['duration']}. {money(c['price'])}, kit optional.", body)
@@ -425,6 +471,8 @@ def page_home():
   <h2 style="margin-bottom:1.4rem">What do you want to learn?</h2><div class="grid3">{tiles}</div></div>
 <div class="wrap pad"><p class="eyebrow">Where we teach</p>
   <h2 style="margin-bottom:1.4rem">Our studios</h2><div class="lcards">{locs}</div></div>"""
+    body += ld(ld_org(),
+               {"@type": "WebSite", "name": SITE["legal"], "url": SITE["domain"] + "/"})
     return ("/", f"Beauty Courses in Ontario | {SITE['short']}",
             f"Hands-on beauty and esthetics training across {len(OPEN)} Ontario studios. "
             f"{len(COURSES)} courses, optional kits, certificate of completion.", body)
@@ -440,7 +488,7 @@ def page_courses():
                 + "".join(crow(c) for c in subs[k]) + '</section>'
                 for k, label in SUBJECTS if subs.get(k))
             + '</div>')
-    return ("/courses/", f"Beauty Courses &amp; Prices | {SITE['short']}",
+    return ("/courses/", f"Beauty Courses & Prices | {SITE['short']}",
             f"All {len(COURSES)} courses with hours, fees and optional kit prices.", body)
 
 def page_locations():
@@ -491,6 +539,16 @@ def page_location(l):
       run at this studio.</p>{''.join(crow(c) for c in cs)}</div>
   {area_html}
 </div>{booking_rail(location=l)}</div></div>"""
+    addr = loc_addr(l)
+    body += ld(
+        {"@type": "LocalBusiness", "name": f"{SITE['short']} {l['name']}",
+         "parentOrganization": ld_org(),
+         "url": f"{SITE['domain']}/locations/{slugify(l['name'])}/",
+         "telephone": SITE["phone"], "email": SITE["email"],
+         "address": {"@type": "PostalAddress", "addressLocality": l["name"],
+                     "addressRegion": "ON", "addressCountry": "CA",
+                     **({"streetAddress": addr} if addr else {})}},
+        ld_crumbs(("Locations", "/locations/"), (l["name"], None)))
     return (f"/locations/{slugify(l['name'])}/", f"{l['name']} Beauty School | {SITE['short']}",
             f"Beauty and esthetics training in {l['name']}, {l['region']}. {len(cs)} courses.", body)
 
@@ -614,6 +672,12 @@ def tidy_body(h):
     h = re.sub(r'<img(?![^>]*\balt=)', '<img alt=""', h)
     return h
 
+# WooCommerce plumbing that came across with no content of its own: /shop/
+# holds the single word "Shop" and /cart/ renders the literal shortcode
+# [woocommerce_cart] as text. Both are dead ends, and the 404 page - which
+# offers courses, studios and the journal - is a better place to land.
+EMPTY_WOO = {"/shop/", "/cart/"}
+
 def migrated_pages():
     out = []
     if not os.path.isdir(CLEAN): return out
@@ -622,6 +686,10 @@ def migrated_pages():
         m = re.match(r"<!--\s*title:\s*(.*?)\n\s*url:\s*(.*?)\n\s*type:\s*(.*?)\s*-->\s*", raw, re.S)
         if not m: continue
         title, url, ptype = (x.strip() for x in m.groups())
+        # WordPress stored entity-encoded titles. shell() escapes what it is
+        # handed, so an encoded one came out double-escaped and the browser tab
+        # read "&amp;" where the ampersand should be.
+        title = html.unescape(title)
         body_html = tidy_body(raw[m.end():])
         # WordPress emoji slugs arrive percent-encoded. Kept that way, the
         # directory on disk is literally named "%f0%9f%98%81…" while a browser
@@ -631,6 +699,7 @@ def migrated_pages():
         path = unquote(urlparse(url).path) or "/"
         if not path.endswith("/"): path += "/"
         if path in GENERATED: continue          # a generated page always wins
+        if path in EMPTY_WOO: continue          # see EMPTY_WOO
         plain = re.sub(r"<[^>]+>", " ", body_html)
         desc = re.sub(r"\s+", " ", html.unescape(plain)).strip()[:155]
         body = (f'<div class="wrap pad"><article class="prose">'
