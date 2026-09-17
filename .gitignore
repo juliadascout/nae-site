@@ -245,3 +245,15 @@ __marimo__/
 # from it, so losing it would leave the blog with no way to rebuild.
 !content/
 !content/editorial/*.html
+
+# Two JSON files that *.json above was silently dropping.
+#
+# content/editorial/taxonomy.json is source. taxonomy_pages() rebuilds the 177
+# category and tag archives from it, and it cannot be regenerated from anything
+# in this repo — a fresh clone was building 177 fewer pages than this machine.
+#
+# worker/prices.json is written by the build, but the deploy only runs
+# `wrangler deploy` and never runs the build, so the Worker's import of it has
+# to resolve from the repo. Without it the deploy fails outright.
+!content/editorial/taxonomy.json
+!worker/prices.json

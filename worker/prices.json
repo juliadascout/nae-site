@@ -1,0 +1,293 @@
+{
+  "currency": "CAD",
+  "cap": 2000,
+  "courses": {
+    "crs-classic-and-hybrid-lash-extensions": {
+      "slug": "classic-hybrid-lash-extensions",
+      "name": "Classic & Hybrid Lash Extensions",
+      "price": 900,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-hybrid-and-volume-lash-extensions": {
+      "slug": "hybrid-volume-lash-extensions",
+      "name": "Hybrid & Volume Lash Extensions",
+      "price": 400,
+      "kitCost": 200,
+      "hasKit": true
+    },
+    "crs-classic-and-volume-lash-extensions": {
+      "slug": "classic-volume-lash-extensions",
+      "name": "Classic & Volume Lash Extensions",
+      "price": 1100,
+      "kitCost": 450,
+      "hasKit": true
+    },
+    "crs-lash-lift-and-tint": {
+      "slug": "lash-lift-tint",
+      "name": "Lash Lift & Tint",
+      "price": 600,
+      "kitCost": 200,
+      "hasKit": true
+    },
+    "crs-grand-master-lash-artist-classic-volume-lift-and-tint": {
+      "slug": "grand-master-lash-artist-classic-volume-lift-tint",
+      "name": "Grand Master Lash Artist (Classic, Volume, Lift & Tint)",
+      "price": 1500,
+      "kitCost": 600,
+      "hasKit": true
+    },
+    "crs-fusion-hair-extensions": {
+      "slug": "fusion-hair-extensions",
+      "name": "Fusion Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-tape-in-hair-extensions": {
+      "slug": "tape-in-hair-extensions",
+      "name": "Tape-In Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-micro-link-micro-loop-and-nano-ring-hair-extensions": {
+      "slug": "micro-link-micro-loop-nano-ring-hair-extensions",
+      "name": "Micro Link, Micro Loop & Nano Ring Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-braid-in-hair-extensions": {
+      "slug": "braid-in-hair-extensions",
+      "name": "Braid-In Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-classic-weave-hair-extensions": {
+      "slug": "classic-weave-hair-extensions",
+      "name": "Classic Weave Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-micro-bead-weave-hair-extensions": {
+      "slug": "micro-bead-weave-hair-extensions",
+      "name": "Micro Bead Weave Hair Extensions",
+      "price": 1000,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-locs-hair-extensions": {
+      "slug": "locs-hair-extensions",
+      "name": "Locs Hair Extensions",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-classic-master-hair-extensions": {
+      "slug": "classic-master-hair-extensions",
+      "name": "Classic Master Hair Extensions",
+      "price": 1200,
+      "kitCost": 400,
+      "hasKit": true
+    },
+    "crs-camille-master-hair-extensions": {
+      "slug": "weave-master-hair-extensions",
+      "name": "Weave Master Hair Extensions",
+      "price": 1200,
+      "kitCost": 400,
+      "hasKit": true
+    },
+    "crs-grand-master-hair-extensions": {
+      "slug": "grand-master-hair-extensions",
+      "name": "Grand Master Hair Extensions",
+      "price": 1895,
+      "kitCost": 500,
+      "hasKit": true
+    },
+    "crs-facial-training": {
+      "slug": "facial-training",
+      "name": "Facial Training",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-microdermabrasion-and-facial-training": {
+      "slug": "microdermabrasion-facial-training",
+      "name": "Microdermabrasion & Facial Training",
+      "price": 800,
+      "kitCost": 500,
+      "hasKit": true
+    },
+    "crs-basic-body-sugaring": {
+      "slug": "basic-body-sugaring",
+      "name": "Basic Body Sugaring",
+      "price": 700,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-sugaring-brazilian-women": {
+      "slug": "sugaring-brazilian-women",
+      "name": "Sugaring Brazilian (Women)",
+      "price": 300,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-sugaring-brazilian-women-and-men": {
+      "slug": "sugaring-brazilian-women-men",
+      "name": "Sugaring Brazilian (Women & Men)",
+      "price": 400,
+      "kitCost": 300,
+      "hasKit": true
+    },
+    "crs-basic-body-waxing": {
+      "slug": "basic-body-waxing",
+      "name": "Basic Body Waxing",
+      "price": 600,
+      "kitCost": 200,
+      "hasKit": true
+    },
+    "crs-basic-body-wax-and-brazilian": {
+      "slug": "basic-body-wax-brazilian",
+      "name": "Basic Body Wax & Brazilian",
+      "price": 900,
+      "kitCost": 200,
+      "hasKit": true
+    },
+    "crs-brow-mapping": {
+      "slug": "brow-mapping",
+      "name": "Brow Mapping",
+      "price": 200,
+      "kitCost": 150,
+      "hasKit": true
+    },
+    "crs-eyebrow-lamination-wax-and-tint": {
+      "slug": "eyebrow-lamination-wax-tint",
+      "name": "Eyebrow Lamination, Wax & Tint",
+      "price": 600,
+      "kitCost": 250,
+      "hasKit": true
+    },
+    "crs-brow-lamination-and-wax": {
+      "slug": "brow-lamination-wax",
+      "name": "Brow Lamination & Wax",
+      "price": 500,
+      "kitCost": 220,
+      "hasKit": true
+    },
+    "crs-brow-tint-and-wax": {
+      "slug": "brow-tint-wax",
+      "name": "Brow Tint & Wax",
+      "price": 500,
+      "kitCost": 220,
+      "hasKit": true
+    },
+    "crs-microblading": {
+      "slug": "microblading",
+      "name": "Microblading",
+      "price": 1400,
+      "kitCost": 400,
+      "hasKit": true
+    },
+    "crs-master-brow": {
+      "slug": "master-brow",
+      "name": "Master Brow",
+      "price": 1895,
+      "kitCost": 650,
+      "hasKit": true
+    },
+    "crs-spray-tan": {
+      "slug": "spray-tan",
+      "name": "Spray Tan",
+      "price": 700,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-relaxation-massage": {
+      "slug": "relaxation-massage",
+      "name": "Relaxation Massage",
+      "price": 700,
+      "kitCost": 150,
+      "hasKit": true
+    },
+    "crs-threading": {
+      "slug": "threading",
+      "name": "Threading",
+      "price": 500,
+      "kitCost": 100,
+      "hasKit": true
+    },
+    "crs-basic-nail-training": {
+      "slug": "basic-nail-training",
+      "name": "Basic Nail Training",
+      "price": 700,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-master-acrylic-nail-technician-tips-and-shaping": {
+      "slug": "master-acrylic-nail-technician-tips-shaping",
+      "name": "Master Acrylic Nail Technician, Tips & Shaping",
+      "price": 1000,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-master-gel-and-gel-x-technician-tips-and-shaping": {
+      "slug": "master-gel-gel-x-technician-tips-shaping",
+      "name": "Master Gel & Gel X Technician, Tips & Shaping",
+      "price": 1000,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-grand-master-nail-technician-acrylic-gel-tips": {
+      "slug": "grand-master-nail-technician-acrylic-gel-tips",
+      "name": "Grand Master Nail Technician (Acrylic, Gel, Tips)",
+      "price": 1750,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-pedicure-training-course": {
+      "slug": "pedicure-training-course",
+      "name": "Pedicure Training Course",
+      "price": 600,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-specialty-designs-nail-technician-advanced": {
+      "slug": "specialty-designs-nail-technician-advanced",
+      "name": "Specialty Designs Nail Technician (Advanced)",
+      "price": 500,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-basic-makeup-training-on-self": {
+      "slug": "basic-makeup-training-on-self",
+      "name": "Basic Makeup Training (on Self)",
+      "price": 600,
+      "kitCost": 0,
+      "hasKit": false
+    },
+    "crs-makeup-artist-training-on-other": {
+      "slug": "makeup-artist-training-on-other",
+      "name": "Makeup Artist Training (on Other)",
+      "price": 1895,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-teeth-whitening-training": {
+      "slug": "teeth-whitening-training",
+      "name": "Teeth Whitening Training",
+      "price": 700,
+      "kitCost": 0,
+      "hasKit": true
+    },
+    "crs-business-development": {
+      "slug": "business-development",
+      "name": "Business Development",
+      "price": 200,
+      "kitCost": 0,
+      "hasKit": false
+    }
+  }
+}
