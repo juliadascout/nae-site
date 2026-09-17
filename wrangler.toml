@@ -1,0 +1,25 @@
+# The site was a plain static deployment until checkout needed somewhere to
+# price an order that a buyer cannot reach. It is still a static deployment:
+# the Worker answers /api/ and hands everything else to the assets, which are
+# the same committed files as before.
+name = "nae-site"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# The site generates its own 404 page; serve it rather than a bare Worker error.
+not_found_handling = "404-page"
+
+[vars]
+PAYPAL_ENV = "sandbox"
+# Public by design - it is embedded in any page that shows a PayPal button.
+PAYPAL_CLIENT_ID = "BAAhh7ONZHyVjmpVvsfyJ4QflLmhfJOEYsHqPlB_wlB6DkpLcys_yrmRJKeLTHKWzIRLRPhnEJnBEGhPno"
+# Buttons stay off until the price list, HST and the refund policy are settled.
+# The endpoints refuse with 503 while this is false, so switching it on is the
+# single decision that opens checkout.
+CHECKOUT_ENABLED = "false"
+
+# PAYPAL_CLIENT_SECRET is NOT here and never will be. It is set with:
+#   npx wrangler secret put PAYPAL_CLIENT_SECRET

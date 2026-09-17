@@ -397,3 +397,20 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
    list they head is real - but the serif is for display sizes, and the level a
    heading occupies says nothing about how big it is drawn. */
 .crow h2,.lcard h2{font-family:var(--body);font-weight:700;letter-spacing:0}
+
+/* Checkout, on a course page. Hidden until the Worker says it is open - the
+   element ships on every course page and stays invisible while the flag is
+   off, so switching it on is a config change and not a rebuild. */
+.co{margin:1rem 0 0;padding:1rem;border:1px solid var(--rule);border-radius:12px;
+  background:var(--card);display:flex;flex-direction:column;gap:.7rem}
+/* display:flex above beats the user agent's [hidden]{display:none}, which would
+   have left an empty bordered box on all 41 course pages while checkout is off. */
+.co[hidden]{display:none}
+.co-test{margin:0;font:500 .7rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--vir-ink);background:var(--vir-soft);padding:.45rem .6rem;border-radius:6px}
+.co-kit{display:flex;align-items:center;gap:.55rem;font-size:.92rem;color:var(--ink-2);cursor:pointer}
+.co-kit input{width:17px;height:17px;accent-color:var(--vir);flex:none}
+.co-msg{margin:0;font-size:.9rem;color:var(--ink-2)}
+.co-msg[data-kind="error"]{color:var(--plum)}
+.co-msg[data-kind="done"]{background:var(--good-bg);color:var(--good-fg);
+  padding:.6rem .7rem;border-radius:8px;font-weight:600}

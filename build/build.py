@@ -388,6 +388,9 @@ def page_course(c):
   {kit_html}
   <div class="card c-faq"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
 </div>{booking_rail(course=c)}</div>{mobile_bar(c)}</div>"""
+    body += (f'<div id="checkout" class="co" hidden data-course="{c["id"]}" '
+             f'data-kit="{c.get("kitCost") or 0}"></div>'
+             f'<script src="/checkout.js" defer></script>')
     body += ld(
         {"@type": "Course", "name": c["name"],
          "description": f"{c['name']} training. {c['duration']}.",
@@ -629,6 +632,22 @@ def page_team():
     return ("/our-team/", f"Our Team | {SITE['short']}",
             "The people who teach at NAE, across our Ontario studios.", body)
 
+# ---------------------------------------------------------------- checkout data
+# The Worker prices every order itself. If the amount came from the browser a
+# buyer could edit it in devtools and pay $1 for a $1,895 course, so the only
+# thing the page sends is a course id and whether the kit is wanted. This is
+# that lookup, written at build time from the same catalogue the pages read -
+# one source, so a price cannot drift between the page and the charge.
+def write_checkout_prices():
+    out = {c["id"]: {"slug": c["slug"], "name": c["name"], "price": c["price"],
+                     "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit"))}
+           for c in COURSES}
+    path = os.path.join(ROOT, "worker", "prices.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"currency": "CAD", "cap": CAP_PRICE, "courses": out}, f, indent=2)
+    return len(out)
+
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team()]
 PAGES += [page_location(l) for l in LOCS]
@@ -867,3 +886,6 @@ print(f"quarantined at write: {len(quarantined)}")
 for p, b in quarantined[:8]: print(f"    {p}  ->  {b}")
 print(f"pages with warnings : {len(warned)}")
 for p, w in warned[:6]: print(f"    {p}  ->  {w}")
+
+
+print(f"checkout prices     : {write_checkout_prices()}")
