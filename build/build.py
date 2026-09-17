@@ -688,7 +688,56 @@ def tidy_body(h):
         lvl = {old: min(6, i + 2) for i, old in enumerate(used)}
         h = re.sub(r"<(/?)h([1-6])\b",
                    lambda m: f"<{m.group(1)}h{lvl[int(m.group(2))]}", h)
+    """Alt text inherited from WordPress is mostly machine-generated - camera
+       file names and social-media ids like "239607550_584230042749529_...".
+       A screen reader reads those out digit by digit, which is worse than
+       silence, and a search engine learns nothing from them. Clear the ones
+       that are plainly not descriptions; leave anything that reads like words,
+       including short ones like a logo's "NAE"."""
+    def is_junk(a):
+        a = a.strip()
+        if not a: return False
+        if re.fullmatch(r"(?i)(img|dsc|pxl|image|photo|screenshot)[\s_-]*\d+.*", a): return True
+        if re.fullmatch(r"[\d\s_\-.()]+", a): return True
+        if re.search(r"\.(jpe?g|png|gif|webp)$", a, re.I): return True
+        if re.search(r"\d{8,}", a): return True
+        letters = len(re.findall(r"[A-Za-z]", a)); digits = len(re.findall(r"\d", a))
+        return bool(digits) and digits >= letters
+    h = re.sub(r'\balt="([^"]*)"',
+               lambda m: 'alt=""' if is_junk(html.unescape(m.group(1))) else m.group(0), h)
+
     h = re.sub(r'<img(?![^>]*\balt=)', '<img alt=""', h)
+
+    """Alt text, where the file name actually says something.
+
+       450 migrated images carried alt="", which is correct for decoration and
+       wrong for a photograph of the thing the page is about - a screen reader
+       skips it and a search engine learns nothing. WordPress names often carry
+       a real description ("Canva-Woman-Curling-Her-Hair-741x1024.jpg"), so that
+       becomes the alt text. Names that are just noise ("y6.png", "12k.png") are
+       left empty rather than guessed at, because a wrong description is worse
+       than none."""
+    def from_name(m):
+        whole, src = m.group(0), m.group(1)
+        stem = re.sub(r"\.[a-z0-9]+$", "", src.rsplit("/", 1)[-1])
+        stem = re.sub(r"[-_]?\d+x\d+$", "", stem)            # WordPress size suffix
+        stem = unquote(stem).replace("%20", " ")
+        words = [w for w in re.split(r"[-_+.\s]+", stem) if re.fullmatch(r"[A-Za-z]{3,}", w)]
+        drop = {"canva", "img", "image", "photo", "copy", "final", "scaled", "edited", "png", "jpg", "jpeg"}
+        words = [w for w in words if w.lower() not in drop]
+        if len(words) < 2:
+            return whole
+        alt = " ".join(words)
+        alt = alt[0].upper() + alt[1:]
+        return whole.replace('alt=""', 'alt="%s"' % html.escape(alt[:120], quote=True))
+    h = re.sub(r'<img [^>]*\bsrc="([^"]+)"[^>]*\balt=""[^>]*>', from_name, h)
+    h = re.sub(r'<img [^>]*\balt=""[^>]*\bsrc="([^"]+)"[^>]*>', from_name, h)
+
+    """The checker's one "very important" item on the live site: empty bold and
+       strong tags, which came across from the WordPress editor and say nothing
+       to anybody."""
+    for tag in ("b", "strong", "em", "i"):
+        h = re.sub(rf"<{tag}[^>]*>\s*</{tag}>", "", h)
     return h
 
 # WooCommerce plumbing that came across with no content of its own: /shop/
