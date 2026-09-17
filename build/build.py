@@ -32,6 +32,11 @@ E    = lambda s: html.escape(str(s if s is not None else ""), quote=True)
 
 COURSES  = json.load(open(f"{DATA}/course-catalog.json"))["courses"]
 LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
+# Google Analytics 4 measurement id, "G-XXXXXXXXXX". Empty emits no tag at all,
+# so the site carries no analytics until this is filled in - which is the state
+# it shipped in, and the reason a cutover would have gone dark.
+GA4_ID = os.environ.get("NAE_GA4_ID", "").strip()
+
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://naeinc.ca",
         # Setmore. Every booking link on the site points here. It replaced a Google
@@ -185,6 +190,22 @@ def ld_crumbs(*pairs):
          **({"item": SITE["domain"] + u} if u else {})}
         for i, (n, u) in enumerate(pairs)]}
 
+
+def ga_tag():
+    """The rebuild had no analytics of any kind. Cutting the domain over would
+       have stopped the existing GA4 property receiving anything, with no
+       before-and-after of the rebuild available afterwards.
+
+       Emits nothing when NAE_GA4_ID is unset, so this changes the output only
+       once someone supplies the id."""
+    if not GA4_ID:
+        return ""
+    return (f'\n<script async src="https://www.googletagmanager.com/gtag/js?id={GA4_ID}"></script>'
+            f'\n<script>window.dataLayer=window.dataLayer||[];'
+            f'function gtag(){{dataLayer.push(arguments)}}'
+            f'gtag("js",new Date());gtag("config","{GA4_ID}");</script>'
+            f'\n<script src="/events.js" defer></script>')
+
 def shell(title, desc, path, body, canonical=None):
     nav_html = "".join(
         '<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == path else '', E(n))
@@ -210,7 +231,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{SITE['domain']}{canonical or path}">
 <meta property="og:image" content="{SITE['domain']}/brand/nae-og-share-1200x630.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary_large_image">{ga_tag()}
 </head><body>
 <header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
