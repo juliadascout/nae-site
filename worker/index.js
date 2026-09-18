@@ -25,6 +25,16 @@ const fail = (status, message, detail) => {
   return json({ error: message }, status);
 };
 
+/* Credentials announce themselves. Naming the ones we might plausibly confuse
+   turns a 401 nobody can read into a sentence that says what to fix. */
+const FOREIGN_SECRET = (s) => {
+  if (/^github_pat_/.test(s)) return "a GitHub fine-grained token";
+  if (/^gh[pousr]_/.test(s)) return "a GitHub token";
+  if (/^sk-/.test(s)) return "an API key from another service";
+  if (/^-----BEGIN /.test(s)) return "a private key";
+  return null;
+};
+
 function ppBase(env) {
   const mode = env.PAYPAL_ENV === "live" ? "live" : "sandbox";
   return { base: PP_HOST[mode], mode };
@@ -43,6 +53,12 @@ async function accessToken(env) {
   const id = env.PAYPAL_CLIENT_ID;
   const secret = env.PAYPAL_CLIENT_SECRET;
   if (!id || !secret) throw new Error("PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is not set");
+  /* Refuse before the request, not after the 401. A secret set by mistake is
+     still a secret, and sending someone else's credential to a third party who
+     logs failed authentication is worse than the outage it was meant to fix.
+     This has happened once already: a GitHub token was pasted here. */
+  const foreign = FOREIGN_SECRET(secret);
+  if (foreign) throw new Error(`PAYPAL_CLIENT_SECRET holds ${foreign}, not a PayPal secret — it was not sent`);
 
   const r = await fetch(`${base}/v1/oauth2/token`, {
     method: "POST",
@@ -245,6 +261,11 @@ export default {
         };
         if (!out.clientIdSet || !out.secretSet) {
           return json({ ...out, ok: false, reason: "client id or secret missing" }, 200);
+        }
+        const foreign = FOREIGN_SECRET(sec);
+        if (foreign) {
+          return json({ ...out, ok: false,
+            reason: `PAYPAL_CLIENT_SECRET holds ${foreign}, not a PayPal secret. Nothing was sent to PayPal.` }, 200);
         }
         try {
           await accessToken(env);
