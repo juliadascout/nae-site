@@ -22,7 +22,10 @@ run_worker_first = [ "/api/*" ]
 [vars]
 PAYPAL_ENV = "sandbox"
 # Public by design - it is embedded in any page that shows a PayPal button.
-PAYPAL_CLIENT_ID = "BAAhh7ONZHyVjmpVvsfyJ4QflLmhfJOEYsHqPlB_wlB6DkpLcys_yrmRJKeLTHKWzIRLRPhnEJnBEGhPno"
+# The "Default Application" sandbox app. The newer "NAE site checkout" app was
+# tried first and its id has an unusual shape; this one is the classic REST
+# format and is the pair the stored secret belongs to.
+PAYPAL_CLIENT_ID = "AWEFDASCNFR7T-Hhsp1v2_t3Sn507X4xNGKO9wkr7SmNW9m5-Vx3-iu1h5OCj5A6uxF1ysoNCPkWDjQ7"
 # Price list, HST and the refund policy were all settled on 18 Sept, so the
 # buttons are on. PAYPAL_ENV is still sandbox: this takes test cards, not money.
 # The endpoints refuse with 503 while this is false.
