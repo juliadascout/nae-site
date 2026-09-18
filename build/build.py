@@ -157,6 +157,27 @@ def loc_addr(l):
     if l.get("showAddress") == "postal":
         return ", ".join(x for x in [a.get("city"), a.get("province"), a.get("postal")] if x)
     return ""
+
+
+def ld_addr(l):
+    """PostalAddress with the parts kept apart.
+
+       loc_addr() builds one human string for the page, and feeding that same
+       string to streetAddress put the town and the postal code inside the
+       street line - and, for a location with no street on file, made
+       "Niagara Falls, ON, L2H 0N1" the street, which is worse than saying
+       nothing. Search engines match a postal code and a locality as their own
+       fields, so give them their own fields. Whatever the location is willing
+       to publish is what appears: showAddress still decides."""
+    a = l.get("address") or {}
+    show = l.get("showAddress")
+    out = {"@type": "PostalAddress", "addressLocality": a.get("city") or l["name"],
+           "addressRegion": a.get("province") or "ON", "addressCountry": "CA"}
+    if show == "full" and a.get("line1"):
+        out["streetAddress"] = a["line1"]
+    if show in ("full", "postal") and a.get("postal"):
+        out["postalCode"] = a["postal"]
+    return out
 OPEN = [l for l in LOCS if l["status"] == "open"]
 
 # ---------------------------------------------------------------- shell
@@ -186,6 +207,22 @@ def ld_org():
             "url": SITE["domain"] + "/", "logo": SITE["domain"] + "/brand/nae-favicon-512.png",
             "telephone": SITE["phone"], "email": SITE["email"],
             "areaServed": sorted({l["region"] for l in OPEN})}
+
+def course_title(c):
+    """Google shows roughly sixty characters and cuts the rest mid-word, so a
+       title longer than that spends its most valuable characters on an ellipsis.
+       Four course names are long enough that "<name> Training | NAE" overflows.
+       Drop the least useful part first - the suffix says nothing a searcher
+       typed, and "Training" is already implied by a course page - rather than
+       truncating and losing the end of the name itself."""
+    for t in (f"{c['name']} Training | {SITE['short']}",
+              f"{c['name']} | {SITE['short']}",
+              f"{c['name']} Training",
+              c["name"]):
+        if len(t) <= 60:
+            return t
+    return c["name"]
+
 
 def ld_crumbs(*pairs):
     return {"@type": "BreadcrumbList", "itemListElement": [
@@ -431,13 +468,10 @@ def page_course(c):
                     "category": "Tuition", "url": f"{SITE['domain']}/courses/{c['slug']}/"},
          "hasCourseInstance": [
              {"@type": "CourseInstance", "courseMode": "onsite",
-              "location": {"@type": "Place", "name": l["name"],
-                           "address": {"@type": "PostalAddress",
-                                       "addressLocality": l["name"],
-                                       "addressRegion": "ON", "addressCountry": "CA"}}}
+              "location": {"@type": "Place", "name": l["name"], "address": ld_addr(l)}}
              for l in at]},
         ld_crumbs(("Courses", "/courses/"), (c["name"], None)))
-    return (f"/courses/{c['slug']}/", f"{c['name']} Training | {SITE['short']}",
+    return (f"/courses/{c['slug']}/", course_title(c),
             f"{c['name']} training in {', '.join(l['name'] for l in at) or 'Ontario'}. "
             f"{c['duration']}. {money(c['price'])}, kit optional.", body)
 
@@ -573,15 +607,12 @@ def page_location(l):
       run at this studio.</p>{''.join(crow(c) for c in cs)}</div>
   {area_html}
 </div>{booking_rail(location=l)}</div></div>"""
-    addr = loc_addr(l)
     body += ld(
         {"@type": "LocalBusiness", "name": f"{SITE['short']} {l['name']}",
          "parentOrganization": ld_org(),
          "url": f"{SITE['domain']}/locations/{slugify(l['name'])}/",
          "telephone": SITE["phone"], "email": SITE["email"],
-         "address": {"@type": "PostalAddress", "addressLocality": l["name"],
-                     "addressRegion": "ON", "addressCountry": "CA",
-                     **({"streetAddress": addr} if addr else {})}},
+         "address": ld_addr(l)},
         ld_crumbs(("Locations", "/locations/"), (l["name"], None)))
     return (f"/locations/{slugify(l['name'])}/", f"{l['name']} Beauty School | {SITE['short']}",
             f"Beauty and esthetics training in {l['name']}, {l['region']}. {len(cs)} courses.", body)
