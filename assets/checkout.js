@@ -153,7 +153,15 @@
         })
           .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
           .then(function (res) {
-            if (!res.ok) throw new Error(res.j.error || "Could not start the payment");
+            if (!res.ok) {
+              /* Show what the server said and log why. PayPal's onError fires
+                 with its own error and loses this one, so the actual reason
+                 has to be put on screen here or it is never seen. */
+              var why = res.j.detail || res.j.error || "Could not start the payment";
+              say(res.j.error || "Could not start the payment", "error");
+              if (window.console) console.error("checkout:", why);
+              throw new Error(why);
+            }
             return res.j.id;
           });
       },
@@ -175,8 +183,15 @@
           .catch(function (e) { say(e.message, "error"); });
       },
 
-      onError: function () {
-        say("Something went wrong with the payment. Nothing has been charged.", "error");
+      onError: function (err) {
+        /* Only speak if createOrder has not already said something more useful:
+           this fires after it, and a generic apology overwriting the real
+           reason is exactly what made this hard to diagnose. */
+        var n = panel && panel.querySelector(".co-msg");
+        if (!n || n.getAttribute("data-kind") !== "error") {
+          say("Something went wrong with the payment. Nothing has been charged.", "error");
+        }
+        if (window.console && err) console.error("checkout (paypal):", err);
       },
 
       onCancel: function () { say("Payment cancelled. Nothing has been charged."); }

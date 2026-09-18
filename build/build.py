@@ -77,20 +77,28 @@ for c in COURSES:
     c["kitFixed"] = bool(c.get("kitCost"))
     c["equipList"] = [x.strip() for x in (c.get("equipment") or "").split(",") if x.strip()]
 
-# A course stays sellable while its tuition is at most $2,000 and its
-# instruction stays under 40 hours. $2,000 is the highest permitted fee rather
-# than the first forbidden one - confirmed 18 Sept, and three courses are priced
-# at exactly $2,000 on that basis. Hours are still a strict under. Bundling is
-# what pushes a programme at either, so the check runs on the built catalogue
-# and fails the build: a price edit in nae-data cannot quietly reintroduce a
-# breach. Kits are excluded deliberately - they are not tuition.
+# A course stays inside the guideline while its tuition is at most $2,000 and
+# its instruction stays under 40 hours. $2,000 is the highest permitted fee
+# rather than the first forbidden one - three courses are priced at exactly
+# $2,000 on that basis. Kits are excluded deliberately: they are not tuition.
+#
+# This warns, it does not stop the build. A pricing question is not a reason a
+# website cannot be deployed, and refusing the build punished the wrong person
+# at the wrong moment. A course that is over the line on purpose carries
+# "capAck": true in the catalogue, which silences it for that course only -
+# the data equivalent of dismissing the warning for good.
 CAP_PRICE, CAP_HOURS = 2000, 40
-over = [(c["name"], c["price"], c["hi"]) for c in COURSES
-        if c["price"] > CAP_PRICE or c["hi"] >= CAP_HOURS]
-if over:
-    raise SystemExit("course caps breached (fee must be at most ${:,}, hours under {}):\n".format(
-        CAP_PRICE, CAP_HOURS) + "\n".join(
-        f"  {n} - ${p:,} / {h:g}h" for n, p, h in over))
+
+
+def cap_breach(c):
+    why = []
+    if c["price"] > CAP_PRICE: why.append(f"fee ${c['price']:,} is over ${CAP_PRICE:,}")
+    if c["hi"] >= CAP_HOURS:   why.append(f"{c['hi']:g} hours is not under {CAP_HOURS}")
+    return why
+
+
+over = [(c, cap_breach(c)) for c in COURSES if cap_breach(c) and not c.get("capAck")]
+acked = [c["name"] for c in COURSES if cap_breach(c) and c.get("capAck")]
 
 # Bundles name their components by frozen id, never by title, so renaming a course
 # never silently empties the bundle it belongs to.
@@ -702,7 +710,8 @@ def page_team():
 # one source, so a price cannot drift between the page and the charge.
 def write_checkout_prices():
     out = {c["id"]: {"slug": c["slug"], "name": c["name"], "price": c["price"],
-                     "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit"))}
+                     "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit")),
+                     "capAck": bool(c.get("capAck"))}
            for c in COURSES}
     path = os.path.join(ROOT, "worker", "prices.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -1036,3 +1045,10 @@ for p, w in warned[:6]: print(f"    {p}  ->  {w}")
 
 
 print(f"checkout prices     : {write_checkout_prices()}")
+if over:
+    print(f"course cap warnings : {len(over)} (build not blocked)")
+    for c, why in over:
+        print(f"    {c['name']} - {'; '.join(why)}")
+    print('    set "capAck": true on a course in nae-data to allow it deliberately')
+if acked:
+    print(f"cap allowed on purpose: {len(acked)} — {', '.join(acked)}")

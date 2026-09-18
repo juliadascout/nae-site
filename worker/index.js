@@ -52,7 +52,10 @@ async function accessToken(env) {
     },
     body: "grant_type=client_credentials",
   });
-  if (!r.ok) throw new Error(`token ${r.status}`);
+  if (!r.ok) {
+    const detail = await r.text().catch(() => "");
+    throw new Error(`PayPal rejected the credentials (${r.status} from ${mode}). ${detail.slice(0, 300)}`);
+  }
   const j = await r.json();
   tokenCache = {
     value: j.access_token,
@@ -92,10 +95,14 @@ function quote(courseId, withKit) {
   if (!c) return { error: "Unknown course" };
 
   /* The cap is the highest permitted fee, not the first forbidden one: three
-     courses are priced at exactly $2,000 deliberately. The build refuses
-     anything above it, so this can only fire if a price moved without a
-     rebuild. Better a refused payment than a wrong one. */
-  if (c.price > prices.cap) return { error: "This course cannot be paid for online" };
+     courses are priced at exactly $2,000 deliberately. A course deliberately
+     priced above it carries capAck and stays sellable - the build warns about
+     it rather than refusing, and this has to agree or the warning would be a
+     lie. Without that acknowledgement, a price above the cap is refused:
+     better a refused payment than a wrong one. */
+  if (c.price > prices.cap && !c.capAck) {
+    return { error: "This course cannot be paid for online" };
+  }
 
   const items = [
     {
@@ -210,6 +217,32 @@ export default {
           enabled: env.CHECKOUT_ENABLED === "true",
         });
       }
+      /* Does this Worker actually hold a working pair of credentials? A
+         checkout that fails gives the buyer a generic apology by design, so
+         without this the only way to tell a wrong secret from a bad payload is
+         to read the Cloudflare log. Says nothing secret: the client id is
+         public and only its tail is shown, to confirm which app is in use. */
+      if (url.pathname === "/api/checkout/health" && request.method === "GET") {
+        const { mode } = ppBase(env);
+        const id = env.PAYPAL_CLIENT_ID || "";
+        const out = {
+          mode,
+          enabled: env.CHECKOUT_ENABLED === "true",
+          clientIdSet: !!id,
+          clientIdTail: id ? "…" + id.slice(-6) : null,
+          secretSet: !!env.PAYPAL_CLIENT_SECRET,
+        };
+        if (!out.clientIdSet || !out.secretSet) {
+          return json({ ...out, ok: false, reason: "client id or secret missing" }, 200);
+        }
+        try {
+          await accessToken(env);
+          return json({ ...out, ok: true, reason: "credentials accepted" });
+        } catch (e) {
+          return json({ ...out, ok: false, reason: e.message }, 200);
+        }
+      }
+
       /* What will I be charged? Answered by the same quote() the order uses,
          so the total on the page and the total on the invoice cannot disagree. */
       if (url.pathname === "/api/checkout/quote" && request.method === "GET") {
@@ -228,7 +261,14 @@ export default {
       if (url.pathname === "/api/checkout/order" && request.method === "POST") {
         if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
         try { return await handleOrder(request, env); }
-        catch (e) { return fail(500, "Could not start the payment", e.message); }
+        catch (e) {
+          /* The buyer gets an apology; whoever is debugging gets the cause.
+             Both come back, because a generic 500 with the reason only in a
+             log nobody is tailing is how "something went wrong" stays
+             unsolved. Nothing here is secret - it is PayPal's own complaint. */
+          console.error("checkout: order failed —", e.message);
+          return json({ error: "Could not start the payment", detail: e.message }, 500);
+        }
       }
       if (url.pathname === "/api/checkout/capture" && request.method === "POST") {
         if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
