@@ -878,7 +878,14 @@ ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 
 if os.path.isdir(OUT): shutil.rmtree(OUT)
 os.makedirs(OUT, exist_ok=True)
-shutil.copy(os.path.join(HERE, "site.css"), os.path.join(OUT, "site.css"))
+# The palette lives in tokens.css and nowhere else. site.css is that plus the
+# component rules; /brand/tokens.css is that on its own, so the coordinator,
+# inventory and contacts apps can use the same values rather than keeping
+# their own copies. Three copies of a palette is three palettes.
+_tokens = open(os.path.join(HERE, "tokens.css"), encoding="utf-8").read()
+_components = open(os.path.join(HERE, "components.css"), encoding="utf-8").read()
+with open(os.path.join(OUT, "site.css"), "w", encoding="utf-8") as f:
+    f.write(_tokens + _components)
 # Static files that are served but not generated - the image library carried
 # over from WordPress. They live in assets/ rather than in public/, because the
 # build empties public/ on every run and would delete anything left there.
@@ -893,6 +900,22 @@ if os.path.isdir(ASSETS):
         dst = os.path.join(OUT, name)
         if os.path.isdir(src): shutil.copytree(src, dst, ignore=_skip)
         else: shutil.copy(src, dst)
+
+# Published after the assets copy: that step creates public/brand itself and
+# shutil.copytree refuses a directory that already exists.
+os.makedirs(os.path.join(OUT, "brand"), exist_ok=True)
+with open(os.path.join(OUT, "brand", "tokens.css"), "w", encoding="utf-8") as f:
+    f.write(_tokens)
+
+# The same palette with every name prefixed. The apps already define --ink,
+# --card and --plum for themselves, so the unprefixed file would collide with
+# them - and aliasing a name to itself is circular and silently unsets it.
+# This variant is what the apps vendor.
+_prefixed = re.sub(r"--(?!nae-)([a-z][a-z0-9-]*)", r"--nae-\1", _tokens)
+with open(os.path.join(OUT, "brand", "tokens-prefixed.css"), "w", encoding="utf-8") as f:
+    f.write("/* Generated from tokens.css by the website build. Do not edit:\n"
+            "   change the palette in nae-site/build/tokens.css. */\n\n" + _prefixed)
+
 
 # WordPress served the same front page at / and at /home/. Both URLs are worth
 # keeping, but only one may claim to be the home page, so /home/ points its

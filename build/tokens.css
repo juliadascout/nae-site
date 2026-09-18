@@ -1,0 +1,59 @@
+/* The palette. One source, two consumers.
+
+   This file is the whole of NAE's colour: the website concatenates it into
+   site.css, and the build also publishes it at /brand/tokens.css so the
+   coordinator, inventory and contacts apps can use the same values instead of
+   keeping their own copies. Three copies of a palette is three palettes, and
+   they drift.
+
+   Three theme states. The bare :root is light. The media query catches the
+   default "system" setting, where nothing is stamped on the root and only
+   prefers-color-scheme separates light from dark. The [data-theme] block
+   catches an explicit choice and wins in both directions. A colour defined
+   only inside the media query never applies in that un-stamped state, which
+   is the classic way a page serves one theme's text on the other's ground. */
+
+
+:root{
+  /* Brand palette. Deep Berry is the working accent: it is the only one of the
+     named brand colours that clears 4.5:1 on white (5.31), so links, buttons and
+     anything carrying text use it. Vibrant Orchid as specified is 4.16 and fails,
+     so the token here is a darkened orchid that passes (6.46) while reading as
+     the same hue; the brand value itself is kept for decoration only. Success
+     stays green - semantic colour is not the accent's job. */
+  --ink:#2B2430; --ink-2:#574B5E; --muted:#6E6376;
+  --paper:#FFFFFF; --paper-2:#FDF6F9; --card:#FFFFFF; --rail:#FFF4F8;
+  --rule:#EADFE6; --rule-2:#F4ECF0;
+  --plum:#D11458; --plum-lt:#E4004F; --plum-soft:#FFEBF2;
+  --vir:#A81D91; --vir-ink:#8E1879; --vir-soft:#FBE9F7;
+  --orchid-deco:#DA2BBB;
+  --good-bg:#E4F1EA; --good-fg:#0B5D3B;
+  --flag-bg:#FBEEDC; --flag-fg:#7A4A0B; --flag-rule:#E3C79A;
+  --shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
+  --display:"Lora",Georgia,"Times New Roman",serif;
+  --body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --wrap:1200px; --gut:clamp(1.1rem,3.5vw,2.2rem);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#F6F0F4; --ink-2:#D2C6D4; --muted:#9C8FA4;
+  --paper:#161119; --paper-2:#1F1826; --card:#241C2C; --rail:#271E30;
+  --rule:#3B3244; --rule-2:#2E2637;
+  --plum:#FF6C99; --plum-lt:#FF8FB4; --plum-soft:#3A1E2C;
+  --vir:#EE7BDF; --vir-ink:#F49BE6; --vir-soft:#342030;
+  --orchid-deco:#EE7BDF;
+  --good-bg:#16362A; --good-fg:#7FD6AC;
+  --flag-bg:#3A2C15; --flag-fg:#E9C486; --flag-rule:#5C4620;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --ink:#F6F0F4; --ink-2:#D2C6D4; --muted:#9C8FA4;
+  --paper:#161119; --paper-2:#1F1826; --card:#241C2C; --rail:#271E30;
+  --rule:#3B3244; --rule-2:#2E2637;
+  --plum:#FF6C99; --plum-lt:#FF8FB4; --plum-soft:#3A1E2C;
+  --vir:#EE7BDF; --vir-ink:#F49BE6; --vir-soft:#342030;
+  --orchid-deco:#EE7BDF;
+  --good-bg:#16362A; --good-fg:#7FD6AC;
+  --flag-bg:#3A2C15; --flag-fg:#E9C486; --flag-rule:#5C4620;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}

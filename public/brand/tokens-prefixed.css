@@ -1,0 +1,62 @@
+/* Generated from tokens.css by the website build. Do not edit:
+   change the palette in nae-site/build/tokens.css. */
+
+/* The palette. One source, two consumers.
+
+   This file is the whole of NAE's colour: the website concatenates it into
+   site.css, and the build also publishes it at /brand/tokens.css so the
+   coordinator, inventory and contacts apps can use the same values instead of
+   keeping their own copies. Three copies of a palette is three palettes, and
+   they drift.
+
+   Three theme states. The bare :root is light. The media query catches the
+   default "system" setting, where nothing is stamped on the root and only
+   prefers-color-scheme separates light from dark. The [data-theme] block
+   catches an explicit choice and wins in both directions. A colour defined
+   only inside the media query never applies in that un-stamped state, which
+   is the classic way a page serves one theme's text on the other's ground. */
+
+
+:root{
+  /* Brand palette. Deep Berry is the working accent: it is the only one of the
+     named brand colours that clears 4.5:1 on white (5.31), so links, buttons and
+     anything carrying text use it. Vibrant Orchid as specified is 4.16 and fails,
+     so the token here is a darkened orchid that passes (6.46) while reading as
+     the same hue; the brand value itself is kept for decoration only. Success
+     stays green - semantic colour is not the accent's job. */
+  --nae-ink:#2B2430; --nae-ink-2:#574B5E; --nae-muted:#6E6376;
+  --nae-paper:#FFFFFF; --nae-paper-2:#FDF6F9; --nae-card:#FFFFFF; --nae-rail:#FFF4F8;
+  --nae-rule:#EADFE6; --nae-rule-2:#F4ECF0;
+  --nae-plum:#D11458; --nae-plum-lt:#E4004F; --nae-plum-soft:#FFEBF2;
+  --nae-vir:#A81D91; --nae-vir-ink:#8E1879; --nae-vir-soft:#FBE9F7;
+  --nae-orchid-deco:#DA2BBB;
+  --nae-good-bg:#E4F1EA; --nae-good-fg:#0B5D3B;
+  --nae-flag-bg:#FBEEDC; --nae-flag-fg:#7A4A0B; --nae-flag-rule:#E3C79A;
+  --nae-shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
+  --nae-display:"Lora",Georgia,"Times New Roman",serif;
+  --nae-body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --nae-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --nae-wrap:1200px; --nae-gut:clamp(1.1rem,3.5vw,2.2rem);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --nae-ink:#F6F0F4; --nae-ink-2:#D2C6D4; --nae-muted:#9C8FA4;
+  --nae-paper:#161119; --nae-paper-2:#1F1826; --nae-card:#241C2C; --nae-rail:#271E30;
+  --nae-rule:#3B3244; --nae-rule-2:#2E2637;
+  --nae-plum:#FF6C99; --nae-plum-lt:#FF8FB4; --nae-plum-soft:#3A1E2C;
+  --nae-vir:#EE7BDF; --nae-vir-ink:#F49BE6; --nae-vir-soft:#342030;
+  --nae-orchid-deco:#EE7BDF;
+  --nae-good-bg:#16362A; --nae-good-fg:#7FD6AC;
+  --nae-flag-bg:#3A2C15; --nae-flag-fg:#E9C486; --nae-flag-rule:#5C4620;
+  --nae-shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --nae-ink:#F6F0F4; --nae-ink-2:#D2C6D4; --nae-muted:#9C8FA4;
+  --nae-paper:#161119; --nae-paper-2:#1F1826; --nae-card:#241C2C; --nae-rail:#271E30;
+  --nae-rule:#3B3244; --nae-rule-2:#2E2637;
+  --nae-plum:#FF6C99; --nae-plum-lt:#FF8FB4; --nae-plum-soft:#3A1E2C;
+  --nae-vir:#EE7BDF; --nae-vir-ink:#F49BE6; --nae-vir-soft:#342030;
+  --nae-orchid-deco:#EE7BDF;
+  --nae-good-bg:#16362A; --nae-good-fg:#7FD6AC;
+  --nae-flag-bg:#3A2C15; --nae-flag-fg:#E9C486; --nae-flag-rule:#5C4620;
+  --nae-shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}

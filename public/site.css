@@ -1,3 +1,18 @@
+/* The palette. One source, two consumers.
+
+   This file is the whole of NAE's colour: the website concatenates it into
+   site.css, and the build also publishes it at /brand/tokens.css so the
+   coordinator, inventory and contacts apps can use the same values instead of
+   keeping their own copies. Three copies of a palette is three palettes, and
+   they drift.
+
+   Three theme states. The bare :root is light. The media query catches the
+   default "system" setting, where nothing is stamped on the root and only
+   prefers-color-scheme separates light from dark. The [data-theme] block
+   catches an explicit choice and wins in both directions. A colour defined
+   only inside the media query never applies in that un-stamped state, which
+   is the classic way a page serves one theme's text on the other's ground. */
+
 
 :root{
   /* Brand palette. Deep Berry is the working accent: it is the only one of the
