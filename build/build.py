@@ -77,15 +77,18 @@ for c in COURSES:
     c["kitFixed"] = bool(c.get("kitCost"))
     c["equipList"] = [x.strip() for x in (c.get("equipment") or "").split(",") if x.strip()]
 
-# A course is only sellable while it stays under both ministry caps: under $2,000
-# in tuition and under 40 hours of instruction. Bundling several courses is what
-# pushes a programme at either one, so the check runs on the built catalogue and
-# fails the build - a price edit in nae-data cannot quietly reintroduce a breach.
+# A course stays sellable while its tuition is at most $2,000 and its
+# instruction stays under 40 hours. $2,000 is the highest permitted fee rather
+# than the first forbidden one - confirmed 18 Sept, and three courses are priced
+# at exactly $2,000 on that basis. Hours are still a strict under. Bundling is
+# what pushes a programme at either, so the check runs on the built catalogue
+# and fails the build: a price edit in nae-data cannot quietly reintroduce a
+# breach. Kits are excluded deliberately - they are not tuition.
 CAP_PRICE, CAP_HOURS = 2000, 40
 over = [(c["name"], c["price"], c["hi"]) for c in COURSES
-        if c["price"] >= CAP_PRICE or c["hi"] >= CAP_HOURS]
+        if c["price"] > CAP_PRICE or c["hi"] >= CAP_HOURS]
 if over:
-    raise SystemExit("course caps breached (must be under ${:,} and under {} hours):\n".format(
+    raise SystemExit("course caps breached (fee must be at most ${:,}, hours under {}):\n".format(
         CAP_PRICE, CAP_HOURS) + "\n".join(
         f"  {n} - ${p:,} / {h:g}h" for n, p, h in over))
 
@@ -258,6 +261,14 @@ def mobile_bar(course):
 
 def booking_rail(course=None, location=None):
     price = ""
+    # Paying sits inside the booking card rather than adrift at the foot of the
+    # page: the card is where someone has already decided, and a buy control
+    # anywhere else is a buy control nobody finds. Booking a call stays the
+    # first action - most people still want to talk to somebody first.
+    checkout = ""
+    if course:
+        checkout = (f'<div id="checkout" class="co" hidden data-course="{course["id"]}" '
+                    f'data-kit="{course.get("kitCost") or 0 if course["kitFixed"] else 0}"></div>')
     if course:
         price = (f'<div class="price"><span style="font-size:.9rem;color:var(--muted)">from</span>'
                  f'<b class="tnum">{money(course["price"])}</b><i>CAD</i></div>'
@@ -273,6 +284,7 @@ def booking_rail(course=None, location=None):
     <li>Kits are optional and never part of the course fee.</li>
     <li>Training dates are set directly with your trainer.</li>
     <li>Certificate of completion on finishing.</li></ul>
+  {checkout}
   <hr class="r">
   <p style="font-size:.89rem;color:var(--ink-2);margin:0">Call
     <a href="tel:+12899682028">{E(SITE['phone'])}</a> or email
@@ -409,9 +421,7 @@ def page_course(c):
   {kit_html}
   <div class="card c-faq"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
 </div>{booking_rail(course=c)}</div>{mobile_bar(c)}</div>"""
-    body += (f'<div id="checkout" class="co" hidden data-course="{c["id"]}" '
-             f'data-kit="{c.get("kitCost") or 0}"></div>'
-             f'<script src="/checkout.js" defer></script>')
+    body += '<script src="/checkout.js" defer></script>'
     body += ld(
         {"@type": "Course", "name": c["name"],
          "description": f"{c['name']} training. {c['duration']}.",
@@ -685,6 +695,19 @@ CLEAN = os.environ.get("NAE_CLEAN") or os.path.join(os.path.dirname(ROOT), "clea
 GENERATED = {p for p,_,_,_ in PAGES}
 
 refused = []
+def stable_anchors(h):
+    """The refund policy is linked from the checkout, and checkout needs a link
+       that will not rot. The migrated heading carries a WordPress-generated id
+       (E285) which means nothing and can change on any re-export, so give the
+       heading a name the rest of the site can rely on. Added alongside the
+       existing id rather than replacing it, so any old link still lands."""
+    return re.sub(
+        r'(<h[1-6]\b[^>]*>)(\s*Withdraw and Refund Policy\s*)(</h[1-6]>)',
+        lambda m: (m.group(1)[:-1] + ' id="refunds">' if 'id="refunds"' not in m.group(1)
+                   else m.group(1)) + m.group(2) + m.group(3),
+        h, count=1, flags=re.I)
+
+
 def tidy_body(h):
     """Three defects that came across with the WordPress content.
 
@@ -779,7 +802,7 @@ def migrated_pages():
         # handed, so an encoded one came out double-escaped and the browser tab
         # read "&amp;" where the ampersand should be.
         title = html.unescape(title)
-        body_html = tidy_body(raw[m.end():])
+        body_html = stable_anchors(tidy_body(raw[m.end():]))
         # WordPress emoji slugs arrive percent-encoded. Kept that way, the
         # directory on disk is literally named "%f0%9f%98%81…" while a browser
         # asking for that URL sends the encoded emoji, which the host decodes

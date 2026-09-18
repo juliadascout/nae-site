@@ -16,10 +16,10 @@ not_found_handling = "404-page"
 PAYPAL_ENV = "sandbox"
 # Public by design - it is embedded in any page that shows a PayPal button.
 PAYPAL_CLIENT_ID = "BAAhh7ONZHyVjmpVvsfyJ4QflLmhfJOEYsHqPlB_wlB6DkpLcys_yrmRJKeLTHKWzIRLRPhnEJnBEGhPno"
-# Buttons stay off until the price list, HST and the refund policy are settled.
-# The endpoints refuse with 503 while this is false, so switching it on is the
-# single decision that opens checkout.
-CHECKOUT_ENABLED = "false"
+# Price list, HST and the refund policy were all settled on 18 Sept, so the
+# buttons are on. PAYPAL_ENV is still sandbox: this takes test cards, not money.
+# The endpoints refuse with 503 while this is false.
+CHECKOUT_ENABLED = "true"
 
 # PAYPAL_CLIENT_SECRET is NOT here and never will be. It is set with:
 #   npx wrangler secret put PAYPAL_CLIENT_SECRET

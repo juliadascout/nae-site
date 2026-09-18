@@ -103,7 +103,7 @@
     "crs-grand-master-hair-extensions": {
       "slug": "grand-master-hair-extensions",
       "name": "Grand Master Hair Extensions",
-      "price": 1895,
+      "price": 2000,
       "kitCost": 500,
       "hasKit": true
     },
@@ -194,7 +194,7 @@
     "crs-master-brow": {
       "slug": "master-brow",
       "name": "Master Brow",
-      "price": 1895,
+      "price": 2000,
       "kitCost": 650,
       "hasKit": true
     },
@@ -202,7 +202,7 @@
       "slug": "spray-tan",
       "name": "Spray Tan",
       "price": 700,
-      "kitCost": 0,
+      "kitCost": 850,
       "hasKit": true
     },
     "crs-relaxation-massage": {
@@ -223,42 +223,42 @@
       "slug": "basic-nail-training",
       "name": "Basic Nail Training",
       "price": 700,
-      "kitCost": 0,
+      "kitCost": 400,
       "hasKit": true
     },
     "crs-master-acrylic-nail-technician-tips-and-shaping": {
       "slug": "master-acrylic-nail-technician-tips-shaping",
       "name": "Master Acrylic Nail Technician, Tips & Shaping",
-      "price": 1000,
-      "kitCost": 0,
+      "price": 1500,
+      "kitCost": 600,
       "hasKit": true
     },
     "crs-master-gel-and-gel-x-technician-tips-and-shaping": {
       "slug": "master-gel-gel-x-technician-tips-shaping",
       "name": "Master Gel & Gel X Technician, Tips & Shaping",
-      "price": 1000,
-      "kitCost": 0,
+      "price": 1500,
+      "kitCost": 600,
       "hasKit": true
     },
     "crs-grand-master-nail-technician-acrylic-gel-tips": {
       "slug": "grand-master-nail-technician-acrylic-gel-tips",
       "name": "Grand Master Nail Technician (Acrylic, Gel, Tips)",
-      "price": 1750,
-      "kitCost": 0,
+      "price": 2000,
+      "kitCost": 800,
       "hasKit": true
     },
     "crs-pedicure-training-course": {
       "slug": "pedicure-training-course",
       "name": "Pedicure Training Course",
       "price": 600,
-      "kitCost": 0,
+      "kitCost": 400,
       "hasKit": true
     },
     "crs-specialty-designs-nail-technician-advanced": {
       "slug": "specialty-designs-nail-technician-advanced",
       "name": "Specialty Designs Nail Technician (Advanced)",
       "price": 500,
-      "kitCost": 0,
+      "kitCost": 200,
       "hasKit": true
     },
     "crs-basic-makeup-training-on-self": {
@@ -273,13 +273,13 @@
       "name": "Makeup Artist Training (on Other)",
       "price": 1895,
       "kitCost": 0,
-      "hasKit": true
+      "hasKit": false
     },
     "crs-teeth-whitening-training": {
       "slug": "teeth-whitening-training",
       "name": "Teeth Whitening Training",
-      "price": 700,
-      "kitCost": 0,
+      "price": 600,
+      "kitCost": 500,
       "hasKit": true
     },
     "crs-business-development": {

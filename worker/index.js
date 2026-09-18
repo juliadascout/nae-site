@@ -78,8 +78,10 @@ async function pp(env, path, method, body) {
   return { ok: r.ok, status: r.status, body: parsed, raw: text };
 }
 
-/* Ontario HST is 13. Set it here, in one place, once the accountant answers. */
-const TAX_PERCENT = 0;
+/* Ontario HST. Confirmed 18 Sept: it applies to course fees. The August
+   "save the tax" promotion is why an earlier invoice shows none - the company
+   still remitted it, it just was not shown on the invoice. */
+const TAX_PERCENT = 13;
 
 const money = (n) => (Math.round(n * 100) / 100).toFixed(2);
 
@@ -89,10 +91,11 @@ function quote(courseId, withKit) {
   const c = prices.courses[courseId];
   if (!c) return { error: "Unknown course" };
 
-  /* The build refuses any course at or above the cap, so this can only fire
-     if a price moved without a rebuild. Better a refused payment than a
-     wrong one. */
-  if (c.price >= prices.cap) return { error: "This course cannot be paid for online" };
+  /* The cap is the highest permitted fee, not the first forbidden one: three
+     courses are priced at exactly $2,000 deliberately. The build refuses
+     anything above it, so this can only fire if a price moved without a
+     rebuild. Better a refused payment than a wrong one. */
+  if (c.price > prices.cap) return { error: "This course cannot be paid for online" };
 
   const items = [
     {
@@ -205,6 +208,21 @@ export default {
           currency: prices.currency,
           mode,
           enabled: env.CHECKOUT_ENABLED === "true",
+        });
+      }
+      /* What will I be charged? Answered by the same quote() the order uses,
+         so the total on the page and the total on the invoice cannot disagree. */
+      if (url.pathname === "/api/checkout/quote" && request.method === "GET") {
+        const q = quote(url.searchParams.get("courseId") || "",
+                        url.searchParams.get("kit") === "1");
+        if (q.error) return fail(400, q.error);
+        return json({
+          currency: q.amount.currency_code,
+          items: q.items.map((i) => ({ name: i.name, value: i.unit_amount.value })),
+          subtotal: q.amount.breakdown.item_total.value,
+          taxPercent: TAX_PERCENT,
+          tax: q.amount.breakdown.tax_total.value,
+          total: q.amount.value,
         });
       }
       if (url.pathname === "/api/checkout/order" && request.method === "POST") {

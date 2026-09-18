@@ -425,6 +425,15 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   color:var(--vir-ink);background:var(--vir-soft);padding:.45rem .6rem;border-radius:6px}
 .co-kit{display:flex;align-items:center;gap:.55rem;font-size:.92rem;color:var(--ink-2);cursor:pointer}
 .co-kit input{width:17px;height:17px;accent-color:var(--vir);flex:none}
+.co-toggle{width:100%;margin:.15rem 0 0}
+.co-panel{display:flex;flex-direction:column;gap:.7rem;margin-top:.8rem}
+.co-panel[hidden]{display:none}
+.co-sum{display:flex;flex-direction:column;gap:.3rem;font-size:.9rem;color:var(--ink-2)}
+.co-row{display:flex;justify-content:space-between;gap:1rem;align-items:baseline}
+.co-total{border-top:1px solid var(--rule);margin-top:.35rem;padding-top:.45rem;
+  font-weight:700;color:var(--ink)}
+.co-policy{margin:0;font-size:.82rem;color:var(--muted)}
+.co-policy a{color:var(--vir-ink)}
 .co-msg{margin:0;font-size:.9rem;color:var(--ink-2)}
 .co-msg[data-kind="error"]{color:var(--plum)}
 .co-msg[data-kind="done"]{background:var(--good-bg);color:var(--good-fg);
