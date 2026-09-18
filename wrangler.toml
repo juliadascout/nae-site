@@ -11,6 +11,13 @@ directory = "./public"
 binding = "ASSETS"
 # The site generates its own 404 page; serve it rather than a bare Worker error.
 not_found_handling = "404-page"
+# Without this the Worker never runs for /api/. With not_found_handling set,
+# the asset router answers anything that does not match a file - so every
+# checkout call got the 404 page as HTML instead of JSON, the PayPal popup
+# opened and died instantly, and the only symptom was a generic apology.
+# Assets still win for everything else, so pages keep being served straight
+# from the asset store without waking the Worker.
+run_worker_first = [ "/api/*" ]
 
 [vars]
 PAYPAL_ENV = "sandbox"
