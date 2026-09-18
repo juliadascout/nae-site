@@ -225,12 +225,23 @@ export default {
       if (url.pathname === "/api/checkout/health" && request.method === "GET") {
         const { mode } = ppBase(env);
         const id = env.PAYPAL_CLIENT_ID || "";
+        /* Enough to compare against the dashboard character by character
+           without publishing anything private. The client id is public by
+           design; the secret is only ever reported as present or absent, and
+           its length and shape, which is what tells a wrong paste from a
+           mismatched pair. */
+        const sec = env.PAYPAL_CLIENT_SECRET || "";
         const out = {
           mode,
           enabled: env.CHECKOUT_ENABLED === "true",
           clientIdSet: !!id,
+          clientIdHead: id ? id.slice(0, 10) + "…" : null,
           clientIdTail: id ? "…" + id.slice(-6) : null,
-          secretSet: !!env.PAYPAL_CLIENT_SECRET,
+          clientIdLength: id.length,
+          secretSet: !!sec,
+          secretLength: sec.length,
+          secretHead: sec ? sec.slice(0, 2) + "…" : null,
+          secretLooksTrimmed: sec === sec.trim(),
         };
         if (!out.clientIdSet || !out.secretSet) {
           return json({ ...out, ok: false, reason: "client id or secret missing" }, 200);
