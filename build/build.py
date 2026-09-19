@@ -767,11 +767,33 @@ def tidy_body(h):
        img with no alt attribute at all, which is different from alt="": a
        screen reader falls back to reading out the file name."""
     h = re.sub(r'src="http://', 'src="https://', h)
-    used = sorted({int(m) for m in re.findall(r"<h([1-6])\b", h)})
-    if used:
-        lvl = {old: min(6, i + 2) for i, old in enumerate(used)}
-        h = re.sub(r"<(/?)h([1-6])\b",
-                   lambda m: f"<{m.group(1)}h{lvl[int(m.group(2))]}", h)
+
+    """Remap in document order, not by sorted level.
+
+       Mapping the distinct levels a post uses onto h2, h3, h4 fixes the set but
+       not the sequence. A body whose first heading was an h4 and whose second
+       was an h2 came out h3 then h2, so the page read h1 -> h3 -> h2: still a
+       skip, and one the old rule could not see because both levels were in
+       range. Twenty-three pages were like that.
+
+       Walking the headings in the order a reader meets them and keeping a stack
+       of open sections preserves whatever nesting the author meant while making
+       each heading at most one level deeper than the section containing it."""
+    stack = []          # (original level, level we assigned it)
+    pending = []        # assigned level, waiting for the matching close tag
+
+    def relevel(m):
+        closing, lv = m.group(1), int(m.group(2))
+        if closing:
+            return f"</h{pending.pop() if pending else 2}"
+        while stack and stack[-1][0] >= lv:
+            stack.pop()
+        assigned = min(6, stack[-1][1] + 1) if stack else 2
+        stack.append((lv, assigned))
+        pending.append(assigned)
+        return f"<h{assigned}"
+
+    h = re.sub(r"<(/?)h([1-6])\b", relevel, h)
     """Alt text inherited from WordPress is mostly machine-generated - camera
        file names and social-media ids like "239607550_584230042749529_...".
        A screen reader reads those out digit by digit, which is worse than
