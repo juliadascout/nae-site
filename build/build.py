@@ -32,10 +32,13 @@ E    = lambda s: html.escape(str(s if s is not None else ""), quote=True)
 
 COURSES  = json.load(open(f"{DATA}/course-catalog.json"))["courses"]
 LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
-# Google Analytics 4 measurement id, "G-XXXXXXXXXX". Empty emits no tag at all,
-# so the site carries no analytics until this is filled in - which is the state
-# it shipped in, and the reason a cutover would have gone dark.
-GA4_ID = os.environ.get("NAE_GA4_ID", "").strip()
+# Google Analytics 4 measurement id. Not a secret - it is visible in the source
+# of every page that carries the tag. It lives here rather than in an
+# environment variable because public/ is committed and deployed as-is: an id
+# that only existed in one shell would vanish from the next person's rebuild,
+# and the site would go quietly dark again. NAE_GA4_ID still overrides it, for
+# testing against a separate property.
+GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://naeinc.ca",
@@ -215,6 +218,40 @@ def ld_org():
             "url": SITE["domain"] + "/", "logo": SITE["domain"] + "/brand/nae-favicon-512.png",
             "telephone": SITE["phone"], "email": SITE["email"],
             "areaServed": sorted({l["region"] for l in OPEN})}
+
+def trim_title(t):
+    """Drop only the boilerplate, and only when the title is too long.
+
+       Google shows about sixty characters. Ninety-eight migrated titles run
+       past that, and the part it cuts is the end - which on these pages is
+       where the town usually sits. Local search is most of what this site is
+       for, so a place name is the last thing that should be lost.
+
+       So this removes whole segments, and only segments that are exactly the
+       site's own name or the phrase "Beauty Certification Programs" - strings
+       that repeat across dozens of pages and tell a searcher nothing. Anything
+       else, including every place name, is left alone, and a title that still
+       does not fit after that is left exactly as it was rather than truncated.
+       Removing boilerplate cannot cost a ranking; guessing at wording can."""
+    if len(t) <= TITLE_MAX:
+        return t
+    parts = [p.strip() for p in re.split(r"\s*\|\s*", t) if p.strip()]
+    kept = [p for p in parts if p.lower() not in TITLE_BOILERPLATE]
+    if not kept:
+        return t
+    trimmed = " | ".join(kept)
+    return trimmed if len(trimmed) <= TITLE_MAX else t
+
+
+TITLE_MAX = 60
+TITLE_BOILERPLATE = {
+    "nae",
+    "national association of estheticians",
+    "national association of estheticians inc.",
+    "beauty certification programs",
+    "beauty certification program",
+}
+
 
 def course_title(c):
     """Google shows roughly sixty characters and cuts the rest mid-word, so a
@@ -863,7 +900,7 @@ def migrated_pages():
         # WordPress stored entity-encoded titles. shell() escapes what it is
         # handed, so an encoded one came out double-escaped and the browser tab
         # read "&amp;" where the ampersand should be.
-        title = html.unescape(title)
+        title = trim_title(html.unescape(title))
         body_html = stable_anchors(tidy_body(raw[m.end():]))
         # WordPress emoji slugs arrive percent-encoded. Kept that way, the
         # directory on disk is literally named "%f0%9f%98%81…" while a browser
