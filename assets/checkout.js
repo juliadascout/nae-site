@@ -13,8 +13,47 @@
   var mount = document.getElementById("checkout");
   if (!mount) return;
 
+  /* The funnel, reported as it happens.
+
+     view_item already fires from events.js. Everything after it was missing,
+     so the property could show visits to a course page and nothing at all
+     about whether anyone tried to buy, got as far as the button, or paid -
+     which is the only part that answers "is this working".
+
+     Guarded: if the tag is blocked or absent, these are silent and the page
+     behaves identically. */
+  function track(name, params) {
+    if (typeof window.gtag === "function") window.gtag("event", name, params || {});
+  }
+
+  var lastQuote = null;   // the server's numbers, reused so reports match invoices
+  function ecommerce(extra) {
+    var q = lastQuote;
+    if (!q) return extra || {};
+    var payload = {
+      currency: q.currency,
+      value: Number(q.total),
+      items: q.items.map(function (i, n) {
+        return { item_id: courseId + (n ? "-kit" : ""), item_name: i.name, price: Number(i.value), quantity: 1 };
+      }),
+    };
+    for (var k in (extra || {})) payload[k] = extra[k];
+    return payload;
+  }
+
   var courseId = mount.getAttribute("data-course");
   var kitCost = Number(mount.getAttribute("data-kit") || 0);
+  var studios = (mount.getAttribute("data-studios") || "")
+    .split("|").filter(Boolean)
+    .map(function (pair) {
+      var i = pair.indexOf(":");
+      return { id: pair.slice(0, i), name: pair.slice(i + 1) };
+    });
+  var studioSelect = null;
+  function chosenLocation() {
+    if (studioSelect) return studioSelect.value || null;
+    return studios.length === 1 ? studios[0].id : null;
+  }
   var wantKit = false;
   var panel, summary, buttons;
 
@@ -84,9 +123,32 @@
       panel.appendChild(row);
       box.addEventListener("change", function () {
         wantKit = box.checked;
+        track(box.checked ? "add_to_cart" : "remove_from_cart", {
+          currency: "CAD", value: kitCost,
+          items: [{ item_id: courseId + "-kit", item_name: "Kit", price: kitCost, quantity: 1 }],
+        });
         quote();
         if (buttons) { buttons.innerHTML = ""; paint(); }
       });
+    }
+
+    /* Where they are going. One studio needs no question - it is stated and
+       recorded. More than one is a choice somebody has to make before paying,
+       because "which location" is not a thing to sort out afterwards. */
+    if (studios.length === 1) {
+      panel.appendChild(el("p", "co-where", "Training at " + studios[0].name + "."));
+    } else if (studios.length > 1) {
+      var lab = el("label", "co-where");
+      lab.appendChild(el("span", null, "Which studio?"));
+      studioSelect = document.createElement("select");
+      studioSelect.id = "co-studio";
+      studios.forEach(function (st) {
+        var o = document.createElement("option");
+        o.value = st.id; o.textContent = st.name;
+        studioSelect.appendChild(o);
+      });
+      lab.appendChild(studioSelect);
+      panel.appendChild(lab);
     }
 
     summary = panel.appendChild(el("div", "co-sum"));
@@ -113,6 +175,12 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (q) {
         if (!q) return;
+        var first = !lastQuote;
+        lastQuote = q;
+        /* begin_checkout waits for the server's numbers. Fired on the click it
+           carried no value and no items, which is most of what the event is
+           for. Once only - a kit toggle is add_to_cart, not a second start. */
+        if (first) track("begin_checkout", ecommerce());
         var rows = q.items.map(function (i) { return [i.name, "$" + i.value]; });
         rows.push(["HST (" + q.taxPercent + "%)", "$" + q.tax]);
         rows.forEach(function (r) {
@@ -149,7 +217,7 @@
         return fetch("/api/checkout/order", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ courseId: courseId, withKit: wantKit })
+          body: JSON.stringify({ courseId: courseId, withKit: wantKit, locationId: chosenLocation() })
         })
           .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
           .then(function (res) {
@@ -158,6 +226,7 @@
                  with its own error and loses this one, so the actual reason
                  has to be put on screen here or it is never seen. */
               var why = res.j.detail || res.j.error || "Could not start the payment";
+              track("checkout_error", { step: "create_order", reason: String(why).slice(0, 100) });
               say(res.j.error || "Could not start the payment", "error");
               if (window.console) console.error("checkout:", why);
               throw new Error(why);
@@ -171,16 +240,27 @@
         return fetch("/api/checkout/capture", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ orderId: data.orderID })
+          body: JSON.stringify({ orderId: data.orderID, locationId: chosenLocation() })
         })
           .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
           .then(function (res) {
             if (!res.ok) throw new Error(res.j.error || "Could not complete the payment");
             var amt = res.j.amount ? res.j.amount.value + " " + res.j.amount.currency_code : "";
+            /* The conversion. transaction_id is PayPal's capture id, so a row
+               in the property and a row in the enrolments table name the same
+               payment and can be reconciled. */
+            track("purchase", ecommerce({
+              transaction_id: res.j.captureId || res.j.orderId,
+              value: res.j.amount ? Number(res.j.amount.value) : undefined,
+              currency: res.j.amount ? res.j.amount.currency_code : undefined,
+            }));
             buttons.hidden = true;
             say("Paid" + (amt ? " — " + amt : "") + ". We will be in touch to book your dates.", "done");
           })
-          .catch(function (e) { say(e.message, "error"); });
+          .catch(function (e) {
+            track("checkout_error", { step: "capture", reason: String(e.message).slice(0, 100) });
+            say(e.message, "error");
+          });
       },
 
       onError: function (err) {
@@ -194,7 +274,10 @@
         if (window.console && err) console.error("checkout (paypal):", err);
       },
 
-      onCancel: function () { say("Payment cancelled. Nothing has been charged."); }
+      onCancel: function () {
+        track("checkout_cancel", {});
+        say("Payment cancelled. Nothing has been charged.");
+      }
     }).render(buttons);
   }
 })();

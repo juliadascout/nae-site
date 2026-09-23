@@ -1,4 +1,5 @@
 import prices from "./prices.json";
+import { recordEnrolment } from "./enrolments.js";
 
 /* The site is static. This Worker serves it, and adds the two endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
@@ -210,6 +211,10 @@ async function handleCapture(request, env) {
      it was buying. This is the number that actually moved. */
   const pu = (res.body.purchase_units || [])[0] || {};
   const cap = ((pu.payments || {}).captures || [])[0] || {};
+
+  const known = prices.courses[pu.reference_id || ""] || {};
+  await recordEnrolment(env, res.body, pu, cap, body, known.name);
+
   return json({
     status: res.body.status,
     orderId: res.body.id,

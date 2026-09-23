@@ -349,8 +349,14 @@ def booking_rail(course=None, location=None):
     # first action - most people still want to talk to somebody first.
     checkout = ""
     if course:
+        # Which studios teach this one, so the buyer says where they are going
+        # and the enrolment record knows. Without it a payment arrives with no
+        # idea which location is expecting them.
+        where = [l for l in OPEN if any(x["id"] == course["id"] for x in loc_courses(l))]
+        studios = "|".join(f'{l["id"]}:{l["name"]}' for l in where)
         checkout = (f'<div id="checkout" class="co" hidden data-course="{course["id"]}" '
-                    f'data-kit="{course.get("kitCost") or 0 if course["kitFixed"] else 0}"></div>')
+                    f'data-kit="{course.get("kitCost") or 0 if course["kitFixed"] else 0}" '
+                    f'data-studios="{E(studios)}"></div>')
     if course:
         price = (f'<div class="price"><span style="font-size:.9rem;color:var(--muted)">from</span>'
                  f'<b class="tnum">{money(course["price"])}</b><i>CAD</i></div>'

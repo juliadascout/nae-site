@@ -33,3 +33,11 @@ CHECKOUT_ENABLED = "true"
 
 # PAYPAL_CLIENT_SECRET is NOT here and never will be. It is set with:
 #   npx wrangler secret put PAYPAL_CLIENT_SECRET
+
+# Who bought what. Separate from the accounts database on purpose: this Worker
+# is the public site, and it has no business being able to read a password
+# hash. Personal data lives here and never in the data repository.
+[[d1_databases]]
+binding = "ENROLMENTS"
+database_name = "nae-enrolments"
+database_id = "64edfe1d-48b5-401a-940d-2af5ff865748"

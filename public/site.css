@@ -428,6 +428,10 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .co-toggle{width:100%;margin:.15rem 0 0}
 .co-panel{display:flex;flex-direction:column;gap:.7rem;margin-top:.8rem}
 .co-panel[hidden]{display:none}
+.co-where{margin:0;font-size:.9rem;color:var(--ink-2)}
+.co-where span{display:block;font-weight:700;font-size:.82rem;margin-bottom:.25rem}
+.co-where select{width:100%;padding:.5rem .55rem;font:400 .92rem/1.3 var(--body);
+  color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:7px}
 .co-sum{display:flex;flex-direction:column;gap:.3rem;font-size:.9rem;color:var(--ink-2)}
 .co-row{display:flex;justify-content:space-between;gap:1rem;align-items:baseline}
 .co-total{border-top:1px solid var(--rule);margin-top:.35rem;padding-top:.45rem;
