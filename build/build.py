@@ -30,7 +30,13 @@ if not os.path.isdir(DATA):
                      f"Set NAE_DATA to the nae-data/data directory and re-run.")
 E    = lambda s: html.escape(str(s if s is not None else ""), quote=True)
 
-COURSES  = json.load(open(f"{DATA}/course-catalog.json"))["courses"]
+# A course marked archived is no longer offered anywhere. It stays in the shared
+# list, so bookings and hours already logged against it still resolve, but the
+# website stops publishing it and checkout stops pricing it - the same rule the
+# Coordinator already follows.
+_ALL_COURSES = json.load(open(f"{DATA}/course-catalog.json"))["courses"]
+ARCHIVED = {c["id"]: c["name"] for c in _ALL_COURSES if c.get("archived")}
+COURSES  = [c for c in _ALL_COURSES if not c.get("archived")]
 LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 # Google Analytics 4 measurement id. Not a secret - it is visible in the source
 # of every page that carries the tag. It lives here rather than in an
@@ -56,7 +62,7 @@ def hours_hi(d):
     ns = re.findall(r'(\d+)\s*(?:[-–]\s*(\d+))?\s*hours?', d or '')
     return max([float(b or a) for a,b in ns] or [0])
 
-for c in COURSES:
+for c in _ALL_COURSES:
     c["slug"]  = slugify(c["name"])
     c["hi"]    = hours_hi(c["duration"])
     raw = (c.get("kitItems") or "").strip()
@@ -106,8 +112,17 @@ acked = [c["name"] for c in COURSES if cap_breach(c) and c.get("capAck")]
 # Bundles name their components by frozen id, never by title, so renaming a course
 # never silently empties the bundle it belongs to.
 BY_ID = {c["id"]: c for c in COURSES}
+ALL_BY_ID = {c["id"]: c for c in _ALL_COURSES}
 for c in COURSES:
     ids = c.get("includes") or []
+    # A programme still on sale cannot be made of a course that is no longer
+    # taught. Which way to fix that - retire the programme too, or change what
+    # it contains and so what it costs - is a decision, so stop and say so.
+    gone = [ARCHIVED[i] for i in ids if i in ARCHIVED]
+    if gone:
+        raise SystemExit(
+            f'{c["name"]} includes {", ".join(gone)}, which is archived. Archive '
+            f'{c["name"]} as well, or take {", ".join(gone)} out of what it includes.')
     unknown = [i for i in ids if i not in BY_ID]
     if unknown:
         raise SystemExit(f'{c["name"]}: includes unknown course id(s) {unknown}')
@@ -118,14 +133,21 @@ for c in COURSES:
     # course lists drifted apart from each other in the first place.
     same = c.get("kitSameAsId")
     if same:
-        if same not in BY_ID:
+        # A shared kit menu outlives the course it was written for: retiring
+        # that course does not make the kit list the others use any less true.
+        if same not in ALL_BY_ID:
             raise SystemExit(f'{c["name"]}: kitSameAsId unknown {same}')
-        src = BY_ID[same]
+        src = ALL_BY_ID[same]
         c["kitList"], c["kitNote"] = list(src["kitList"]), src["kitNote"]
         c["hasKit"]   = src["hasKit"]
         c["kitFixed"] = src["kitFixed"]
         if not c.get("kitCost"): c["kitCost"] = src.get("kitCost", 0)
     pre = c.get("prerequisiteIds") or []
+    gone = [ARCHIVED[i] for i in pre if i in ARCHIVED]
+    if gone:
+        raise SystemExit(
+            f'{c["name"]} requires {", ".join(gone)} first, which is archived. Archive '
+            f'{c["name"]} as well, or remove the requirement.')
     unknown_pre = [i for i in pre if i not in BY_ID]
     if unknown_pre:
         raise SystemExit(f'{c["name"]}: prerequisiteIds unknown {unknown_pre}')
