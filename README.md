@@ -24,6 +24,14 @@ Or point it anywhere:
 NAE_DATA=/path/to/nae-data/data NAE_OUT=/path/to/output python3 build/build.py
 ```
 
+The journal pages are built from `content/editorial/`, which the build reads by
+default (`NAE_CLEAN` points it elsewhere). If it cannot find them it stops, rather
+than emptying `public/` and writing a site without the journal.
+
+`NAE_STRICT=1` checks every page before writing anything, and stops if the
+compliance gate refuses one. Without it a refused page is left out and reported,
+as before.
+
 ## The compliance gate
 
 `build/compliance.py` encodes the wording rules. Every page is checked **before it
@@ -43,6 +51,12 @@ their addresses would throw that away. Verified: 21 of 21 match.
 ## Deploying
 
 Build output is `public/`. Host it anywhere static.
+
+The site republishes itself when the course or studio list changes. A workflow in
+nae-data (`.github/workflows/publish-website.yml`) runs on any change to
+`data/locations.json` or `data/course-catalog.json`. It builds strictly and pushes
+`public/` and `worker/prices.json` here, and Cloudflare deploys the push. A page the
+gate refuses fails the run before anything is pushed.
 
 Note: GitHub Pages' terms exclude sites "primarily directed at facilitating
 commercial transactions", which a site selling courses would be. Cloudflare Pages

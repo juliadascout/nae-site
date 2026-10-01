@@ -549,7 +549,13 @@ def page_course(c):
             f"{c['duration']}. {money(c['price'])}, kit optional.", body)
 
 def page_area(city, locid, path):
-    l = next(x for x in LOCS if x["id"] == locid)
+    l = next((x for x in LOCS if x["id"] == locid), None)
+    if l is None:
+        # These pages hold their addresses for search traffic, so dropping one
+        # quietly is not an option, and which studio should take it over is a
+        # decision. Stop and say so.
+        raise SystemExit(f"{path} (near {city}) is served from studio {locid}, which is no longer "
+                         f"in locations.json.\nPoint it at another studio in AREAS in build/build.py.")
     picks = [c for c in loc_courses(l)][:6]
     body = f"""<div class="wrap pad">
 <p class="bcrumb"><a href="/areas-served/">Areas served</a><span>/</span><span>{E(city)}</span></p>
@@ -796,7 +802,16 @@ PAGES += [page_area(*a) for a in AREAS]
 # Content has been through the compliance pass; the gate still runs on each one,
 # so anything that slipped through is refused rather than published.
 from urllib.parse import urlparse, unquote
-CLEAN = os.environ.get("NAE_CLEAN") or os.path.join(os.path.dirname(ROOT), "clean")
+# The corpus is committed here, in content/editorial. The build used to look
+# for it beside the repo instead (../clean), and finding nothing there it built
+# a site with no journal and emptied public/ to write it - 357 of the 430
+# published pages gone in one run. NAE_CLEAN still points it elsewhere; a corpus that cannot be
+# found now stops the build rather than costing the journal.
+CLEAN = os.environ.get("NAE_CLEAN") or os.path.join(ROOT, "content", "editorial")
+if not os.path.isdir(CLEAN):
+    raise SystemExit(f"editorial corpus not found at {CLEAN}\n"
+                     f"Building without it would delete every journal page. "
+                     f"Set NAE_CLEAN to the content/editorial directory and re-run.")
 GENERATED = {p for p,_,_,_ in PAGES}
 
 refused = []
@@ -1026,6 +1041,32 @@ PAGES.append(page_blog_index(MIG))
 PAGES.extend(taxonomy_pages(MIG))
 ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 
+# WordPress served the same front page at / and at /home/. Both URLs are worth
+# keeping, but only one may claim to be the home page, so /home/ points its
+# canonical at / rather than competing with it for the same searches.
+CANONICAL = {"/home/": "/"}
+
+# Every page is put together and checked before anything is written. With
+# NAE_STRICT=1 - set when the site republishes itself with nobody watching - a
+# page the gate refuses stops the build before public/ is touched, instead of
+# the site going out without it.
+STRICT = os.environ.get("NAE_STRICT") == "1"
+docs, quarantined, warned = [], [], []
+seen = set()
+for path, title, desc, body in ALL:
+    if path in seen: continue
+    seen.add(path)
+    doc = shell(title, desc, path, body, canonical=CANONICAL.get(path))
+    blocks, warns = check(doc)
+    if blocks:
+        quarantined.append((path, blocks)); continue
+    if warns: warned.append((path, warns))
+    docs.append((path, doc))
+if STRICT and (quarantined or refused):
+    for p, b in quarantined: print(f"refused by the gate: {p}  ->  {b}")
+    for p in refused: print(f"refused by the gate: {p}")
+    raise SystemExit("NAE_STRICT: the compliance gate refused a page, so nothing was written")
+
 if os.path.isdir(OUT): shutil.rmtree(OUT)
 os.makedirs(OUT, exist_ok=True)
 # The palette lives in tokens.css and nowhere else. site.css is that plus the
@@ -1067,21 +1108,8 @@ with open(os.path.join(OUT, "brand", "tokens-prefixed.css"), "w", encoding="utf-
             "   change the palette in nae-site/build/tokens.css. */\n\n" + _prefixed)
 
 
-# WordPress served the same front page at / and at /home/. Both URLs are worth
-# keeping, but only one may claim to be the home page, so /home/ points its
-# canonical at / rather than competing with it for the same searches.
-CANONICAL = {"/home/": "/"}
-
-written, quarantined, warned = 0, [], []
-seen = set()
-for path, title, desc, body in ALL:
-    if path in seen: continue
-    seen.add(path)
-    doc = shell(title, desc, path, body, canonical=CANONICAL.get(path))
-    blocks, warns = check(doc)
-    if blocks:
-        quarantined.append((path, blocks)); continue
-    if warns: warned.append((path, warns))
+written = 0
+for path, doc in docs:
     d = os.path.join(OUT, path.strip("/"))
     os.makedirs(d, exist_ok=True)
     open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(doc)
@@ -1116,7 +1144,7 @@ open(f"{OUT}/404.html", "w", encoding="utf-8").write(_404)
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + "".join(f"  <url><loc>{SITE['domain']}{p}</loc></url>\n"
-              for p in sorted(seen) if p not in CANONICAL) + "</urlset>\n")
+              for p in sorted(p for p, _ in docs) if p not in CANONICAL) + "</urlset>\n")
 open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['domain']}/sitemap.xml\n")
 
 gen_n = len(PAGES)
