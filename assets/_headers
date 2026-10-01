@@ -1,0 +1,8 @@
+# Cloudflare static-asset headers (copied into public/ by the build; Cloudflare
+# reads this file and does not serve it).
+#
+# The workers.dev addresses are previews of naeinc.ca, open to anyone. Keep them
+# out of search results so they never compete with the real domain. Matches
+# nae-site.juliadascout.workers.dev and any version preview of it, never naeinc.ca.
+https://:version.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex

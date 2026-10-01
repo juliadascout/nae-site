@@ -98,9 +98,10 @@ async function pp(env, path, method, body) {
   return { ok: r.ok, status: r.status, body: parsed, raw: text };
 }
 
-/* Ontario HST. Confirmed 18 Sept: it applies to course fees. The August
-   "save the tax" promotion is why an earlier invoice shows none - the company
-   still remitted it, it just was not shown on the invoice. */
+/* Ontario HST at 13%, which is what this charges. It was confirmed on
+   18 Sept that HST applies to course fees; NAE's accountant should confirm
+   that before any live payment. If the answer differs, this one number is
+   the change. */
 const TAX_PERCENT = 13;
 
 const money = (n) => (Math.round(n * 100) / 100).toFixed(2);
@@ -111,13 +112,14 @@ function quote(courseId, withKit) {
   const c = prices.courses[courseId];
   if (!c) return { error: "Unknown course" };
 
-  /* The cap is the highest permitted fee, not the first forbidden one: three
-     courses are priced at exactly $2,000 deliberately. A course deliberately
-     priced above it carries capAck and stays sellable - the build warns about
-     it rather than refusing, and this has to agree or the warning would be a
-     lie. Without that acknowledgement, a price above the cap is refused:
-     better a refused payment than a wrong one. */
-  if (c.price > prices.cap && !c.capAck) {
+  /* The guideline's wording is "less than $2,000", so a fee of exactly the cap
+     is over it, not on it (second review, 1 Oct 2026; this reverses an earlier
+     reading that $2,000 itself was allowed). A course priced at or over the cap
+     is not taken online unless it carries capAck - booking a call still works.
+     The build applies the same test and leaves "Buy now" off those pages, so
+     the page never offers what this would refuse. Better a refused payment
+     than a wrong one. */
+  if (c.price >= prices.cap && !c.capAck) {
     return { error: "This course cannot be paid for online" };
   }
 
@@ -146,9 +148,8 @@ function quote(courseId, withKit) {
 
   const subtotal = items.reduce((s, i) => s + Number(i.unit_amount.value), 0);
 
-  /* Whether HST applies to course fees is not settled - the PayPal item
-     catalogue says 13%, an issued invoice charged nothing. The line exists at
-     zero so answering it is a one-number change rather than a re-plumb. */
+  /* See TAX_PERCENT: the rate is one number so a different answer is a
+     one-line change rather than a re-plumb. */
   const tax = Math.round(subtotal * TAX_PERCENT) / 100;
 
   return {

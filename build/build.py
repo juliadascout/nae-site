@@ -86,10 +86,11 @@ for c in _ALL_COURSES:
     c["kitFixed"] = bool(c.get("kitCost"))
     c["equipList"] = [x.strip() for x in (c.get("equipment") or "").split(",") if x.strip()]
 
-# A course stays inside the guideline while its tuition is at most $2,000 and
-# its instruction stays under 40 hours. $2,000 is the highest permitted fee
-# rather than the first forbidden one - three courses are priced at exactly
-# $2,000 on that basis. Kits are excluded deliberately: they are not tuition.
+# A course stays inside the guideline while its tuition is under $2,000 and its
+# instruction is under 40 hours. The published wording is "less than $2,000", so
+# exactly $2,000 is over the line, not on it (second review, 1 Oct 2026; this
+# reverses an earlier reading). Kits are excluded deliberately: they are not
+# tuition. Whether any course fits the guideline is not this file's to say.
 #
 # This warns, it does not stop the build. A pricing question is not a reason a
 # website cannot be deployed, and refusing the build punished the wrong person
@@ -101,7 +102,7 @@ CAP_PRICE, CAP_HOURS = 2000, 40
 
 def cap_breach(c):
     why = []
-    if c["price"] > CAP_PRICE: why.append(f"fee ${c['price']:,} is over ${CAP_PRICE:,}")
+    if c["price"] >= CAP_PRICE: why.append(f"fee ${c['price']:,} is not under ${CAP_PRICE:,}")
     if c["hi"] >= CAP_HOURS:   why.append(f"{c['hi']:g} hours is not under {CAP_HOURS}")
     return why
 
@@ -363,6 +364,13 @@ def mobile_bar(course):
             f'<span>excludes HST</span></div>'
             f'<a class="btn btn-p" href="{SITE["booking"]}" rel="noopener">Book a call</a></div>')
 
+def sellable_online(c):
+    """The same test the checkout Worker applies: a fee at or over the cap is not
+    taken online unless the course carries capAck. Without this the page offered
+    "Buy now" and the Worker then refused it."""
+    return c["price"] < CAP_PRICE or bool(c.get("capAck"))
+
+
 def booking_rail(course=None, location=None):
     price = ""
     # Paying sits inside the booking card rather than adrift at the foot of the
@@ -370,7 +378,7 @@ def booking_rail(course=None, location=None):
     # anywhere else is a buy control nobody finds. Booking a call stays the
     # first action - most people still want to talk to somebody first.
     checkout = ""
-    if course:
+    if course and sellable_online(course):
         # Which studios teach this one, so the buyer says where they are going
         # and the enrolment record knows. Without it a payment arrives with no
         # idea which location is expecting them.
@@ -380,8 +388,7 @@ def booking_rail(course=None, location=None):
                     f'data-kit="{course.get("kitCost") or 0 if course["kitFixed"] else 0}" '
                     f'data-studios="{E(studios)}"></div>')
     if course:
-        price = (f'<div class="price"><span style="font-size:.9rem;color:var(--muted)">from</span>'
-                 f'<b class="tnum">{money(course["price"])}</b><i>CAD</i></div>'
+        price = (f'<div class="price"><b class="tnum">{money(course["price"])}</b><i>CAD</i></div>'
                  f'<p style="font-size:.85rem;color:var(--muted);margin:.25rem 0 0">'
                  f'{"Optional kit " + money(course["kitCost"]) + " &middot; " if course["kitFixed"] else ("Kit options &middot; " if course["hasKit"] else "")}'
                  f'excludes HST</p><hr class="r">')
@@ -932,6 +939,15 @@ def tidy_body(h):
 # offers courses, studios and the journal - is a better place to land.
 EMPTY_WOO = {"/shop/", "/cart/"}
 
+# Journal pages kept in content/editorial but not published, each with the
+# reason. Taking a page out here is reversible; deleting its source is not.
+WITHHELD = {
+    "/own-the-ultimate-beauty-business-in-canada/":
+        "business-opportunity offer with an income figure and \"licensing included\"; "
+        "out until Kalleigh decides with a lawyer whether it returns (second review C1, 1 Oct 2026)",
+}
+withheld = []
+
 def migrated_pages():
     out = []
     if not os.path.isdir(CLEAN): return out
@@ -954,6 +970,7 @@ def migrated_pages():
         if not path.endswith("/"): path += "/"
         if path in GENERATED: continue          # a generated page always wins
         if path in EMPTY_WOO: continue          # see EMPTY_WOO
+        if path in WITHHELD: withheld.append(path); continue
         plain = re.sub(r"<[^>]+>", " ", body_html)
         desc = re.sub(r"\s+", " ", html.unescape(plain)).strip()[:155]
         body = (f'<div class="wrap pad"><article class="prose">'
@@ -1057,7 +1074,7 @@ for path, title, desc, body in ALL:
     if path in seen: continue
     seen.add(path)
     doc = shell(title, desc, path, body, canonical=CANONICAL.get(path))
-    blocks, warns = check(doc)
+    blocks, warns = check(doc, strict=path in GENERATED, path=path)
     if blocks:
         quarantined.append((path, blocks)); continue
     if warns: warned.append((path, warns))
@@ -1137,7 +1154,7 @@ _404 = shell(
     '<a class="crow" href="/contact/"><div><h2>Contact</h2>'
     '<p>Book a call, or ask us a question&hellip;</p></div></a>'
     '</div></div></div>')
-if check(_404)[0]:
+if check(_404, strict=True, path="/404.html")[0]:
     raise SystemExit("the 404 page itself trips the compliance gate")
 open(f"{OUT}/404.html", "w", encoding="utf-8").write(_404)
 
@@ -1155,6 +1172,16 @@ print(f"refused by the gate : {len(refused)} (excluded from the index, so no dea
 for r in refused: print(f"    {r}")
 print(f"quarantined at write: {len(quarantined)}")
 for p, b in quarantined[:8]: print(f"    {p}  ->  {b}")
+print(f"withheld on purpose : {len(withheld)}")
+for p in withheld: print(f"    {p}  ->  {WITHHELD[p]}")
+review = [(p, w) for p, ws in warned for w in ws if str(w[0]).startswith("review: ")]
+print(f"journal to review   : {len({p for p, _ in review})} pages (wording the gate refuses on data pages)")
+if os.environ.get("NAE_REVIEW_OUT"):
+    import csv
+    with open(os.environ["NAE_REVIEW_OUT"], "w", newline="", encoding="utf-8") as fh:
+        wr = csv.writer(fh); wr.writerow(["page", "rule", "words found"])
+        for p, (label, words) in review: wr.writerow([p, label.replace("review: ", ""), "; ".join(words)])
+    print(f"    written to {os.environ['NAE_REVIEW_OUT']}")
 print(f"pages with warnings : {len(warned)}")
 for p, w in warned[:6]: print(f"    {p}  ->  {w}")
 
