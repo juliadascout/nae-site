@@ -17,27 +17,56 @@ BLOCK = {
   # "…for Canada (NAEC)" wording that sat in the privacy policy for years.
   'wrong entity':        r'\b(new[\s-]?age\s?beauty\w*|NABA|estheticians for canada|NAEC)\b',
 }
-# nvbeautyboutique.com is owned by the same people (confirmed 10 Sept), so its
-# images and links are first-party and are deliberately preserved. Only genuinely
-# third-party asset hosts are worth a warning - those can disappear without notice.
-# Modalities: Julia approved these on 10 Sept - what the curriculum covers is
-# hers to decide. Kept as a warning rather than a block, so a page naming one is
-# still surfaced for a look instead of being silently published. Protected titles
-# and registration/accreditation claims stay blocks: those are not curriculum.
+# An image served from another site's address breaks when that site changes or
+# goes offline, so any host other than naeinc.ca warns. That includes
+# nvbeautyboutique.com: an earlier note here called it first-party, but how NV
+# Beauty relates to NAE is not established, and whether NAE may copy those
+# images into assets/ is an open question.
 WARN = {
-  'modality - review': r'\b(laser|IPL|micro-?needl\w*|botox|injectab\w*|dermal filler)\b',
-  'third-party image': r'src="https?://(?!(?:www\.)?(?:naeinc\.ca|nvbeautyboutique\.com))[^"]+',
+  # Only images. Matching any src= counted the analytics script, so every page
+  # warned and the pages with a real third-party image were lost in the noise.
+  'third-party image': r'<img\b[^>]*\ssrc="https?://(?!(?:www\.)?naeinc\.ca)[^"]+',
 }
 
-def check(text):
+# The rules the BLOCK list above was narrower than (second review, 1 Oct 2026):
+# NAE's status is never described - not certified, recognised, approved or
+# registered, by a ministry or otherwise - and funding is not promised. "Certificate
+# of completion" is a true description of what a student receives and is not
+# caught. The three companies whose relationship to NAE is unestablished are
+# never named.
+#
+# These refuse a page built from the course and studio lists outright, since an
+# edit in Inventory could otherwise put the wording on the site. The migrated
+# journal carries them in dozens of posts, so there they warn and are listed for
+# Kalleigh's review; they move into BLOCK once that review is done.
+#
+# Laser, IPL, RF, energy devices and micro-needling are never added as training,
+# so a course or studio page naming one is refused. They were a warning everywhere
+# after 10 Sept; in the journal they still are, until that review.
+REVIEW = {
+  'modality':             r'\b(laser|IPL|micro-?needl\w*|botox|injectab\w*|dermal filler|radio[- ]?frequency|energy[- ]device)\b',
+  'status wording':       r'\b(certif(?:ied|ications?)|recogni[sz]ed|approved|registered|ministry)\b',
+  'funding claim':        r'\bgrants?\b',
+  'unestablished entity': r'\b(nv\s*beauty\w*|nvbeautyboutique|beauty\s*bar\s*one|europa\s+beauty\w*)\b',
+}
+
+def check(text, strict=False, path=""):
     # Stripping a tag leaves a space behind, so "the <strong>best</strong>"
     # became "the  best" and slipped past every multi-word rule below. Collapse
     # runs of whitespace first: inline markup must not be a way through the gate.
     plain = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text)))
+    # Words a reader sees that are not body text: the page's address and image
+    # alt text. Checked against the review rules, and against everything on a
+    # strict page.
+    extra = " ".join([re.sub(r'[-_/]+', ' ', path)] +
+                     [html.unescape(a) for a in re.findall(r'\salt="([^"]*)"', text)])
     blocks, warns = [], []
     for label, pat in BLOCK.items():
-        hits = {m.group(0).lower() for m in re.finditer(pat, plain, re.I)}
+        hits = {m.group(0).lower() for m in re.finditer(pat, plain + (" " + extra if strict else ""), re.I)}
         if hits: blocks.append((label, sorted(hits)))
+    for label, pat in REVIEW.items():
+        hits = {m.group(0).lower() for m in re.finditer(pat, plain + " " + extra, re.I)}
+        if hits: (blocks if strict else warns).append((label if strict else "review: " + label, sorted(hits)))
     for label, pat in WARN.items():
         n = len(re.findall(pat, text, re.I))
         if n: warns.append((label, n))
