@@ -66,6 +66,36 @@ Build output is `public/`. Host it anywhere static.
 `assets/_headers` marks every workers.dev address `noindex`, so the preview copy
 never competes with naeinc.ca in search results. It does not apply to naeinc.ca.
 
+### Where the site sits on naeinc.ca
+
+`NAE_BASE` decides it, and nothing else does. Every internal link, image,
+stylesheet, canonical address, sitemap entry and structured-data URL follows it.
+
+- **At the root** (the default, `NAE_BASE` unset): the new site replaces the
+  WordPress one. Old addresses on `content/redirects.csv` are answered with 301s.
+- **In a subfolder** (`NAE_BASE=/beauty-school`): the old site keeps the root.
+  No redirects are written, because the old site still answers its own addresses.
+  For the checkout to work there, give the Worker the same value as `SITE_BASE`
+  and add `"/beauty-school/api/*"` to `run_worker_first` in `wrangler.toml`.
+- **Subfolder first, root later**: build with the base, then rebuild without it
+  and add `/beauty-school/* /:splat 301` to `content/redirects.csv`.
+
+The build refuses a base that is not a plain path such as `/beauty-school`.
+
+### Redirects
+
+`content/redirects.csv` is the one list of old WordPress addresses that now live
+somewhere else: the old address, where it goes, and why. The build:
+
+- publishes nothing at an old address on the list
+- points links in the journal straight at the new page
+- writes `public/_redirects`, which Cloudflare answers with a 301
+- stops, before writing anything, if a redirect points at a page it is not building
+
+The list came from the live site on 9 October 2026, read through the WordPress
+REST API. Every other old address already has a page at the same place on the new
+site, except the retired posts, which return the 404 page on purpose.
+
 The site republishes itself when the course or studio list changes. A workflow in
 nae-data (`.github/workflows/publish-website.yml`) runs on any change to
 `data/locations.json` or `data/course-catalog.json`. It builds strictly and pushes

@@ -10,6 +10,16 @@
    Renders nothing at all unless the Worker says checkout is open, so this file
    is inert on a site that has not switched it on. */
 (function () {
+  /* Where the site sits on its domain: "" at the root, "/beauty-school" in a
+     subfolder. Read from this file's own address, which the build sets, so it is
+     decided in one place. Taken now: document.currentScript only exists while
+     the file first runs. */
+  var BASE = (function () {
+    var src = document.currentScript && document.currentScript.src;
+    try { return src ? new URL(src).pathname.replace(/\/checkout\.js$/, "") : ""; }
+    catch (e) { return ""; }
+  })();
+
   var mount = document.getElementById("checkout");
   if (!mount) return;
 
@@ -72,7 +82,7 @@
     n.setAttribute("role", kind === "error" ? "alert" : "status");
   }
 
-  fetch("/api/checkout/config")
+  fetch(BASE + "/api/checkout/config")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {
       if (!cfg || !cfg.enabled || !cfg.clientId) return;   // stays hidden
@@ -156,7 +166,7 @@
     var policy = el("p", "co-policy");
     policy.appendChild(document.createTextNode("Paying accepts our "));
     var a = document.createElement("a");
-    a.href = "/about-national-association-of-estheticians-beauty-school/#refunds";
+    a.href = BASE + "/about-national-association-of-estheticians-beauty-school/#refunds";
     a.textContent = "refund and cancellation policy";
     policy.appendChild(a);
     policy.appendChild(document.createTextNode("."));
@@ -171,7 +181,7 @@
   function quote() {
     if (!summary) return;
     summary.textContent = "";
-    fetch("/api/checkout/quote?courseId=" + encodeURIComponent(courseId) + "&kit=" + (wantKit ? "1" : "0"))
+    fetch(BASE + "/api/checkout/quote?courseId=" + encodeURIComponent(courseId) + "&kit=" + (wantKit ? "1" : "0"))
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (q) {
         if (!q) return;
@@ -214,7 +224,7 @@
       style: { layout: "vertical", shape: "rect", label: "pay" },
 
       createOrder: function () {
-        return fetch("/api/checkout/order", {
+        return fetch(BASE + "/api/checkout/order", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ courseId: courseId, withKit: wantKit, locationId: chosenLocation() })
@@ -237,7 +247,7 @@
 
       onApprove: function (data) {
         say("Completing your payment…");
-        return fetch("/api/checkout/capture", {
+        return fetch(BASE + "/api/checkout/capture", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ orderId: data.orderID, locationId: chosenLocation() })

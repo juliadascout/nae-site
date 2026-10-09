@@ -15,7 +15,7 @@ Every page passes through compliance.check() before it is written. A page that
 trips a BLOCK rule is not written at all - it is quarantined and listed in the
 report. The build is the enforcement point.
 """
-import os, re, json, html, sys, shutil, glob
+import os, re, csv, json, html, sys, shutil, glob
 sys.path.insert(0, os.path.dirname(__file__))
 from compliance import check
 
@@ -55,6 +55,48 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         # studio later, make this a dict keyed by course or location id; every page
         # reads it from here, so nothing else has to change.
         "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27"}
+
+# Where the site sits on its domain. Empty is the root (naeinc.ca/); NAE_BASE=/beauty-school
+# builds it for a subfolder instead. This is the one place that is decided: every
+# internal link, image, stylesheet, canonical address, sitemap entry and structured-data
+# URL follows it, so going live at the root, in a subfolder, or in a subfolder first and
+# the root later is a rebuild rather than a rewrite.
+BASE = (os.environ.get("NAE_BASE") or "").strip().rstrip("/")
+if BASE and not re.fullmatch(r"(/[a-z0-9][a-z0-9-]*)+", BASE):
+    raise SystemExit(f"NAE_BASE must look like /beauty-school, not {BASE!r}")
+SITE["url"] = SITE["domain"] + BASE
+
+# Root-relative addresses in a finished page: any attribute value starting with a
+# single "/", every entry of a srcset, and url(/...) in inline styles.
+_ROOT_ATTR = re.compile(r'(\s(?!srcset=)[\w:.-]+=)(["\'])/(?!/)')
+_SRCSET = re.compile(r'(\ssrcset=)(["\'])([^"\']*)\2')
+_CSS_URL = re.compile(r'(url\(\s*["\']?)/(?!/)')
+# The migrated journal writes many of its own links out in full (https://naeinc.ca/...).
+# They mean "this site", so in a subfolder they have to stay inside it.
+_OWN_ABS = re.compile(r'(<(?:a|img)\b[^>]*?\s(?:href|src)=["\'])https?://(?:www\.)?naeinc\.ca(?=/)')
+_OWN_LINK = re.compile(r'(<a\b[^>]*?\shref=["\'])((?:https?://(?:www\.)?naeinc\.ca)?/[^"\'#?]*)([^"\']*)(["\'])')
+def relink(doc):
+    """Sends a link to an old address on the redirect list straight to its new page."""
+    def one(m):
+        path = re.sub(r"^https?://(?:www\.)?naeinc\.ca", "", m.group(2))
+        if path not in REDIRECTS:
+            return m.group(0)
+        return f"{m.group(1)}{REDIRECTS[path]}{m.group(4)}"
+    return _OWN_LINK.sub(one, doc)
+
+def rebase(doc):
+    """Puts BASE in front of every root-relative address in a page. At the root it
+    returns the page untouched, so the default build is unchanged byte for byte."""
+    if not BASE:
+        return doc
+    def srcset(m):
+        entries = [e.strip() for e in m.group(3).split(",")]
+        entries = [BASE + e if e.startswith("/") and not e.startswith("//") else e for e in entries]
+        return f"{m.group(1)}{m.group(2)}{', '.join(entries)}{m.group(2)}"
+    doc = _OWN_ABS.sub(lambda m: m.group(1), doc)
+    doc = _SRCSET.sub(srcset, doc)
+    doc = _ROOT_ATTR.sub(lambda m: f"{m.group(1)}{m.group(2)}{BASE}/", doc)
+    return _CSS_URL.sub(lambda m: f"{m.group(1)}{BASE}/", doc)
 
 def slugify(s): return re.sub(r'[^a-z0-9]+','-',s.lower()).strip('-')
 def money(n):   return "$" + format(int(n), ",d")
@@ -238,7 +280,7 @@ def ld(*objs):
 
 def ld_org():
     return {"@type": "Organization", "name": SITE["legal"], "alternateName": SITE["short"],
-            "url": SITE["domain"] + "/", "logo": SITE["domain"] + "/brand/nae-favicon-512.png",
+            "url": SITE["url"] + "/", "logo": SITE["url"] + "/brand/nae-favicon-512.png",
             "telephone": SITE["phone"], "email": SITE["email"],
             "areaServed": sorted({l["region"] for l in OPEN})}
 
@@ -295,7 +337,7 @@ def course_title(c):
 def ld_crumbs(*pairs):
     return {"@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": i + 1, "name": n,
-         **({"item": SITE["domain"] + u} if u else {})}
+         **({"item": SITE["url"] + u} if u else {})}
         for i, (n, u) in enumerate(pairs)]}
 
 
@@ -324,7 +366,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
-<link rel="canonical" href="{SITE['domain']}{canonical or path}">
+<link rel="canonical" href="{SITE['url']}{canonical or path}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -337,8 +379,8 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:site_name" content="{E(SITE['legal'])}">
 <meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}">
-<meta property="og:url" content="{SITE['domain']}{canonical or path}">
-<meta property="og:image" content="{SITE['domain']}/brand/nae-og-share-1200x630.png">
+<meta property="og:url" content="{SITE['url']}{canonical or path}">
+<meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">{ga_tag()}
 </head><body>
 <header class="hdr"><div class="wrap">
@@ -542,10 +584,10 @@ def page_course(c):
     body += ld(
         {"@type": "Course", "name": c["name"],
          "description": f"{c['name']} training. {c['duration']}.",
-         "url": f"{SITE['domain']}/courses/{c['slug']}/",
+         "url": f"{SITE['url']}/courses/{c['slug']}/",
          "provider": ld_org(),
          "offers": {"@type": "Offer", "price": c["price"], "priceCurrency": "CAD",
-                    "category": "Tuition", "url": f"{SITE['domain']}/courses/{c['slug']}/"},
+                    "category": "Tuition", "url": f"{SITE['url']}/courses/{c['slug']}/"},
          "hasCourseInstance": [
              {"@type": "CourseInstance", "courseMode": "onsite",
               "location": {"@type": "Place", "name": l["name"], "address": ld_addr(l)}}
@@ -626,7 +668,7 @@ def page_home():
 <div class="wrap pad"><p class="eyebrow">Where we teach</p>
   <h2 style="margin-bottom:1.4rem">Our studios</h2><div class="lcards">{locs}</div></div>"""
     body += ld(ld_org(),
-               {"@type": "WebSite", "name": SITE["legal"], "url": SITE["domain"] + "/"})
+               {"@type": "WebSite", "name": SITE["legal"], "url": SITE["url"] + "/"})
     return ("/", f"Beauty Courses in Ontario | {SITE['short']}",
             f"Hands-on beauty and esthetics training across {len(OPEN)} Ontario studios. "
             f"{len(COURSES)} courses, optional kits, certificate of completion.", body)
@@ -696,7 +738,7 @@ def page_location(l):
     body += ld(
         {"@type": "LocalBusiness", "name": f"{SITE['short']} {l['name']}",
          "parentOrganization": ld_org(),
-         "url": f"{SITE['domain']}/locations/{slugify(l['name'])}/",
+         "url": f"{SITE['url']}/locations/{slugify(l['name'])}/",
          "telephone": SITE["phone"], "email": SITE["email"],
          "address": ld_addr(l)},
         ld_crumbs(("Locations", "/locations/"), (l["name"], None)))
@@ -948,6 +990,24 @@ WITHHELD = {
 }
 withheld = []
 
+# Addresses the WordPress site served that now live somewhere else. One list,
+# content/redirects.csv: each row is the old address, where it goes now, and why.
+# Nothing is published at an old address on the list, links in the journal that
+# point at one go straight to its new page, and public/_redirects answers the
+# address itself with a permanent (301) redirect, so its search standing and
+# inbound links move with it. _redirects is written only for a site at the root:
+# in a subfolder the old site still answers its own addresses.
+REDIRECTS = {}
+_RFILE = os.path.join(ROOT, "content", "redirects.csv")
+if os.path.exists(_RFILE):
+    with open(_RFILE, newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            if (r.get("from") or "").strip():
+                REDIRECTS[r["from"].strip()] = r["to"].strip()
+_clash = sorted(set(REDIRECTS) & GENERATED)
+if _clash:
+    raise SystemExit(f"content/redirects.csv redirects pages the build generates: {_clash}")
+
 def migrated_pages():
     out = []
     if not os.path.isdir(CLEAN): return out
@@ -971,6 +1031,7 @@ def migrated_pages():
         if path in GENERATED: continue          # a generated page always wins
         if path in EMPTY_WOO: continue          # see EMPTY_WOO
         if path in WITHHELD: withheld.append(path); continue
+        if path in REDIRECTS: continue            # see REDIRECTS
         plain = re.sub(r"<[^>]+>", " ", body_html)
         desc = re.sub(r"\s+", " ", html.unescape(plain)).strip()[:155]
         body = (f'<div class="wrap pad"><article class="prose">'
@@ -1084,6 +1145,19 @@ if STRICT and (quarantined or refused):
     for p in refused: print(f"refused by the gate: {p}")
     raise SystemExit("NAE_STRICT: the compliance gate refused a page, so nothing was written")
 
+# Every redirect has to land on a page this build is about to write, or it is a
+# 301 to a 404. Checked here, before public/ is touched, like the gate above. A
+# course archived in Inventory takes its page with it, so a redirect to it falls
+# back to the course list instead of stopping the site from updating.
+_built = {p for p, _ in docs} | {"/sitemap.xml"}
+retargeted = []
+for _a, _b in list(REDIRECTS.items()):
+    if _b not in _built and _b.startswith("/courses/") and "/courses/" in _built:
+        REDIRECTS[_a] = "/courses/"; retargeted.append(f"{_a} -> {_b}")
+_dead = [f"{a} -> {b}" for a, b in REDIRECTS.items() if b not in _built]
+if _dead:
+    raise SystemExit("content/redirects.csv points at pages this build does not write: " + "; ".join(_dead))
+
 if os.path.isdir(OUT): shutil.rmtree(OUT)
 os.makedirs(OUT, exist_ok=True)
 # The palette lives in tokens.css and nowhere else. site.css is that plus the
@@ -1129,7 +1203,7 @@ written = 0
 for path, doc in docs:
     d = os.path.join(OUT, path.strip("/"))
     os.makedirs(d, exist_ok=True)
-    open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(doc)
+    open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(rebase(relink(doc)))
     written += 1
 
 # Served for any URL that matches no page. Without it the host decides, and a
@@ -1156,13 +1230,19 @@ _404 = shell(
     '</div></div></div>')
 if check(_404, strict=True, path="/404.html")[0]:
     raise SystemExit("the 404 page itself trips the compliance gate")
-open(f"{OUT}/404.html", "w", encoding="utf-8").write(_404)
+open(f"{OUT}/404.html", "w", encoding="utf-8").write(rebase(relink(_404)))
+
 
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-  + "".join(f"  <url><loc>{SITE['domain']}{p}</loc></url>\n"
+  + "".join(f"  <url><loc>{SITE['url']}{p}</loc></url>\n"
               for p in sorted(p for p, _ in docs) if p not in CANONICAL) + "</urlset>\n")
-open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['domain']}/sitemap.xml\n")
+open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['url']}/sitemap.xml\n")
+
+if REDIRECTS and not BASE:
+    with open(os.path.join(OUT, "_redirects"), "w", encoding="utf-8") as fh:
+        fh.write("# Generated from content/redirects.csv by build/build.py. Edit that file, not this one.\n")
+        fh.writelines(f"{a} {b} 301\n" for a, b in REDIRECTS.items())
 
 gen_n = len(PAGES)
 print(f"generated from data : {gen_n}")
@@ -1172,12 +1252,13 @@ print(f"refused by the gate : {len(refused)} (excluded from the index, so no dea
 for r in refused: print(f"    {r}")
 print(f"quarantined at write: {len(quarantined)}")
 for p, b in quarantined[:8]: print(f"    {p}  ->  {b}")
+print(f"redirects           : {len(REDIRECTS)}" + ("" if BASE else " (public/_redirects)"))
+for r in retargeted: print(f"    course page gone, now sent to /courses/: {r}")
 print(f"withheld on purpose : {len(withheld)}")
 for p in withheld: print(f"    {p}  ->  {WITHHELD[p]}")
 review = [(p, w) for p, ws in warned for w in ws if str(w[0]).startswith("review: ")]
 print(f"journal to review   : {len({p for p, _ in review})} pages (wording the gate refuses on data pages)")
 if os.environ.get("NAE_REVIEW_OUT"):
-    import csv
     with open(os.environ["NAE_REVIEW_OUT"], "w", newline="", encoding="utf-8") as fh:
         wr = csv.writer(fh); wr.writerow(["page", "rule", "words found"])
         for p, (label, words) in review: wr.writerow([p, label.replace("review: ", ""), "; ".join(words)])

@@ -229,8 +229,14 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/api/")) {
-      if (url.pathname === "/api/checkout/config" && request.method === "GET") {
+    /* The site can be built for a subfolder (NAE_BASE in the build). Give the
+       Worker the same value as SITE_BASE and the API answers under it too;
+       unset, routing is exactly as before. */
+    const base = (env.SITE_BASE || "").replace(/\/+$/, "");
+    const path = base && url.pathname.startsWith(base + "/") ? url.pathname.slice(base.length) : url.pathname;
+
+    if (path.startsWith("/api/")) {
+      if (path === "/api/checkout/config" && request.method === "GET") {
         const { mode } = ppBase(env);
         return json({
           clientId: env.PAYPAL_CLIENT_ID || null,
@@ -244,7 +250,7 @@ export default {
          without this the only way to tell a wrong secret from a bad payload is
          to read the Cloudflare log. Says nothing secret: the client id is
          public and only its tail is shown, to confirm which app is in use. */
-      if (url.pathname === "/api/checkout/health" && request.method === "GET") {
+      if (path === "/api/checkout/health" && request.method === "GET") {
         const { mode } = ppBase(env);
         const id = env.PAYPAL_CLIENT_ID || "";
         /* Enough to compare against the dashboard character by character
@@ -283,7 +289,7 @@ export default {
 
       /* What will I be charged? Answered by the same quote() the order uses,
          so the total on the page and the total on the invoice cannot disagree. */
-      if (url.pathname === "/api/checkout/quote" && request.method === "GET") {
+      if (path === "/api/checkout/quote" && request.method === "GET") {
         const q = quote(url.searchParams.get("courseId") || "",
                         url.searchParams.get("kit") === "1");
         if (q.error) return fail(400, q.error);
@@ -296,7 +302,7 @@ export default {
           total: q.amount.value,
         });
       }
-      if (url.pathname === "/api/checkout/order" && request.method === "POST") {
+      if (path === "/api/checkout/order" && request.method === "POST") {
         if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
         try { return await handleOrder(request, env); }
         catch (e) {
@@ -308,7 +314,7 @@ export default {
           return json({ error: "Could not start the payment", detail: e.message }, 500);
         }
       }
-      if (url.pathname === "/api/checkout/capture" && request.method === "POST") {
+      if (path === "/api/checkout/capture" && request.method === "POST") {
         if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
         try { return await handleCapture(request, env); }
         catch (e) { return fail(500, "Could not complete the payment", e.message); }
