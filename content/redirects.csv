@@ -2,7 +2,7 @@ from,to,why
 /shop/,/courses/,old WooCommerce store; the course pages replace it
 /cart/,/courses/,old WooCommerce store; the course pages replace it
 /checkout/,/courses/,old WooCommerce checkout; paying happens on each course page
-/my-account/,/contact/,old WooCommerce customer accounts are not carried over
+/my-account/,/account/,the old WooCommerce account page - accounts are now NAE's own; old WooCommerce logins were not carried over
 /product/advanced-teeth-whitening-kit/,/courses/teeth-whitening-training/,old store product page with a store price; prices come from the course database only
 /product/fusion-hair-extensions-starter-kit/,/courses/fusion-hair-extensions/,old store product page with a store price; prices come from the course database only
 /product/micro-link-hair-extension-artist-course/,/courses/micro-link-micro-loop-nano-ring-hair-extensions/,old store product page with a store price; prices come from the course database only

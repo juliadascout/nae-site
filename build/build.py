@@ -257,6 +257,10 @@ def ld_addr(l):
 OPEN = [l for l in LOCS if l["status"] == "open"]
 
 # ---------------------------------------------------------------- shell
+# Pages with nothing on them for a search engine: kept out of the index and
+# out of the sitemap.
+NOINDEX = {"/account/"}
+
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
        ("Our team","/our-team/"),("Contact","/contact/")]
 
@@ -357,6 +361,7 @@ def ga_tag():
             f'\n<script src="/events.js" defer></script>')
 
 def shell(title, desc, path, body, canonical=None):
+    robots = '\n<meta name="robots" content="noindex">' if path in NOINDEX else ""
     nav_html = "".join(
         '<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == path else '', E(n))
         for n, h in NAV)
@@ -381,13 +386,14 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{SITE['url']}{canonical or path}">
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
-<meta name="twitter:card" content="summary_large_image">{ga_tag()}
+<meta name="twitter:card" content="summary_large_image">{robots}{ga_tag()}
 </head><body>
 <header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
     <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
     <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
+  <a class="acct" href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a>
   <a class="btn btn-p" href="/contact/">Book a call</a>
 </div></header>
 <main>{body}</main>
@@ -828,6 +834,113 @@ def page_team():
 # thing the page sends is a course id and whether the kit is wanted. This is
 # that lookup, written at build time from the same catalogue the pages read -
 # one source, so a price cannot drift between the page and the charge.
+# ---------------------------------------------------------------- account
+# One account for the website and the apps. The email and password somebody
+# makes here are the same ones staff use for Hours & invoices, Inventory and
+# Contacts; the role on the account decides what it opens, and an account made
+# here opens only this page. The page is static. assets/account.js does the
+# work against /api/auth/*, which the Worker passes to the accounts system
+# (worker/index.js) - nothing about an account is stored by this site.
+def _fld(label, id_, type_="text", ac="", extra=""):
+    auto = f' autocomplete="{ac}"' if ac else ""
+    return f'<label class="fld"><span>{label}</span><input id="{id_}" type="{type_}"{auto}{extra}></label>'
+
+def page_account():
+    fld = _fld
+    return ("/account/", f"Your account | {SITE['short']}",
+      f"Sign in to your {SITE['short']} account, or make one.",
+      f"""<div class="wrap pad"><div class="two"><div class="stack" id="acct">
+      <div class="card" data-panel="loading"><p class="lede" style="margin:0">Checking whether you are signed in&hellip;</p></div>
+
+      <div class="card" data-panel="signin" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Sign in</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="signin" novalidate>
+          {fld("Email", "si-email", "email", "username", " required")}
+          {fld("Password", "si-password", "password", "current-password", " required")}
+          <button class="btn btn-p" type="submit">Sign in</button>
+        </form>
+        <p class="fine">Forgotten your password? Call {E(SITE['phone'])} or email {E(SITE['email'])}
+          and we will set you a new one.</p>
+        <hr class="r">
+        <h2 style="margin-bottom:.4rem">New here?</h2>
+        <p style="margin:0 0 .9rem">Make an account with your email and a password.</p>
+        <button class="btn" type="button" data-show="signup">Make an account</button>
+      </div>
+
+      <div class="card" data-panel="signup" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Make an account</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="signup" novalidate>
+          {fld("Your name", "su-name", "text", "name", ' required maxlength="120"')}
+          {fld("Email", "su-email", "email", "email", " required")}
+          {fld("Phone (optional)", "su-phone", "tel", "tel", ' maxlength="40"')}
+          {fld("Password &mdash; at least 12 characters", "su-password", "password", "new-password", ' required minlength="12"')}
+          {fld("Type it once more", "su-again", "password", "new-password", ' required minlength="12"')}
+          <button class="btn btn-p" type="submit">Make my account</button>
+        </form>
+        <p class="fine">Already have one? <a href="#" data-show="signin">Sign in instead</a>.</p>
+      </div>
+
+      <div class="card" data-panel="change" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose your own password</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p>The password you were given is temporary. Pick one only you know.</p>
+        <form data-form="change" novalidate>
+          {fld("The temporary password you were given", "ch-current", "password", "current-password")}
+          {fld("New password &mdash; at least 12 characters", "ch-next", "password", "new-password", ' required minlength="12"')}
+          {fld("Type it once more", "ch-again", "password", "new-password", ' required minlength="12"')}
+          <button class="btn btn-p" type="submit">Save and continue</button>
+        </form>
+      </div>
+
+      <div class="card" data-panel="me" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.4rem" data-hello>Hello</h1>
+        <p class="lede" style="margin-bottom:1rem" data-email></p>
+        <div data-apps hidden>
+          <p style="margin:0 0 .9rem">Your account also opens the work tools &mdash; Hours &amp; invoices,
+            and whatever else your role includes.</p>
+          <a class="btn btn-p" data-apps-link href="#">Open the work tools</a>
+          <hr class="r">
+        </div>
+        <h2 style="margin-bottom:.6rem">Your details</h2>
+        <p class="co-msg" data-msg="details" hidden></p>
+        <form data-form="details" novalidate>
+          {fld("Name", "me-name", "text", "name", ' maxlength="120"')}
+          {fld("Phone", "me-phone", "tel", "tel", ' maxlength="40"')}
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <hr class="r">
+        <h2 style="margin-bottom:.6rem">Password</h2>
+        <p class="co-msg" data-msg="password" hidden></p>
+        <form data-form="password" novalidate>
+          {fld("Current password", "pw-current", "password", "current-password", " required")}
+          {fld("New password &mdash; at least 12 characters", "pw-next", "password", "new-password", ' required minlength="12"')}
+          {fld("Type it once more", "pw-again", "password", "new-password", ' required minlength="12"')}
+          <button class="btn" type="submit">Change password</button>
+        </form>
+        <p class="fine">Changing it signs you out everywhere else.</p>
+        <hr class="r">
+        <button class="btn" type="button" data-signout>Sign out</button>
+      </div>
+      </div>
+
+      <aside class="stack"><div class="card">
+        <p class="eyebrow">About accounts</p>
+        <ul class="bul" style="margin-top:.4rem">
+          <li>One account for everything with {E(SITE['short'])}. If you work with us, the same email and
+            password sign you in to the work tools.</li>
+          <li>We keep your name, your email, your phone number if you give it, and your password in a
+            form that cannot be read back by anyone, including us.</li>
+          <li>Making an account does not sign you up for marketing email.</li>
+          <li>To change your email address or close your account, call {E(SITE['phone'])} or
+            email {E(SITE['email'])}.</li>
+        </ul>
+        <p class="fine">More in our <a href="/privacy/">privacy policy</a>.</p>
+      </div></aside>
+      </div></div>
+      <script src="/account.js" defer></script>""")
+
 def write_checkout_prices():
     out = {c["id"]: {"slug": c["slug"], "name": c["name"], "price": c["price"],
                      "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit")),
@@ -840,7 +953,8 @@ def write_checkout_prices():
     return len(out)
 
 # ---------------------------------------------------------------- build
-PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team()]
+PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
+         page_account()]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]
 PAGES += [page_area(*a) for a in AREAS]
@@ -1236,7 +1350,7 @@ open(f"{OUT}/404.html", "w", encoding="utf-8").write(rebase(relink(_404)))
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + "".join(f"  <url><loc>{SITE['url']}{p}</loc></url>\n"
-              for p in sorted(p for p, _ in docs) if p not in CANONICAL) + "</urlset>\n")
+              for p in sorted(p for p, _ in docs) if p not in CANONICAL and p not in NOINDEX) + "</urlset>\n")
 open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['url']}/sitemap.xml\n")
 
 if REDIRECTS and not BASE:
