@@ -387,8 +387,22 @@ def ga_tag():
             f'gtag("js",new Date());gtag("config","{GA4_ID}");</script>'
             f'\n<script src="/events.js" defer></script>')
 
+# An emailed account link carries a one-time code after the # (#reset=...,
+# #verify=...). This runs first in the account page's head, before analytics
+# loads, takes the code off the address bar and leaves it in NAE_LINK for
+# account.js - so nothing else on the page, analytics included, ever sees it.
+# It listens too, ahead of anything else, for the code arriving in a tab that
+# already shows the page, where only the part after # changes.
+LINK_GUARD = ('\n<script>(function(){function take(){'
+              'var m=/^#((?:reset|verify)=[A-Za-z0-9_-]{20,100})$/.exec(location.hash);if(!m)return;'
+              'window.NAE_LINK=m[1];'
+              'try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}'
+              'try{window.dispatchEvent(new Event("nae-link"))}catch(e){}}'
+              'take();addEventListener("popstate",take);addEventListener("hashchange",take)})()</script>')
+
 def shell(title, desc, path, body, canonical=None):
     robots = '\n<meta name="robots" content="noindex">' if path in NOINDEX else ""
+    guard = LINK_GUARD if path == "/account/" else ""
     # A path is on this site; a full address is a page somewhere else that this one
     # is a copy of (LEGACY).
     canon = canonical if (canonical or "").startswith("https://") else SITE['url'] + (canonical or path)
@@ -416,7 +430,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{E(canon)}">
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
-<meta name="twitter:card" content="summary_large_image">{robots}{ga_tag()}
+<meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}
 </head><body>
 <header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
@@ -890,7 +904,8 @@ def page_account():
           {fld("Password", "si-password", "password", "current-password", " required")}
           <button class="btn btn-p" type="submit">Sign in</button>
         </form>
-        <p class="fine">Forgotten your password? Call {E(SITE['phone'])} or email {E(SITE['email'])}
+        <p class="fine" data-forgot-link hidden><a href="#forgot" data-show="forgot">Forgotten your password?</a></p>
+        <p class="fine" data-forgot-call>Forgotten your password? Call {E(SITE['phone'])} or email {E(SITE['email'])}
           and we will set you a new one.</p>
         <hr class="r">
         <h2 style="margin-bottom:.4rem">New here?</h2>
@@ -912,6 +927,30 @@ def page_account():
         <p class="fine">Already have one? <a href="#" data-show="signin">Sign in instead</a>.</p>
       </div>
 
+      <div class="card" data-panel="forgot" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Forgotten your password?</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p>Enter the email address on your account. We will email you a link to choose a new
+          password; it works once, for an hour.</p>
+        <form data-form="forgot" novalidate>
+          {fld("Email", "fo-email", "email", "username", " required")}
+          <button class="btn btn-p" type="submit">Email me a link</button>
+        </form>
+        <p class="fine"><a href="#" data-show="signin">Back to sign in</a></p>
+      </div>
+
+      <div class="card" data-panel="reset" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose a new password</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="reset" novalidate>
+          {fld("New password &mdash; at least 12 characters", "re-next", "password", "new-password", ' required minlength="12"')}
+          {fld("Type it once more", "re-again", "password", "new-password", ' required minlength="12"')}
+          <button class="btn btn-p" type="submit">Save and sign in</button>
+        </form>
+        <p class="fine">Saving it signs you out everywhere else. Link not working?
+          <a href="#forgot" data-show="forgot">Ask for a new one</a>.</p>
+      </div>
+
       <div class="card" data-panel="change" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose your own password</h1>
         <p class="co-msg" data-msg hidden></p>
@@ -927,6 +966,14 @@ def page_account():
       <div class="card" data-panel="me" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.4rem" data-hello>Hello</h1>
         <p class="lede" style="margin-bottom:1rem" data-email></p>
+        <p class="co-msg" data-msg="me" hidden></p>
+        <div data-verify hidden>
+          <p style="margin:0 0 .9rem">Please confirm your email address: we sent you a link when you
+            made your account.</p>
+          <p class="co-msg" data-msg="verify" hidden></p>
+          <button class="btn" type="button" data-resend>Send the link again</button>
+          <hr class="r">
+        </div>
         <div data-apps hidden>
           <p style="margin:0 0 .9rem">Your account also opens the work tools &mdash; Hours &amp; invoices,
             and whatever else your role includes.</p>

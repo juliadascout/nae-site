@@ -20,6 +20,7 @@
 <meta property="og:image" content="https://naeinc.ca/brand/nae-og-share-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="noindex">
+<script>(function(){function take(){var m=/^#((?:reset|verify)=[A-Za-z0-9_-]{20,100})$/.exec(location.hash);if(!m)return;window.NAE_LINK=m[1];try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}try{window.dispatchEvent(new Event("nae-link"))}catch(e){}}take();addEventListener("popstate",take);addEventListener("hashchange",take)})()</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T7PT7JBB74"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-T7PT7JBB74");</script>
 <script src="/events.js" defer></script>
@@ -43,7 +44,8 @@
           <label class="fld"><span>Password</span><input id="si-password" type="password" autocomplete="current-password" required></label>
           <button class="btn btn-p" type="submit">Sign in</button>
         </form>
-        <p class="fine">Forgotten your password? Call 289-968-2028 or email sales@glamsquadcanada.com
+        <p class="fine" data-forgot-link hidden><a href="#forgot" data-show="forgot">Forgotten your password?</a></p>
+        <p class="fine" data-forgot-call>Forgotten your password? Call 289-968-2028 or email sales@glamsquadcanada.com
           and we will set you a new one.</p>
         <hr class="r">
         <h2 style="margin-bottom:.4rem">New here?</h2>
@@ -65,6 +67,30 @@
         <p class="fine">Already have one? <a href="#" data-show="signin">Sign in instead</a>.</p>
       </div>
 
+      <div class="card" data-panel="forgot" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Forgotten your password?</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p>Enter the email address on your account. We will email you a link to choose a new
+          password; it works once, for an hour.</p>
+        <form data-form="forgot" novalidate>
+          <label class="fld"><span>Email</span><input id="fo-email" type="email" autocomplete="username" required></label>
+          <button class="btn btn-p" type="submit">Email me a link</button>
+        </form>
+        <p class="fine"><a href="#" data-show="signin">Back to sign in</a></p>
+      </div>
+
+      <div class="card" data-panel="reset" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose a new password</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="reset" novalidate>
+          <label class="fld"><span>New password &mdash; at least 12 characters</span><input id="re-next" type="password" autocomplete="new-password" required minlength="12"></label>
+          <label class="fld"><span>Type it once more</span><input id="re-again" type="password" autocomplete="new-password" required minlength="12"></label>
+          <button class="btn btn-p" type="submit">Save and sign in</button>
+        </form>
+        <p class="fine">Saving it signs you out everywhere else. Link not working?
+          <a href="#forgot" data-show="forgot">Ask for a new one</a>.</p>
+      </div>
+
       <div class="card" data-panel="change" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose your own password</h1>
         <p class="co-msg" data-msg hidden></p>
@@ -80,6 +106,14 @@
       <div class="card" data-panel="me" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.4rem" data-hello>Hello</h1>
         <p class="lede" style="margin-bottom:1rem" data-email></p>
+        <p class="co-msg" data-msg="me" hidden></p>
+        <div data-verify hidden>
+          <p style="margin:0 0 .9rem">Please confirm your email address: we sent you a link when you
+            made your account.</p>
+          <p class="co-msg" data-msg="verify" hidden></p>
+          <button class="btn" type="button" data-resend>Send the link again</button>
+          <hr class="r">
+        </div>
         <div data-apps hidden>
           <p style="margin:0 0 .9rem">Your account also opens the work tools &mdash; Hours &amp; invoices,
             and whatever else your role includes.</p>
