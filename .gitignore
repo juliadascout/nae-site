@@ -261,3 +261,9 @@ __marimo__/
 # The redirect map is part of the website, not data: old public addresses and
 # where they go now. Named here so the *.csv rule above cannot drop it.
 !content/redirects.csv
+
+# Every address each course page has had, written by the build into public/.
+# The next build reads it to answer a renamed course's old address with a 301;
+# dropped by *.json above, renames would silently go back to the 404 page.
+# assets/.assetsignore keeps it off the live site.
+!public/_course-addresses.json

@@ -28,6 +28,14 @@ a{color:var(--vir-ink)}
 .hdr .wrap{display:flex;align-items:center;gap:1.4rem;min-height:64px}
 .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;margin-right:auto;color:inherit}
 .brand img{height:46px;width:auto;display:block;flex:none}
+/* The <picture> around the wordmark is the flex item, not the img. Left free to
+   shrink on a narrow header, it squeezed the logo to 111px wide while the img
+   kept its 46px height - the wordmark drawn about 13% too narrow. */
+.brand picture{flex:none;display:block}
+/* With the wordmark at its true width, the "Ontario" tag no longer fits beside
+   Account and Book a call on a phone and ran into them. It goes on narrow
+   screens; the button keeps to one line. */
+@media (max-width:480px){.brand span{display:none} .hdr .btn{white-space:nowrap}}
 .brand span{font-family:var(--mono);font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .nav{display:flex;gap:1.35rem;align-items:center}
 .nav a{text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:500;
@@ -172,8 +180,12 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   background:var(--plum-soft);border:1px solid var(--rule-2);border-radius:9px;
   padding:.8rem 1rem;margin-bottom:1rem}
 .kitbar b{font-family:var(--body);font-weight:700;font-size:1.15rem;color:var(--plum)}
-.kitbar em{font-style:normal;font:500 .72rem/1 var(--mono);letter-spacing:.09em;
-  text-transform:uppercase;color:var(--plum);opacity:.85}
+/* "Optional - not part of the course fee" is the line that has to be read. At
+   85% opacity it measured 3.96:1 on the pink ground, under the 4.5:1 minimum;
+   full-strength Deep Berry is 4.66:1 (5.6:1 in the dark theme), and a touch
+   larger. */
+.kitbar em{font-style:normal;font:500 .78rem/1.2 var(--mono);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--plum)}
 /* ---------- price breakdown ---------- */
 .brk{border:1px solid var(--rule-2);border-radius:9px;overflow:hidden;margin-bottom:.9rem}
 .brk div{display:flex;justify-content:space-between;gap:1rem;padding:.6rem .8rem;
@@ -251,6 +263,9 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   .stack{display:contents}
   .c-intro{order:1} .rail{order:2} .c-specs{order:3} .c-parts{order:4} .c-kit{order:5}
   .cta{order:6} .c-faq{order:7} .c-ask{order:8}
+  /* Related courses come last. Unordered, a card is order 0 and would jump
+     above the course description. */
+  .c-rel{order:9}
   /* one tile, not five, so the booking box is a thumb-flick away */
   .gal{grid-template-columns:1fr!important;height:172px!important;grid-auto-rows:auto!important}
   .gal div:not(:first-child){display:none}
@@ -394,3 +409,19 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 #acct .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
 #acct .co-msg[hidden],#acct [hidden]{display:none}
 #acct .fld input:focus{outline:2px solid var(--vir);outline-offset:1px}
+
+/* ---------- skill tags ---------- */
+/* What a course covers, under its name: the words people search with, shown
+   as plain text so they are read, indexed and translated like the rest of the
+   page. Not links - each one would lead back to this same page. */
+.skills{margin-top:1rem}
+.skills-h{margin:0 0 .45rem;font:500 .7rem/1 var(--mono);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted)}
+.skills ul{display:flex;flex-wrap:wrap;gap:.4rem;margin:0;padding:0;list-style:none}
+.skills li{font-size:.86rem;line-height:1.2;padding:.38rem .7rem;border-radius:100px;
+  background:var(--paper-2);border:1px solid var(--rule);color:var(--ink-2)}
+/* The subject chip on a course page leads back to its section of the list. */
+a.chip{text-decoration:none}
+a.chip:hover{text-decoration:underline;text-underline-offset:2px}
+/* The skills line under each subject on the course list. */
+.csec-skills{margin:.6rem 0 .9rem;font-size:.9rem;color:var(--ink-2);max-width:72ch}

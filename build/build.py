@@ -18,6 +18,7 @@ report. The build is the enforcement point.
 import os, re, csv, json, html, sys, shutil, glob
 sys.path.insert(0, os.path.dirname(__file__))
 from compliance import check
+from skills import SKILLS, SUBJECTS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -246,6 +247,28 @@ for c in COURSES:
     # teaching - and presenting it as money saved would be a false comparison.
     c["comparable"] = bool(c["parts"]) and c["hi"] >= 0.85 * c["partsHours"]
 
+# What each course teaches, in search wording (build/skills.py). A bundle with no
+# list of its own teaches what its parts teach. A course nobody has tagged yet
+# still publishes, with its own name as its only tag, and is listed at the end of
+# the build so a line can be added - a new course in Inventory must never be
+# held off the website for want of tags.
+def _teaches(c):
+    own = (SKILLS.get(c["id"]) or {}).get("teaches")
+    if own:
+        return list(own)
+    out = []
+    for p in c.get("parts") or []:
+        for t in _teaches(p):
+            if t not in out: out.append(t)
+    return out or [c["name"]]
+for c in COURSES:
+    c["teaches"] = _teaches(c)
+UNTAGGED = [c["name"] for c in COURSES if c["id"] not in SKILLS]
+STALE_TAGS = sorted(set(SKILLS) - {c["id"] for c in _ALL_COURSES})
+# Which bundles each course is taught inside, so its page can point at them.
+for c in COURSES:
+    c["inBundles"] = [b for b in COURSES if any(p["id"] == c["id"] for p in b.get("parts") or [])]
+
 def loc_courses(l):
     sc = l.get("courseScope")
     if sc is None: return COURSES
@@ -306,11 +329,16 @@ def ld(*objs):
                    + '</script>')
     return "".join(out)
 
-def ld_org():
+def ld_org(full=False):
+    """full=True adds every skill the courses teach, as knowsAbout - the one
+       place a search engine is told everything the organisation teaches. Only
+       the home page carries it; every course page names the organisation as its
+       provider, and repeating the full list in each of those says nothing new."""
     return {"@type": "Organization", "name": SITE["legal"], "alternateName": SITE["short"],
             "url": SITE["url"] + "/", "logo": SITE["url"] + "/brand/nae-favicon-512.png",
             "telephone": SITE["phone"], "email": SITE["email"],
             "areaServed": sorted({l["region"] for l in OPEN}),
+            **({"knowsAbout": ALL_SKILLS} if full else {}),
             # The same organisation's other website, while both are up: one entity
             # with two addresses, not two businesses with the same phone number.
             **({"sameAs": [LEGACY + "/"]} if LEGACY else {})}
@@ -355,7 +383,16 @@ def course_title(c):
        Four course names are long enough that "<name> Training | NAE" overflows.
        Drop the least useful part first - the suffix says nothing a searcher
        typed, and "Training" is already implied by a course page - rather than
-       truncating and losing the end of the name itself."""
+       truncating and losing the end of the name itself.
+
+       A tagged course leads with what people search for (build/skills.py):
+       "<search> Course | NAE", or the title written out for a bundle whose name
+       says less than what it contains. The page heading keeps the course's own
+       name either way; only the title in the search result changes."""
+    s = SKILLS.get(c["id"]) or {}
+    for t in (s.get("title"), s.get("search") and f"{s['search']} Course | {SITE['short']}"):
+        if t and len(t) <= TITLE_MAX:
+            return t
     for t in (f"{c['name']} Training | {SITE['short']}",
               f"{c['name']} | {SITE['short']}",
               f"{c['name']} Training",
@@ -529,22 +566,75 @@ BLURB = {"lash":"Isolation, placement, retention and aftercare, practised on a l
  "skin":"Skin assessment, product selection and treatment technique, with the aftercare you send clients home with.",
  "remove":"Product temperature, application and removal, plus the skin preparation and aftercare either side of it.",
  "nails":"Preparation, application, shaping and finish, built up until the result is consistent.",
+ "makeup":"Product choice and application, built up until the finished look is consistent.",
  "body":"Technique, client comfort and aftercare, taught to a standard you can work at."}
 def subject(n):
+    """The fallback for a course build/skills.py does not know yet: its section,
+       guessed from its name. A tagged course says its own subject."""
     n=n.lower()
     for d,p in [("lash",r"lash|eyelash"),("brow",r"brow|microblad"),("nails",r"nail|pedicure|manicure|acrylic|gel"),
                 ("hair",r"hair extension|weave|locs|micro link|micro loop|nano ring|fusion|tape-?in|braid"),
-                ("skin",r"facial|microderm|skin"),("remove",r"wax|sugar|threading")]:
+                ("skin",r"facial|microderm|skin"),("remove",r"wax|sugar|threading"),("makeup",r"make-?up")]:
         if re.search(p,n): return d
     return "body"
-for c in COURSES: c["subject"] = subject(c["name"])
 
-# Display order and labels for the seven subjects. The key is what subject()
-# returns and is what the anchors and joins use; the label is display only, so
+# Display order and labels for the subjects live in build/skills.py, beside the
+# tags. The key is what the anchors and joins use; the label is display only, so
 # renaming one breaks nothing.
-SUBJECTS = [("lash","Lash"),("brow","Brow"),("hair","Hair extensions"),
-            ("skin","Skin"),("nails","Nails"),("remove","Hair removal"),
-            ("body","Body & other")]
+SUBJECT_LABEL = dict(SUBJECTS)
+for c in COURSES:
+    c["subject"] = (SKILLS.get(c["id"]) or {}).get("subject") or subject(c["name"])
+    if c["subject"] not in SUBJECT_LABEL or c["subject"] not in BLURB:
+        raise SystemExit(f'{c["name"]}: subject {c["subject"]!r} is not one of '
+                         f'{[k for k, _ in SUBJECTS]} (build/skills.py)')
+    c["lede"] = (SKILLS.get(c["id"]) or {}).get("lede") or BLURB[c["subject"]]
+
+# Every skill taught anywhere, in subject order, each once. The organisation's
+# knowsAbout on the home page, and the skills line under each subject on the
+# course list.
+SUBJECT_SKILLS = {}
+for _k, _ in SUBJECTS:
+    SUBJECT_SKILLS[_k] = []
+    for _c in COURSES:
+        if _c["subject"] != _k: continue
+        for _t in _c["teaches"]:
+            # An untagged course's only tag is its own name - not a skill.
+            if _t not in SUBJECT_SKILLS[_k] and (_c["id"] in SKILLS or _t != _c["name"]):
+                SUBJECT_SKILLS[_k].append(_t)
+ALL_SKILLS = [t for k, _ in SUBJECTS for t in SUBJECT_SKILLS[k]]
+
+def and_list(xs):
+    """Lash, brow and nails - a list as a person would say it."""
+    xs = list(xs)
+    return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1] if xs else ""
+
+def course_desc(c, at):
+    """The search-result description: what it is, where, how long, what it costs.
+       Google shows about 155-160 characters, so the fullest version that fits is
+       used, dropping the least useful part first. Every fact comes from the
+       catalogue; nothing is promised that the course page does not say."""
+    s = SKILLS.get(c["id"]) or {}
+    phrase = s.get("search") or c["name"]
+    where = and_list(l["name"] for l in at) or "Ontario"
+    hours = c["duration"].split("/")[0].strip()
+    covers = [t for t in c["teaches"] if t != c["name"]]
+    kit = ", kit optional" if c["hasKit"] else ""
+    tail = f"{money(c['price'])} plus HST{kit}."
+    options = []
+    if len(covers) > 1:
+        options.append(f"{phrase} course in {where}. Covers {and_list(t.lower() for t in covers)}. "
+                       f"{hours}, certificate of completion. {tail}")
+    if c.get("parts"):
+        options.append(f"{phrase} course in {where}: {len(c['parts'])} methods in one programme. "
+                       f"{hours}, certificate of completion. {tail}")
+    options += [f"{phrase} course in {where}. {hours} of training, certificate of completion. {tail}",
+                f"{phrase} course in {where}. {hours}, certificate of completion. {tail}",
+                f"{phrase} course in {where}. {tail}",
+                f"{phrase} course. {tail}"]
+    for d in options:
+        if len(d) <= 160:
+            return d
+    return options[-1]
 
 PAGES = []   # (path, title, description, body)
 
@@ -619,33 +709,68 @@ def page_course(c):
             "costs less than booking them separately and the shared theory is taught once."))
     faq_html = "".join(f'<details{" open" if i==0 else ""}><summary>{E(q)}</summary><p>{E(a)}</p></details>'
                        for i,(q,a) in enumerate(faqs))
+    # The skills this course covers, under its name. Left off where the only tag
+    # is the course's own name - that would just repeat the heading.
+    covers = [t for t in c["teaches"] if t != c["name"]]
+    skills_html = ((f'<div class="skills"><p class="skills-h">Skills covered</p><ul>'
+                    + "".join(f"<li>{E(t)}</li>" for t in covers) + '</ul></div>') if covers else "")
+    # Where to go next: the programmes this course is part of, then other courses
+    # in the same subject. Courses already listed above as this programme's parts
+    # are not repeated.
+    shown = {p["id"] for p in c["parts"]} | {b["id"] for b in c["inBundles"]} | {c["id"]}
+    sib = [x for x in COURSES if x["subject"] == c["subject"] and x["id"] not in shown][:4]
+    related_html = ""
+    if c["inBundles"]:
+        related_html += ('<div class="card c-rel"><h2 style="margin-bottom:.35rem">Also taught as part of</h2>'
+                         f'<p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">{E(c["name"])} '
+                         f'is one of the methods in {"these programmes" if len(c["inBundles"]) > 1 else "this programme"}.</p>'
+                         + "".join(crow(b) for b in c["inBundles"]) + '</div>')
+    if sib:
+        related_html += ('<div class="card c-rel"><h2 style="margin-bottom:1rem">Related courses</h2>'
+                         + "".join(crow(x) for x in sib) + '</div>')
+    desc = course_desc(c, at)
+    url = f"{SITE['url']}/courses/{c['slug']}/"
+    phrase = (SKILLS.get(c["id"]) or {}).get("search") or c["name"]
     body = f"""<div class="wrap pad">
 <p class="bcrumb"><a href="/courses/">Courses</a><span>/</span><span>{E(c['name'])}</span></p>
 <div class="two"><div class="stack">
-  <div class="card c-intro"><span class="chip">{E(c['subject'].title())}</span>
+  <div class="card c-intro"><a class="chip" href="/courses/#{c['subject']}">{E(SUBJECT_LABEL[c['subject']])}</a>
     <h1 style="margin:.7rem 0 .8rem">{E(c['name'])}</h1>
-    <p class="lede">{E(BLURB[c['subject']])} The programme runs {E(c['duration'].replace(' / ',' across '))}, scheduled around your availability.</p></div>
+    <p class="lede">{E(c['lede'])} The programme runs {E(c['duration'].replace(' / ',' across '))}, scheduled around your availability.</p>
+    {skills_html}</div>
   <div class="card c-specs"><h2 style="margin-bottom:1rem">At a glance</h2><dl class="specs">{spec_html}</dl></div>
   {parts_html}
   {kit_html}
   <div class="card c-faq"><h2 style="margin-bottom:.9rem">Common questions</h2><div class="faq">{faq_html}</div></div>
+  {related_html}
 </div>{booking_rail(course=c)}</div>{mobile_bar(c)}</div>"""
     body += '<script src="/checkout.js" defer></script>'
+    # Google stopped showing course rich results in 2025; this is here so that
+    # search engines and AI answer engines read the same facts the page shows -
+    # including what the course teaches - rather than guessing them from layout.
     body += ld(
         {"@type": "Course", "name": c["name"],
-         "description": f"{c['name']} training. {c['duration']}.",
-         "url": f"{SITE['url']}/courses/{c['slug']}/",
+         "description": desc,
+         "url": url,
          "provider": ld_org(),
+         # A tagged course says what it teaches even when that is just its name
+         # ("Microblading"); the page leaves that off because it repeats the heading.
+         **({"teaches": c["teaches"]} if c["id"] in SKILLS else ({"teaches": covers} if covers else {})),
+         "keywords": ", ".join(dict.fromkeys([t.lower() for t in c["teaches"]] + [f"{phrase.lower()} course"])),
+         **({"coursePrerequisites": [{"@type": "Course", "name": p["name"],
+                                      "url": f"{SITE['url']}/courses/{p['slug']}/"} for p in c["prereqs"]]}
+            if c["prereqs"] else {}),
+         **({"hasPart": [{"@type": "Course", "name": p["name"],
+                          "url": f"{SITE['url']}/courses/{p['slug']}/"} for p in c["parts"]]}
+            if c["parts"] else {}),
          "offers": {"@type": "Offer", "price": c["price"], "priceCurrency": "CAD",
-                    "category": "Tuition", "url": f"{SITE['url']}/courses/{c['slug']}/"},
+                    "category": "Tuition", "url": url},
          "hasCourseInstance": [
              {"@type": "CourseInstance", "courseMode": "onsite",
               "location": {"@type": "Place", "name": l["name"], "address": ld_addr(l)}}
              for l in at]},
         ld_crumbs(("Courses", "/courses/"), (c["name"], None)))
-    return (f"/courses/{c['slug']}/", course_title(c),
-            f"{c['name']} training in {', '.join(l['name'] for l in at) or 'Ontario'}. "
-            f"{c['duration']}. {money(c['price'])}, kit optional.", body)
+    return (f"/courses/{c['slug']}/", course_title(c), desc, body)
 
 def page_area(city, locid, path):
     l = next((x for x in LOCS if x["id"] == locid), None)
@@ -679,9 +804,27 @@ def page_area(city, locid, path):
       <p>Usually, yes. It is the most common arrangement for students travelling in.</p></details>
   </div></div>
 </div>{booking_rail(location=l)}</div></div>"""
-    return (path, f"Beauty School Near {city} | {SITE['short']}",
-            f"Beauty and esthetics training near {city}, Ontario. Courses at our {l['name']} studio. "
-            f"Kits optional, certificate of completion issued.", body)
+    # The title and address stay exactly as they are - these pages carry the
+    # search traffic. The description now names what can be learned there.
+    desc = (f"{subjects_at(l, 4)} courses near {city}, Ontario, at our {l['name']} studio. "
+            f"Kits optional, certificate of completion issued.")
+    if len(desc) > 160:
+        desc = (f"Beauty and esthetics training near {city}, Ontario. Courses at our {l['name']} studio. "
+                f"Kits optional, certificate of completion issued.")
+    return (path, f"Beauty School Near {city} | {SITE['short']}", desc, body)
+
+def subjects_at(l, n=None):
+    """'Lash, brow, hair extension and nail' - the subjects taught at a studio,
+       in course-list order, as words for a sentence."""
+    here = {c["subject"] for c in loc_courses(l)}
+    words = [SUBJECT_WORD[k] for k, _ in SUBJECTS if k in here and k in SUBJECT_WORD]
+    words = words[:n] if n else words
+    s = and_list(words)
+    return s[:1].upper() + s[1:]
+# How each subject reads inside a sentence ("lash and nail courses"). Body & other
+# has no single word, so it is left out of these lists rather than mislabelled.
+SUBJECT_WORD = {"lash": "lash", "brow": "brow", "hair": "hair extension", "skin": "facial",
+                "nails": "nail", "remove": "hair removal", "makeup": "makeup"}
 
 def page_home():
     subs = {}
@@ -701,7 +844,7 @@ def page_home():
     body = f"""<div class="wrap hero">
   <p class="eyebrow">Hands-on beauty training &middot; Ontario</p>
   <h1>Learn on a real client,<br>with a trainer beside you.</h1>
-  <p class="lede">{len(COURSES)} courses in lash, brow, hair extensions, skin, nails and hair removal.
+  <p class="lede">{len(COURSES)} courses in {E(subject_sentence())}.
     {len(OPEN)} studios open across Niagara and York Region. Every course finishes with a certificate
     of completion, and kits are always optional.</p>
   <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.6rem">
@@ -711,17 +854,35 @@ def page_home():
     <div><b class="tnum">{len(COURSES)}</b><span>Courses</span></div>
     <div><b class="tnum">{len(OPEN)}</b><span>Studios open</span></div>
     <div><b class="tnum">{len(AREAS)}</b><span>Areas served</span></div>
-    <div><b class="tnum">2&ndash;27</b><span>Hours per course</span></div></div>
+    <div><b class="tnum">{hours_span()}</b><span>Hours per course</span></div></div>
 </div>
 <div class="wrap pad"><p class="eyebrow">Pick a subject</p>
   <h2 style="margin-bottom:1.4rem">What do you want to learn?</h2><div class="grid3">{tiles}</div></div>
 <div class="wrap pad"><p class="eyebrow">Where we teach</p>
   <h2 style="margin-bottom:1.4rem">Our studios</h2><div class="lcards">{locs}</div></div>"""
-    body += ld(ld_org(),
+    body += ld(ld_org(full=True),
                {"@type": "WebSite", "name": SITE["legal"], "url": SITE["url"] + "/"})
-    return ("/", f"Beauty Courses in Ontario | {SITE['short']}",
-            f"Hands-on beauty and esthetics training across {len(OPEN)} Ontario studios. "
-            f"{len(COURSES)} courses, optional kits, certificate of completion.", body)
+    desc = (f"{subject_sentence().capitalize()} courses across {len(OPEN)} Ontario studios. "
+            f"{len(COURSES)} courses, optional kits, certificate of completion.")
+    if len(desc) > 160:
+        desc = (f"Hands-on beauty and esthetics training across {len(OPEN)} Ontario studios. "
+                f"{len(COURSES)} courses, optional kits, certificate of completion.")
+    return ("/", f"Beauty Courses in Ontario | {SITE['short']}", desc, body)
+
+def subject_sentence():
+    """'lash, brow, hair extensions, skin, nails, hair removal and makeup' - every
+       subject with courses in it, from the list itself. It was typed out by hand,
+       and stopped being true the first time a subject was added."""
+    have = {c["subject"] for c in COURSES}
+    return and_list(label.lower() for k, label in SUBJECTS if k in have and k != "body")
+
+def hours_span():
+    """The shortest and longest course, from the catalogue. Typed by hand it read
+       2-27 while one programme runs 32-38 hours."""
+    lo = min(float(re.search(r"\d+(?:\.\d+)?", c["duration"]).group()) for c in COURSES
+             if re.search(r"\d", c["duration"] or ""))
+    hi = max(c["hi"] for c in COURSES)
+    return f"{lo:g}&ndash;{hi:g}"
 
 def page_courses():
     subs = {}
@@ -731,11 +892,26 @@ def page_courses():
             f'<strong>Kits are optional</strong> and never part of the course fee.</p>'
             + "".join(
                 f'<section class="csec" id="{k}"><h2>{E(label)}</h2>'
+                + (f'<p class="csec-skills">{E(" · ".join(SUBJECT_SKILLS[k]))}</p>' if SUBJECT_SKILLS.get(k) else "")
                 + "".join(crow(c) for c in subs[k]) + '</section>'
                 for k, label in SUBJECTS if subs.get(k))
             + '</div>')
-    return ("/courses/", f"Beauty Courses & Prices | {SITE['short']}",
-            f"All {len(COURSES)} courses with hours, fees and optional kit prices.", body)
+    # The whole list, grouped as the page groups it, with the prices the page
+    # shows. One machine-readable index of everything NAE teaches and charges.
+    body += ld({"@type": "OfferCatalog", "name": "Courses", "url": f"{SITE['url']}/courses/",
+                "itemListElement": [
+                    {"@type": "OfferCatalog", "name": label, "itemListElement": [
+                        {"@type": "Offer", "price": c["price"], "priceCurrency": "CAD",
+                         "itemOffered": {"@type": "Course", "name": c["name"],
+                                         "url": f"{SITE['url']}/courses/{c['slug']}/",
+                                         **({"teaches": c["teaches"]} if c["id"] in SKILLS else {})}}
+                        for c in subs[k]]}
+                    for k, label in SUBJECTS if subs.get(k)]})
+    desc = (f"All {len(COURSES)} courses in {subject_sentence()}, with hours, fees "
+            f"and optional kit prices.")
+    if len(desc) > 160:
+        desc = f"All {len(COURSES)} courses with hours, fees and optional kit prices."
+    return ("/courses/", f"Beauty Courses & Prices | {SITE['short']}", desc, body)
 
 def page_locations():
     cards = "".join(
@@ -782,7 +958,7 @@ def page_location(l):
       <div><dt>Enrolling</dt><dd>Yes<small>current intake</small></dd></div></dl></div>
   <div class="card"><h2 style="margin-bottom:.35rem">Courses taught here</h2>
     <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">{len(cs)} of the {len(COURSES)} courses
-      run at this studio.</p>{''.join(crow(c) for c in cs)}</div>
+      run at this studio, covering {E(subjects_at(l).lower())} training.</p>{''.join(crow(c) for c in cs)}</div>
   {area_html}
 </div>{booking_rail(location=l)}</div></div>"""
     body += ld(
@@ -790,10 +966,19 @@ def page_location(l):
          "parentOrganization": ld_org(),
          "url": f"{SITE['url']}/locations/{slugify(l['name'])}/",
          "telephone": SITE["phone"], "email": SITE["email"],
-         "address": ld_addr(l)},
+         "address": ld_addr(l),
+         # What is taught at this studio, as the skills each course covers.
+         "knowsAbout": [t for k, _ in SUBJECTS for t in SUBJECT_SKILLS[k]
+                        if any(t in c["teaches"] for c in cs)]},
         ld_crumbs(("Locations", "/locations/"), (l["name"], None)))
-    return (f"/locations/{slugify(l['name'])}/", f"{l['name']} Beauty School | {SITE['short']}",
-            f"Beauty and esthetics training in {l['name']}, {l['region']}. {len(cs)} courses.", body)
+    desc = (f"{subjects_at(l)} courses in {l['name']}, {l['region']}. "
+            f"{len(cs)} courses, optional kits, certificate of completion.")
+    if len(desc) > 160:
+        desc = (f"{subjects_at(l, 4)} courses in {l['name']}, {l['region']}. "
+                f"{len(cs)} courses, optional kits, certificate of completion.")
+    if len(desc) > 160:
+        desc = f"Beauty and esthetics training in {l['name']}, {l['region']}. {len(cs)} courses."
+    return (f"/locations/{slugify(l['name'])}/", f"{l['name']} Beauty School | {SITE['short']}", desc, body)
 
 def page_areas():
     out = []
@@ -1199,6 +1384,42 @@ _clash = sorted(set(REDIRECTS) & GENERATED)
 if _clash:
     raise SystemExit(f"content/redirects.csv redirects pages the build generates: {_clash}")
 
+# A course's address comes from its name, so renaming a course in Inventory moves
+# its page - and the old address, which ads, bookmarks and other sites still point
+# at, would otherwise answer with the 404 page from that moment on. The build keeps
+# a record of every address each course id has been published at
+# (public/_course-addresses.json, committed with the rest of public/ by whoever
+# publishes) and answers each old one with a 301 to wherever the course lives now.
+# A course that is archived or deleted sends its old addresses to the course list.
+# Read here, before public/ is emptied. Nothing in this can stop a build: a record
+# that is missing or unreadable just starts a new one from today's addresses.
+_ADDR_FILE = "_course-addresses.json"
+def _read_addresses():
+    for d in (OUT, os.path.join(ROOT, "public")):
+        try:
+            with open(os.path.join(d, _ADDR_FILE), encoding="utf-8") as fh:
+                data = json.load(fh).get("courses", {})
+            return {k: [s for s in v if isinstance(s, str) and re.fullmatch(r"[a-z0-9-]+", s)]
+                    for k, v in data.items() if isinstance(v, list)}
+        except (OSError, ValueError, AttributeError):
+            continue
+    return {}
+COURSE_ADDRESSES = _read_addresses()
+_live_slug = {c["id"]: c["slug"] for c in COURSES}
+for _cid, _slug in _live_slug.items():
+    _seen = COURSE_ADDRESSES.setdefault(_cid, [])
+    if _slug not in _seen: _seen.append(_slug)
+MOVED = {}
+for _cid, _slugs in COURSE_ADDRESSES.items():
+    _to = f"/courses/{_live_slug[_cid]}/" if _cid in _live_slug else "/courses/"
+    for _s in _slugs:
+        _from = f"/courses/{_s}/"
+        # Never redirect a page that is being built (a new course may take an old
+        # name), and never second-guess a line someone wrote in redirects.csv.
+        if _from == _to or _from in GENERATED or _from in REDIRECTS: continue
+        MOVED[_from] = _to
+REDIRECTS.update(MOVED)
+
 def migrated_pages():
     out = []
     if not os.path.isdir(CLEAN): return out
@@ -1405,6 +1626,17 @@ for path, doc in docs:
     open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(rebase(relink(doc)))
     written += 1
 
+# Every address each course has been published at (see MOVED above). Committed
+# with public/ so the next build knows where a renamed course used to live;
+# assets/.assetsignore keeps it off the live site.
+with open(os.path.join(OUT, _ADDR_FILE), "w", encoding="utf-8") as fh:
+    json.dump({"about": "Every address each course id has been published at, oldest first. "
+                        "Written by build/build.py; old addresses are answered with a 301 "
+                        "to the current one. Do not edit by hand.",
+               "courses": {k: COURSE_ADDRESSES[k] for k in sorted(COURSE_ADDRESSES)}},
+              fh, indent=1, ensure_ascii=False)
+    fh.write("\n")
+
 # Served for any URL that matches no page. Without it the host decides, and a
 # host that answers an unknown path with the home page tells a search engine
 # every wrong URL is a real page. Written as a bare file, not a directory, and
@@ -1469,6 +1701,12 @@ if os.environ.get("NAE_REVIEW_OUT"):
     print(f"    written to {os.environ['NAE_REVIEW_OUT']}")
 print(f"pages with warnings : {len(warned)}")
 for p, w in warned[:6]: print(f"    {p}  ->  {w}")
+print(f"skill tags          : {len(COURSES) - len(UNTAGGED)} of {len(COURSES)} courses tagged, "
+      f"{len(ALL_SKILLS)} skills (build/skills.py)")
+for n in UNTAGGED: print(f"    no tags yet - add a line for it: {n}")
+for i in STALE_TAGS: print(f"    tags for a course that is no longer in the catalogue: {i}")
+print(f"course pages moved  : {len(MOVED)}" + (" (301s in public/_redirects)" if MOVED and not BASE else ""))
+for a, b in sorted(MOVED.items()): print(f"    {a} -> {b}")
 
 
 print(f"checkout prices     : {write_checkout_prices()}")

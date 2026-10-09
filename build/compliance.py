@@ -55,11 +55,17 @@ def check(text, strict=False, path=""):
     # became "the  best" and slipped past every multi-word rule below. Collapse
     # runs of whitespace first: inline markup must not be a way through the gate.
     plain = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text)))
-    # Words a reader sees that are not body text: the page's address and image
-    # alt text. Checked against the review rules, and against everything on a
-    # strict page.
+    # Words a reader sees that are not body text: the page's address, image alt
+    # text, and the description and share titles - which live inside <meta> tags,
+    # so stripping tags above threw them away unread. The search-result snippet
+    # is the copy a searcher is most likely to read, so it is checked like the
+    # page. Checked against the review rules, and against everything on a strict
+    # page.
+    metas = re.findall(r'<meta\s+(?:name|property)="(?:description|keywords|og:title|og:description|'
+                       r'twitter:title|twitter:description)"\s+content="([^"]*)"', text, re.I)
     extra = " ".join([re.sub(r'[-_/]+', ' ', path)] +
-                     [html.unescape(a) for a in re.findall(r'\salt="([^"]*)"', text)])
+                     [html.unescape(a) for a in re.findall(r'\salt="([^"]*)"', text)] +
+                     [html.unescape(m) for m in metas])
     blocks, warns = [], []
     for label, pat in BLOCK.items():
         hits = {m.group(0).lower() for m in re.finditer(pat, plain + (" " + extra if strict else ""), re.I)}
