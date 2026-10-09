@@ -20,10 +20,13 @@ const env = {
 
 const req = (path, init = {}) => new Request('https://naeinc.ca' + path, init);
 
-for (const p of ['/api/auth/signup', '/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/auth/password', '/api/auth/profile']) {
+for (const p of ['/api/auth/status', '/api/auth/signup', '/api/auth/login', '/api/auth/logout', '/api/auth/me',
+                 '/api/auth/password', '/api/auth/profile',
+                 '/api/auth/forgot', '/api/auth/reset', '/api/auth/verify', '/api/auth/verify/resend']) {
   check(`${p} goes to the accounts system`, ACCOUNT_PATHS.has(p));
 }
-for (const p of ['/api/admin/users', '/api/auth/bootstrap', '/api/data/tracker', '/api/me', '/api/auth/../admin/users']) {
+for (const p of ['/api/admin/users', '/api/auth/bootstrap', '/api/data/tracker', '/api/me', '/api/auth/../admin/users',
+                 '/api/auth/verify/../../admin/users']) {
   check(`${p} does not`, !ACCOUNT_PATHS.has(p));
 }
 

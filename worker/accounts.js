@@ -22,12 +22,19 @@ const fail = (status, message, detail) => {
 };
 
 export const ACCOUNT_PATHS = new Set([
+  "/api/auth/status",
   "/api/auth/signup",
   "/api/auth/login",
   "/api/auth/logout",
   "/api/auth/me",
   "/api/auth/password",
   "/api/auth/profile",
+  /* The links in account emails lead to this site's account page, so
+     choosing a password from one, and confirming an address, happen here. */
+  "/api/auth/forgot",
+  "/api/auth/reset",
+  "/api/auth/verify",
+  "/api/auth/verify/resend",
 ]);
 
 export async function toAccounts(request, env, path) {
