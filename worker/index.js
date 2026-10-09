@@ -1,5 +1,6 @@
 import prices from "./prices.json";
 import { recordEnrolment } from "./enrolments.js";
+import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
 
 /* The site is static. This Worker serves it, and adds the two endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
@@ -236,6 +237,7 @@ export default {
     const path = base && url.pathname.startsWith(base + "/") ? url.pathname.slice(base.length) : url.pathname;
 
     if (path.startsWith("/api/")) {
+      if (ACCOUNT_PATHS.has(path)) return toAccounts(request, env, path);
       if (path === "/api/checkout/config" && request.method === "GET") {
         const { mode } = ppBase(env);
         return json({

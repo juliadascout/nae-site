@@ -34,6 +34,15 @@ CHECKOUT_ENABLED = "true"
 # PAYPAL_CLIENT_SECRET is NOT here and never will be. It is set with:
 #   npx wrangler secret put PAYPAL_CLIENT_SECRET
 
+# Accounts: the same ones the apps use, kept by the nae-inc Worker. This is a
+# service binding - a direct call to that Worker inside Cloudflare, not a
+# request across the internet, so Cloudflare Access is not in the way - and it
+# only reaches the endpoints worker/index.js passes on (ACCOUNT_PATHS). It is
+# not the accounts database: this Worker still cannot read a password hash.
+[[services]]
+binding = "ACCOUNTS"
+service = "nae-inc"
+
 # Who bought what. Separate from the accounts database on purpose: this Worker
 # is the public site, and it has no business being able to read a password
 # hash. Personal data lives here and never in the data repository.

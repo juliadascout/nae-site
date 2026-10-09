@@ -383,3 +383,14 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .co-msg[data-kind="error"]{color:var(--plum)}
 .co-msg[data-kind="done"]{background:var(--good-bg);color:var(--good-fg);
   padding:.6rem .7rem;border-radius:8px;font-weight:600}
+
+/* ---------- account ---------- */
+/* In the header beside "Book a call" rather than in the menu, because the menu
+   is hidden on phones and that is where most people will make an account. */
+.acct{text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:500;
+  padding:.25rem 0;border-bottom:1.5px solid transparent;white-space:nowrap}
+.acct:hover,.acct[aria-current]{border-bottom-color:var(--vir);color:var(--vir-ink)}
+#acct .co-msg{margin:0 0 .9rem}
+#acct .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#acct .co-msg[hidden],#acct [hidden]{display:none}
+#acct .fld input:focus{outline:2px solid var(--vir);outline-offset:1px}

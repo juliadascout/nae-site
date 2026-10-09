@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en-CA"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your account | NAE</title>
+<meta name="description" content="Sign in to your NAE account, or make one.">
+<link rel="canonical" href="https://naeinc.ca/account/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/nae-favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/brand/nae-favicon-16.png">
+<link rel="apple-touch-icon" href="/brand/nae-favicon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="National Association of Estheticians Inc.">
+<meta property="og:title" content="Your account | NAE">
+<meta property="og:description" content="Sign in to your NAE account, or make one.">
+<meta property="og:url" content="https://naeinc.ca/account/">
+<meta property="og:image" content="https://naeinc.ca/brand/nae-og-share-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="robots" content="noindex">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T7PT7JBB74"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-T7PT7JBB74");</script>
+<script src="/events.js" defer></script>
+</head><body>
+<header class="hdr"><div class="wrap">
+  <a class="brand" href="/"><picture>
+    <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
+    <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
+  <nav class="nav"><a href="/courses/">Courses</a><a href="/locations/">Locations</a><a href="/areas-served/">Areas served</a><a href="/our-team/">Our team</a><a href="/contact/">Contact</a></nav>
+  <a class="acct" href="/account/" aria-current="page">Account</a>
+  <a class="btn btn-p" href="/contact/">Book a call</a>
+</div></header>
+<main><div class="wrap pad"><div class="two"><div class="stack" id="acct">
+      <div class="card" data-panel="loading"><p class="lede" style="margin:0">Checking whether you are signed in&hellip;</p></div>
+
+      <div class="card" data-panel="signin" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Sign in</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="signin" novalidate>
+          <label class="fld"><span>Email</span><input id="si-email" type="email" autocomplete="username" required></label>
+          <label class="fld"><span>Password</span><input id="si-password" type="password" autocomplete="current-password" required></label>
+          <button class="btn btn-p" type="submit">Sign in</button>
+        </form>
+        <p class="fine">Forgotten your password? Call 289-968-2028 or email sales@glamsquadcanada.com
+          and we will set you a new one.</p>
+        <hr class="r">
+        <h2 style="margin-bottom:.4rem">New here?</h2>
+        <p style="margin:0 0 .9rem">Make an account with your email and a password.</p>
+        <button class="btn" type="button" data-show="signup">Make an account</button>
+      </div>
+
+      <div class="card" data-panel="signup" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Make an account</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="signup" novalidate>
+          <label class="fld"><span>Your name</span><input id="su-name" type="text" autocomplete="name" required maxlength="120"></label>
+          <label class="fld"><span>Email</span><input id="su-email" type="email" autocomplete="email" required></label>
+          <label class="fld"><span>Phone (optional)</span><input id="su-phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          <label class="fld"><span>Password &mdash; at least 12 characters</span><input id="su-password" type="password" autocomplete="new-password" required minlength="12"></label>
+          <label class="fld"><span>Type it once more</span><input id="su-again" type="password" autocomplete="new-password" required minlength="12"></label>
+          <button class="btn btn-p" type="submit">Make my account</button>
+        </form>
+        <p class="fine">Already have one? <a href="#" data-show="signin">Sign in instead</a>.</p>
+      </div>
+
+      <div class="card" data-panel="change" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose your own password</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p>The password you were given is temporary. Pick one only you know.</p>
+        <form data-form="change" novalidate>
+          <label class="fld"><span>The temporary password you were given</span><input id="ch-current" type="password" autocomplete="current-password"></label>
+          <label class="fld"><span>New password &mdash; at least 12 characters</span><input id="ch-next" type="password" autocomplete="new-password" required minlength="12"></label>
+          <label class="fld"><span>Type it once more</span><input id="ch-again" type="password" autocomplete="new-password" required minlength="12"></label>
+          <button class="btn btn-p" type="submit">Save and continue</button>
+        </form>
+      </div>
+
+      <div class="card" data-panel="me" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.4rem" data-hello>Hello</h1>
+        <p class="lede" style="margin-bottom:1rem" data-email></p>
+        <div data-apps hidden>
+          <p style="margin:0 0 .9rem">Your account also opens the work tools &mdash; Hours &amp; invoices,
+            and whatever else your role includes.</p>
+          <a class="btn btn-p" data-apps-link href="#">Open the work tools</a>
+          <hr class="r">
+        </div>
+        <h2 style="margin-bottom:.6rem">Your details</h2>
+        <p class="co-msg" data-msg="details" hidden></p>
+        <form data-form="details" novalidate>
+          <label class="fld"><span>Name</span><input id="me-name" type="text" autocomplete="name" maxlength="120"></label>
+          <label class="fld"><span>Phone</span><input id="me-phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <hr class="r">
+        <h2 style="margin-bottom:.6rem">Password</h2>
+        <p class="co-msg" data-msg="password" hidden></p>
+        <form data-form="password" novalidate>
+          <label class="fld"><span>Current password</span><input id="pw-current" type="password" autocomplete="current-password" required></label>
+          <label class="fld"><span>New password &mdash; at least 12 characters</span><input id="pw-next" type="password" autocomplete="new-password" required minlength="12"></label>
+          <label class="fld"><span>Type it once more</span><input id="pw-again" type="password" autocomplete="new-password" required minlength="12"></label>
+          <button class="btn" type="submit">Change password</button>
+        </form>
+        <p class="fine">Changing it signs you out everywhere else.</p>
+        <hr class="r">
+        <button class="btn" type="button" data-signout>Sign out</button>
+      </div>
+      </div>
+
+      <aside class="stack"><div class="card">
+        <p class="eyebrow">About accounts</p>
+        <ul class="bul" style="margin-top:.4rem">
+          <li>One account for everything with NAE. If you work with us, the same email and
+            password sign you in to the work tools.</li>
+          <li>We keep your name, your email, your phone number if you give it, and your password in a
+            form that cannot be read back by anyone, including us.</li>
+          <li>Making an account does not sign you up for marketing email.</li>
+          <li>To change your email address or close your account, call 289-968-2028 or
+            email sales@glamsquadcanada.com.</li>
+        </ul>
+        <p class="fine">More in our <a href="/privacy/">privacy policy</a>.</p>
+      </div></aside>
+      </div></div>
+      <script src="/account.js" defer></script></main>
+<footer class="ftr"><div class="wrap">
+  <div><strong style="color:var(--ink)">National Association of Estheticians Inc.</strong><br>
+    289-968-2028 &nbsp;&middot;&nbsp; sales@glamsquadcanada.com</div>
+  <div>St. Catharines &middot; Niagara Falls &middot; Richmond Hill</div>
+  <div>Kits are optional and priced separately.<br>Certificate of completion issued on every course.</div>
+</div></footer></body></html>
