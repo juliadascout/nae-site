@@ -54,7 +54,18 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         # slots she was not actually free for. To split booking by course or by
         # studio later, make this a dict keyed by course or location id; every page
         # reads it from here, so nothing else has to change.
-        "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27"}
+        "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27",
+        # The old WordPress site, while it is still up somewhere else. Kalleigh's
+        # decision on 9 Oct 2026 (option E) puts this site on a new domain of its own
+        # and keeps WordPress at naeinc.ca for now. While both are up, set this to
+        # "https://naeinc.ca" (and "domain" above to the new one): every page this site
+        # copied from WordPress then names the original as the page to rank
+        # (rel=canonical), stays out of this site's sitemap, and the journal's listing
+        # pages are kept out of search. Two sites with the same words compete, and the
+        # older one wins; this way they do not compete at all, and this site ranks for
+        # what only it has - the courses, prices, studios and checkout. The day
+        # naeinc.ca is redirected here, set it back to None and rebuild.
+        "legacy":None}
 
 # Where the site sits on its domain. Empty is the root (naeinc.ca/); NAE_BASE=/beauty-school
 # builds it for a subfolder instead. This is the one place that is decided: every
@@ -64,7 +75,20 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
 BASE = (os.environ.get("NAE_BASE") or "").strip().rstrip("/")
 if BASE and not re.fullmatch(r"(/[a-z0-9][a-z0-9-]*)+", BASE):
     raise SystemExit(f"NAE_BASE must look like /beauty-school, not {BASE!r}")
+# NAE_DOMAIN and NAE_LEGACY override the two settings above, for a test build only:
+# the publish workflow builds with neither, so what is written in SITE is what goes
+# live. Both must be a bare https address with no path.
+for _key, _env in (("domain", "NAE_DOMAIN"), ("legacy", "NAE_LEGACY")):
+    _v = (os.environ.get(_env) or SITE.get(_key) or "").strip().rstrip("/")
+    if _v and not re.fullmatch(r"https://[a-z0-9-]+(\.[a-z0-9-]+)+", _v):
+        raise SystemExit(f"{_env or _key} must look like https://example.ca, not {_v!r}")
+    SITE[_key] = _v or None
+if not SITE["domain"]:
+    raise SystemExit("SITE has no domain")
+if SITE["legacy"] == SITE["domain"]:
+    raise SystemExit("SITE legacy is the old site somewhere else; it cannot be this site's own domain")
 SITE["url"] = SITE["domain"] + BASE
+LEGACY = SITE["legacy"]
 
 # Root-relative addresses in a finished page: any attribute value starting with a
 # single "/", every entry of a srcset, and url(/...) in inline styles.
@@ -286,7 +310,10 @@ def ld_org():
     return {"@type": "Organization", "name": SITE["legal"], "alternateName": SITE["short"],
             "url": SITE["url"] + "/", "logo": SITE["url"] + "/brand/nae-favicon-512.png",
             "telephone": SITE["phone"], "email": SITE["email"],
-            "areaServed": sorted({l["region"] for l in OPEN})}
+            "areaServed": sorted({l["region"] for l in OPEN}),
+            # The same organisation's other website, while both are up: one entity
+            # with two addresses, not two businesses with the same phone number.
+            **({"sameAs": [LEGACY + "/"]} if LEGACY else {})}
 
 def trim_title(t):
     """Drop only the boilerplate, and only when the title is too long.
@@ -362,6 +389,9 @@ def ga_tag():
 
 def shell(title, desc, path, body, canonical=None):
     robots = '\n<meta name="robots" content="noindex">' if path in NOINDEX else ""
+    # A path is on this site; a full address is a page somewhere else that this one
+    # is a copy of (LEGACY).
+    canon = canonical if (canonical or "").startswith("https://") else SITE['url'] + (canonical or path)
     nav_html = "".join(
         '<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h == path else '', E(n))
         for n, h in NAV)
@@ -371,7 +401,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
-<link rel="canonical" href="{SITE['url']}{canonical or path}">
+<link rel="canonical" href="{E(canon)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -384,7 +414,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:site_name" content="{E(SITE['legal'])}">
 <meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}">
-<meta property="og:url" content="{SITE['url']}{canonical or path}">
+<meta property="og:url" content="{E(canon)}">
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">{robots}{ga_tag()}
 </head><body>
@@ -1229,8 +1259,15 @@ def taxonomy_pages(entries):
                     f'<a href="/blog/">All posts</a></p>{rows}</div>'))
     return out
 
-PAGES.append(page_blog_index(MIG))
-PAGES.extend(taxonomy_pages(MIG))
+_listings = [page_blog_index(MIG)] + taxonomy_pages(MIG)
+PAGES.extend(_listings)
+
+# While the old site is up (LEGACY), the copied journal points at its originals and
+# the pages that list it - the journal index, categories and tags - stay out of
+# search: they would be the only copies left competing.
+COPIED = {p for p, *_ in MIG} if LEGACY else set()
+if LEGACY:
+    NOINDEX |= {p for p, *_ in _listings}
 ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 
 # WordPress served the same front page at / and at /home/. Both URLs are worth
@@ -1248,7 +1285,8 @@ seen = set()
 for path, title, desc, body in ALL:
     if path in seen: continue
     seen.add(path)
-    doc = shell(title, desc, path, body, canonical=CANONICAL.get(path))
+    doc = shell(title, desc, path, body,
+                canonical=(LEGACY + CANONICAL.get(path, path)) if path in COPIED else CANONICAL.get(path))
     blocks, warns = check(doc, strict=path in GENERATED, path=path)
     if blocks:
         quarantined.append((path, blocks)); continue
@@ -1350,7 +1388,8 @@ open(f"{OUT}/404.html", "w", encoding="utf-8").write(rebase(relink(_404)))
 open(f"{OUT}/sitemap.xml","w").write(
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + "".join(f"  <url><loc>{SITE['url']}{p}</loc></url>\n"
-              for p in sorted(p for p, _ in docs) if p not in CANONICAL and p not in NOINDEX) + "</urlset>\n")
+              for p in sorted(p for p, _ in docs)
+              if p not in CANONICAL and p not in NOINDEX and p not in COPIED) + "</urlset>\n")
 open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['url']}/sitemap.xml\n")
 
 if REDIRECTS and not BASE:
@@ -1366,6 +1405,10 @@ print(f"refused by the gate : {len(refused)} (excluded from the index, so no dea
 for r in refused: print(f"    {r}")
 print(f"quarantined at write: {len(quarantined)}")
 for p, b in quarantined[:8]: print(f"    {p}  ->  {b}")
+print(f"domain              : {SITE['url']}")
+if LEGACY:
+    print(f"old site still up   : {LEGACY} - {len(COPIED)} copied pages name it as the original, "
+          f"{len(_listings)} journal listings kept out of search")
 print(f"redirects           : {len(REDIRECTS)}" + ("" if BASE else " (public/_redirects)"))
 for r in retargeted: print(f"    course page gone, now sent to /courses/: {r}")
 print(f"withheld on purpose : {len(withheld)}")

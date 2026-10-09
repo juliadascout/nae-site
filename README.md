@@ -64,11 +64,43 @@ their addresses would throw that away. Verified: 21 of 21 match.
 Build output is `public/`. Host it anywhere static.
 
 `assets/_headers` marks every workers.dev address `noindex`, so the preview copy
-never competes with naeinc.ca in search results. It does not apply to naeinc.ca.
+never competes with the real domain in search results. It does not apply there.
 
-### Where the site sits on naeinc.ca
+### Where the site sits
 
-`NAE_BASE` decides it, and nothing else does. Every internal link, image,
+**Decided 9 Oct 2026 (Kalleigh): option E, a new domain of its own.** The
+WordPress site stays up at naeinc.ca for now. Two settings in `SITE` at the top of
+`build/build.py` carry that, and nothing else does:
+
+- `domain`: where this site is served. Every canonical address, sitemap entry,
+  structured-data URL and share link follows it.
+- `legacy`: the old site, while it is still up (`"https://naeinc.ca"`). The 163
+  pages copied from WordPress then name their naeinc.ca original as the page to
+  rank, and stay out of this site's sitemap. The journal's index, category and tag
+  pages are kept out of search, and the organisation's structured data lists
+  naeinc.ca as the same organisation's other site. Two sites with the same words
+  compete, and the older one wins. This way they do not compete, and this site
+  ranks for what only it has: the courses, prices, studios and checkout.
+  Set it back to `None` the day naeinc.ca is redirected here, and rebuild.
+
+`NAE_DOMAIN` and `NAE_LEGACY` override both settings for a test build. The publish
+workflow sets neither, so what is written in `SITE` is what goes live.
+
+Switching to the new domain, in order:
+
+1. Register the domain in NAE's name, in an account NAE controls.
+2. Add it to Cloudflare and move its nameservers there.
+3. If nothing sends email from it, publish `v=spf1 -all` and a DMARC record with
+   `p=reject`, so nobody else can send as it. If something will send email from it,
+   set up that service's SPF and DKIM records instead.
+4. Set `domain` (and `legacy`, while naeinc.ca is up) and merge. The site rebuilds.
+5. Attach the domain to the `nae-site` Worker as a custom domain, and redirect
+   `www` to it.
+6. Add it to Google Search Console (DNS verification) and submit the sitemap. Verify
+   it for Meta ads as well.
+7. In Cloudflare's AI Crawl Control, allow the AI crawlers that cite their sources.
+
+`NAE_BASE` decides where the site sits *on* its domain. Every internal link, image,
 stylesheet, canonical address, sitemap entry and structured-data URL follows it.
 
 - **At the root** (the default, `NAE_BASE` unset): the new site replaces the
