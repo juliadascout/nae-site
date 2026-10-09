@@ -598,7 +598,8 @@ for _k, _ in SUBJECTS:
     for _c in COURSES:
         if _c["subject"] != _k: continue
         for _t in _c["teaches"]:
-            if _t not in SUBJECT_SKILLS[_k] and _t != _c["name"]:
+            # An untagged course's only tag is its own name - not a skill.
+            if _t not in SUBJECT_SKILLS[_k] and (_c["id"] in SKILLS or _t != _c["name"]):
                 SUBJECT_SKILLS[_k].append(_t)
 ALL_SKILLS = [t for k, _ in SUBJECTS for t in SUBJECT_SKILLS[k]]
 
@@ -752,8 +753,10 @@ def page_course(c):
          "description": desc,
          "url": url,
          "provider": ld_org(),
-         **({"teaches": covers} if covers else {}),
-         "keywords": ", ".join([t.lower() for t in covers] + [f"{phrase.lower()} course"]),
+         # A tagged course says what it teaches even when that is just its name
+         # ("Microblading"); the page leaves that off because it repeats the heading.
+         **({"teaches": c["teaches"]} if c["id"] in SKILLS else ({"teaches": covers} if covers else {})),
+         "keywords": ", ".join(dict.fromkeys([t.lower() for t in c["teaches"]] + [f"{phrase.lower()} course"])),
          **({"coursePrerequisites": [{"@type": "Course", "name": p["name"],
                                       "url": f"{SITE['url']}/courses/{p['slug']}/"} for p in c["prereqs"]]}
             if c["prereqs"] else {}),
@@ -901,8 +904,7 @@ def page_courses():
                         {"@type": "Offer", "price": c["price"], "priceCurrency": "CAD",
                          "itemOffered": {"@type": "Course", "name": c["name"],
                                          "url": f"{SITE['url']}/courses/{c['slug']}/",
-                                         **({"teaches": [t for t in c["teaches"] if t != c["name"]]}
-                                            if any(t != c["name"] for t in c["teaches"]) else {})}}
+                                         **({"teaches": c["teaches"]} if c["id"] in SKILLS else {})}}
                         for c in subs[k]]}
                     for k, label in SUBJECTS if subs.get(k)]})
     desc = (f"All {len(COURSES)} courses in {subject_sentence()}, with hours, fees "
