@@ -1,0 +1,128 @@
+{
+ "about": "Every address each course id has been published at, oldest first. Written by build/build.py; old addresses are answered with a 301 to the current one. Do not edit by hand.",
+ "courses": {
+  "crs-basic-body-sugaring": [
+   "basic-body-sugaring"
+  ],
+  "crs-basic-body-wax-and-brazilian": [
+   "basic-body-wax-brazilian"
+  ],
+  "crs-basic-body-waxing": [
+   "basic-body-waxing"
+  ],
+  "crs-basic-makeup-training-on-self": [
+   "basic-makeup-training-on-self"
+  ],
+  "crs-basic-nail-training": [
+   "basic-nail-training"
+  ],
+  "crs-braid-in-hair-extensions": [
+   "braid-in-hair-extensions"
+  ],
+  "crs-brow-lamination-and-wax": [
+   "brow-lamination-wax"
+  ],
+  "crs-brow-mapping": [
+   "brow-mapping"
+  ],
+  "crs-brow-tint-and-wax": [
+   "brow-tint-wax"
+  ],
+  "crs-business-development": [
+   "business-development"
+  ],
+  "crs-camille-master-hair-extensions": [
+   "weave-master-hair-extensions"
+  ],
+  "crs-classic-and-hybrid-lash-extensions": [
+   "classic-hybrid-lash-extensions"
+  ],
+  "crs-classic-and-volume-lash-extensions": [
+   "classic-volume-lash-extensions"
+  ],
+  "crs-classic-master-hair-extensions": [
+   "classic-master-hair-extensions"
+  ],
+  "crs-classic-weave-hair-extensions": [
+   "classic-weave-hair-extensions"
+  ],
+  "crs-eyebrow-lamination-wax-and-tint": [
+   "eyebrow-lamination-wax-tint"
+  ],
+  "crs-facial-training": [
+   "facial-training"
+  ],
+  "crs-fusion-hair-extensions": [
+   "fusion-hair-extensions"
+  ],
+  "crs-grand-master-hair-extensions": [
+   "grand-master-hair-extensions"
+  ],
+  "crs-grand-master-lash-artist-classic-volume-lift-and-tint": [
+   "grand-master-lash-artist-classic-volume-lift-tint"
+  ],
+  "crs-grand-master-nail-technician-acrylic-gel-tips": [
+   "grand-master-nail-technician-acrylic-gel-tips"
+  ],
+  "crs-hybrid-and-volume-lash-extensions": [
+   "hybrid-volume-lash-extensions"
+  ],
+  "crs-lash-lift-and-tint": [
+   "lash-lift-tint"
+  ],
+  "crs-locs-hair-extensions": [
+   "locs-hair-extensions"
+  ],
+  "crs-makeup-artist-training-on-other": [
+   "makeup-artist-training-on-other"
+  ],
+  "crs-master-acrylic-nail-technician-tips-and-shaping": [
+   "master-acrylic-nail-technician-tips-shaping"
+  ],
+  "crs-master-brow": [
+   "master-brow"
+  ],
+  "crs-master-gel-and-gel-x-technician-tips-and-shaping": [
+   "master-gel-gel-x-technician-tips-shaping"
+  ],
+  "crs-micro-bead-weave-hair-extensions": [
+   "micro-bead-weave-hair-extensions"
+  ],
+  "crs-micro-link-micro-loop-and-nano-ring-hair-extensions": [
+   "micro-link-micro-loop-nano-ring-hair-extensions"
+  ],
+  "crs-microblading": [
+   "microblading"
+  ],
+  "crs-microdermabrasion-and-facial-training": [
+   "microdermabrasion-facial-training"
+  ],
+  "crs-pedicure-training-course": [
+   "pedicure-training-course"
+  ],
+  "crs-relaxation-massage": [
+   "relaxation-massage"
+  ],
+  "crs-specialty-designs-nail-technician-advanced": [
+   "specialty-designs-nail-technician-advanced"
+  ],
+  "crs-spray-tan": [
+   "spray-tan"
+  ],
+  "crs-sugaring-brazilian-women": [
+   "sugaring-brazilian-women"
+  ],
+  "crs-sugaring-brazilian-women-and-men": [
+   "sugaring-brazilian-women-men"
+  ],
+  "crs-tape-in-hair-extensions": [
+   "tape-in-hair-extensions"
+  ],
+  "crs-teeth-whitening-training": [
+   "teeth-whitening-training"
+  ],
+  "crs-threading": [
+   "threading"
+  ]
+ }
+}

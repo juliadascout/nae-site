@@ -1,0 +1,4 @@
+# Files in public/ that Cloudflare must not serve (same format as .gitignore).
+# The build keeps a record of every address each course has had, so it can
+# answer old ones with a 301; the record is for the build, not for visitors.
+_course-addresses.json

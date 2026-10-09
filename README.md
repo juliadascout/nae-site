@@ -53,6 +53,39 @@ rule, words found. Once the review is done those rules block everywhere.
 A page can also be left out on purpose: `WITHHELD` in `build/build.py` names it
 and says why. The build reports it every time.
 
+The gate also reads the search-result description and the share titles. They sit
+inside `<meta>` tags, which the gate used to strip unread.
+
+## Skill tags
+
+`build/skills.py` says what each course teaches, in the words people search with
+("lash lift", "brow lamination", "microblading"). One list feeds:
+
+- the **Skills covered** list under each course's name
+- the page title (`<search phrase> Course | NAE`) and search description
+- `teaches` and `keywords` in the course's structured data
+- the skills line under each subject on `/courses/`, and that page's catalogue
+- `knowsAbout` for the organisation (home page) and for each studio
+
+The course name on the page never changes; only the title in the search result
+leads with the search phrase. Tags are keyed by course id, so a rename in
+Inventory keeps them. A tag only names what the course's name, its bundle parts or
+its catalogue entry already state, and every page it lands on goes through the
+gate. Tags are search wording only: they are not modalities and nothing computes
+instructor coverage from them.
+
+A course added in Inventory publishes straight away with its own name as its only
+tag. The build log lists it under `skill tags` until someone adds a line for it.
+
+## Course addresses
+
+A course's address comes from its name, so a rename in Inventory moves its page.
+The build keeps every address each course id has had in
+`public/_course-addresses.json` and answers the old ones with a 301 to the new
+page (to `/courses/` if the course is archived or deleted), so ads, bookmarks and
+links to the old address keep working. `assets/.assetsignore` keeps that file off
+the live site. The build log lists the moves under `course pages moved`.
+
 ## URLs
 
 The 21 `beauty-school-near-*` pages are generated at the **exact paths they already
