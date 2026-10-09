@@ -1,0 +1,70 @@
+from,to,why
+/shop/,/courses/,old WooCommerce store; the course pages replace it
+/cart/,/courses/,old WooCommerce store; the course pages replace it
+/checkout/,/courses/,old WooCommerce checkout; paying happens on each course page
+/my-account/,/contact/,old WooCommerce customer accounts are not carried over
+/product/advanced-teeth-whitening-kit/,/courses/teeth-whitening-training/,old store product page with a store price; prices come from the course database only
+/product/fusion-hair-extensions-starter-kit/,/courses/fusion-hair-extensions/,old store product page with a store price; prices come from the course database only
+/product/micro-link-hair-extension-artist-course/,/courses/micro-link-micro-loop-nano-ring-hair-extensions/,old store product page with a store price; prices come from the course database only
+/product/brow-tinting-artist-course/,/courses/brow-tint-wax/,old store product page with a store price; prices come from the course database only
+/product/brow-lamination-lift-tint-artist-course/,/courses/eyebrow-lamination-wax-tint/,old store product page with a store price; prices come from the course database only
+/product/brow-waxing-extension-artist-course/,/courses/brow-tint-wax/,old store product page with a store price; prices come from the course database only
+/product/brow-lamination-artist-course/,/courses/brow-lamination-wax/,old store product page with a store price; prices come from the course database only
+/product/advanced-makeup-artist-course/,/courses/makeup-artist-training-on-other/,old store product page with a store price; prices come from the course database only
+/product/fusion-hair-extension-artist-course/,/courses/fusion-hair-extensions/,old store product page with a store price; prices come from the course database only
+/product/tape-in-hair-extension-artist-course/,/courses/tape-in-hair-extensions/,old store product page with a store price; prices come from the course database only
+/product/master-hair-extension-artist-course/,/courses/classic-master-hair-extensions/,old store product page with a store price; prices come from the course database only
+/product/microblade-artist-course/,/courses/microblading/,old store product page with a store price; prices come from the course database only
+/product/lash-lift-artist-course/,/courses/lash-lift-tint/,old store product page with a store price; prices come from the course database only
+/product/waxing-artist-course/,/courses/basic-body-waxing/,old store product page with a store price; prices come from the course database only
+/product/sugaring-artist-course/,/courses/basic-body-sugaring/,old store product page with a store price; prices come from the course database only
+/product/spray-tan-artist-course/,/courses/spray-tan/,old store product page with a store price; prices come from the course database only
+/product/microdermabrasion-artist-course/,/courses/microdermabrasion-facial-training/,old store product page with a store price; prices come from the course database only
+/product/teeth-whitening-artist-training-course/,/courses/teeth-whitening-training/,old store product page with a store price; prices come from the course database only
+/product/makeup-artist-course/,/courses/basic-makeup-training-on-self/,old store product page with a store price; prices come from the course database only
+/product/lash-extension-artist-course/,/courses/classic-hybrid-lash-extensions/,old store product page with a store price; prices come from the course database only
+/product/beauty-course-workbook-black-and-white/,/courses/,old store product page with a store price; prices come from the course database only
+/product/course-workbook-color/,/courses/,old store product page with a store price; prices come from the course database only
+/product/makeup-artist-kit/,/courses/basic-makeup-training-on-self/,old store product page with a store price; prices come from the course database only
+/product-category/brow-lamination/,/courses/,old store category
+/product-category/brow-tinting/,/courses/,old store category
+/product-category/brow-waxing/,/courses/,old store category
+/product-category/courses/,/courses/,old store category
+/product-category/eyebrows/,/courses/,old store category
+/product-category/hair-extensions/,/courses/,old store category
+/product-category/lash-extensions/,/courses/,old store category
+/product-category/lash-lifts/,/courses/,old store category
+/product-category/makeup/,/courses/,old store category
+/product-category/makeup-artist/,/courses/,old store category
+/product-category/microblading/,/courses/,old store category
+/product-category/microdermabrasion/,/courses/,old store category
+/product-category/spray-tan/,/courses/,old store category
+/product-category/starter-kits/,/courses/,old store category
+/product-category/sugaring/,/courses/,old store category
+/product-category/teeth-whitening/,/courses/,old store category
+/product-category/textbooks/,/courses/,old store category
+/product-category/uncategorized/,/courses/,old store category
+/product-category/waxing/,/courses/,old store category
+/author/bbbbb-bbbbb/,/blog/,WordPress author archive
+/author/bbbbb-bbbbb-8374/,/blog/,WordPress author archive
+/author/bbbbb-bbbbb-4789/,/blog/,WordPress author archive
+/author/naeinc/,/blog/,WordPress author archive
+/apply-now-cosmetology-program-niagara/,/courses/,old price list; prices come from the course database only
+/richmond-hill-beauty-school-location/,/locations/richmond-hill/,old price list; prices come from the course database only; the studio page replaces it
+/richmond-hill-beauty-school/,/locations/richmond-hill/,old price list; prices come from the course database only; the studio page replaces it
+/contact-form/,/contact/,linked from old posts; WordPress used to redirect it quietly
+/sugaring-artist-training-course/,/courses/basic-body-sugaring/,linked from old posts; WordPress used to redirect it quietly
+/teeth-whitening-artist-training-course/,/courses/teeth-whitening-training/,linked from old posts; WordPress used to redirect it quietly
+/about-national-association-of-estheticians-beauty-institution/,/about-national-association-of-estheticians-beauty-school/,linked from old posts; WordPress used to redirect it quietly
+/about-us,/about-national-association-of-estheticians-beauty-school/,linked from old posts; WordPress used to redirect it quietly
+/apply-now,/courses/,linked from old posts; WordPress used to redirect it quietly
+/apply-now/,/courses/,linked from old posts; WordPress used to redirect it quietly
+/sitemap_index.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/post-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/page-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/product-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/category-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/post_tag-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/product_cat-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/author-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
+/feed/,/blog/,old WordPress feed
