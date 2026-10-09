@@ -89,8 +89,16 @@
       credentials: "same-origin",
       cache: "no-store",
     }).then(function (r) {
-      return r.json().catch(function () { return {}; })
-        .then(function (j) { return { ok: r.ok, status: r.status, body: j || {} }; });
+      return r.json().catch(function () { return null; })
+        .then(function (j) {
+          /* A refusal comes as JSON with its reason. Anything else - an error
+             page from Cloudflare, a timeout - is a fault on our side, and is
+             said so, with the code that tells us which fault it was. */
+          if (!j && !r.ok) {
+            j = { error: "Something went wrong on our side (error " + r.status + "). Try again in a minute; if it keeps happening, call or email us." };
+          }
+          return { ok: r.ok, status: r.status, body: j || {} };
+        });
     }).catch(function () {
       return { ok: false, status: 0, body: { error: "Could not reach us just now. Check your connection and try again." } };
     });
