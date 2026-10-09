@@ -86,7 +86,10 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   .gal div:first-child{grid-column:span 2;grid-row:span 1}}
 
 /* ---------- spec grid ---------- */
-.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;
+/* Never more than three across: six facts then always fill whole rows (3+3 or
+   2+2+2). A wider card fitted five, and the sixth sat alone beside an empty
+   block of the grid's background. */
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(max(168px,30%),1fr));gap:1px;
   background:var(--rule-2);border:1px solid var(--rule-2);border-radius:10px;overflow:hidden}
 .specs.q{grid-template-columns:repeat(2,minmax(0,1fr))}
 .specs>div{background:var(--card);padding:.9rem 1rem}
@@ -259,7 +262,11 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   body:has(.mbar){padding-bottom:74px}
   /* Order on mobile only: description, then the booking box, then the detail,
      then the questions. Desktop keeps the two-column layout untouched. */
-  .two{display:flex;flex-direction:column}
+  /* stretch: the desktop grid's align-items:start carried over, so every card
+     shrank to its own content - harmless on a phone, where text fills the
+     width anyway, but between about 860px and 1000px (a phone showing the
+     desktop-size site, a narrow window) the cards came out at a dozen widths. */
+  .two{display:flex;flex-direction:column;align-items:stretch}
   .stack{display:contents}
   .c-intro{order:1} .rail{order:2} .c-specs{order:3} .c-parts{order:4} .c-kit{order:5}
   .cta{order:6} .c-faq{order:7} .c-ask{order:8}
