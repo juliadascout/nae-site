@@ -43,6 +43,17 @@ CHECKOUT_ENABLED = "true"
 binding = "ACCOUNTS"
 service = "nae-inc"
 
+# Email. This Worker sends none itself. A student's enrolment confirmation,
+# and the administrators' alerts for a new enrolment or a question from the
+# Contact page, are sent by the apps' Worker, which sends every account email
+# already and knows who the administrators are (nae-inc worker/notify.js).
+# This reaches only its Notify entrypoint - two methods, enrolment and
+# enquiry - and nothing in the apps.
+[[services]]
+binding = "NOTIFY"
+service = "nae-inc"
+entrypoint = "Notify"
+
 # Who bought what. Separate from the accounts database on purpose: this Worker
 # is the public site, and it has no business being able to read a password
 # hash. Personal data lives here and never in the data repository.
@@ -50,3 +61,20 @@ service = "nae-inc"
 binding = "ENROLMENTS"
 database_name = "nae-enrolments"
 database_id = "64edfe1d-48b5-401a-940d-2af5ff865748"
+
+# Workers Logs: what the Worker writes with console.error - a payment that
+# could not be recorded, an email that did not go - plus one line per request
+# to /api/ (address, status, timing; no bodies), kept 7 days in the dashboard
+# under Workers & Pages > nae-site > Observability. Pages are served without
+# waking the Worker, so they are not in it. Nothing logs a name, an address or
+# a message. Stated here so a deploy cannot quietly turn it off.
+[observability]
+enabled = true
+
+  [observability.logs]
+  enabled = true
+  invocation_logs = true
+  head_sampling_rate = 1
+
+  [observability.traces]
+  enabled = false

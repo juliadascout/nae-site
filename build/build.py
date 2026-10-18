@@ -56,6 +56,13 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         # studio later, make this a dict keyed by course or location id; every page
         # reads it from here, so nothing else has to change.
         "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27",
+        # Which studio's address is the mailing address at the foot of a
+        # student's enrolment email: Canadian anti-spam law (CASL) wants one on
+        # any business email, and the buyer's record of an online purchase
+        # should say where the seller is. Read from the studio list, so it is
+        # never typed twice. St. Catharines until Julia or Kalleigh confirms it
+        # or names another; to be settled before checkout takes real money.
+        "mailingStudio":"loc-stc",
         # The old WordPress site, while it is still up somewhere else. Kalleigh's
         # decision on 9 Oct 2026 (option E) puts this site on a new domain of its own
         # and keeps WordPress at naeinc.ca for now. While both are up, set this to
@@ -502,6 +509,9 @@ def sellable_online(c):
 
 def booking_rail(course=None, location=None):
     price = ""
+    # The question form is on the Contact page; from a course, it opens with
+    # that course already chosen.
+    ask = f'/contact/?course={course["id"]}#ask' if course else "/contact/#ask"
     # Paying sits inside the booking card rather than adrift at the foot of the
     # page: the card is where someone has already decided, and a buy control
     # anywhere else is a buy control nobody finds. Booking a call stays the
@@ -533,8 +543,9 @@ def booking_rail(course=None, location=None):
   {checkout}
   <hr class="r">
   <p style="font-size:.89rem;color:var(--ink-2);margin:0">Call
-    <a href="tel:+12899682028">{E(SITE['phone'])}</a> or email
-    <a href="mailto:{E(SITE['email'])}">{E(SITE['email'])}</a>.</p>
+    <a href="tel:+12899682028">{E(SITE['phone'])}</a>, email
+    <a href="mailto:{E(SITE['email'])}">{E(SITE['email'])}</a>, or
+    <a href="{ask}">send us a question</a>.</p>
 </div></aside>"""
 
 def crow(c):
@@ -997,13 +1008,39 @@ def page_areas():
 def page_contact():
     rows = "".join(f'<div><dt>{E(l["name"])}</dt><dd style="font-size:.86rem">{E(loc_addr(l))}</dd></div>'
                    for l in OPEN)
+    # A question goes to the Worker (worker/enquiries.js), which keeps it and
+    # has every administrator emailed. Only what answering needs is asked for.
+    # The empty "website" field is for robots: people never see it, and a form
+    # that comes back with it filled in is thanked and dropped.
+    options = "".join(f'<option value="{E(c["id"])}">{E(c["name"])}</option>'
+                      for c in sorted(COURSES, key=lambda c: c["name"].lower()))
+    fld = _fld
     return ("/contact/", f"Contact | {SITE['short']}", "Get in touch about courses and enrolment.",
       f"""<div class="wrap pad"><div class="two"><div class="stack"><div class="card">
       <p class="eyebrow">Get in touch</p><h1 style="margin-bottom:.8rem">Contact</h1>
       <p class="lede">Ask about any course, or arrange a call.</p><hr class="r">
       <dl class="specs q"><div><dt>Phone</dt><dd>{E(SITE['phone'])}</dd></div>
       <div><dt>Email</dt><dd style="font-size:.84rem">{E(SITE['email'])}</dd></div>{rows}</dl>
-      </div></div>{booking_rail()}</div></div>""")
+      </div>
+      <div class="card" id="ask">
+        <h2 style="margin-bottom:.4rem">Ask a question</h2>
+        <p style="margin:0 0 .9rem">Write to us here and we will answer by email.</p>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="ask" novalidate>
+          {fld("Your name", "ask-name", "text", "name", ' required maxlength="120"')}
+          {fld("Email", "ask-email", "email", "email", ' required maxlength="254"')}
+          {fld("Phone (optional)", "ask-phone", "tel", "tel", ' maxlength="40"')}
+          <label class="fld"><span>Course (optional)</span><select id="ask-course">
+            <option value="">Not sure yet, or more than one</option>{options}</select></label>
+          <label class="fld"><span>Your question</span><textarea id="ask-message" required maxlength="2000"></textarea></label>
+          <label class="hp" aria-hidden="true">Leave this empty <input id="ask-website" type="text" tabindex="-1" autocomplete="off"></label>
+          <button class="btn btn-p" type="submit">Send my question</button>
+        </form>
+        <noscript><p class="fine">The form needs JavaScript. Call or email us instead.</p></noscript>
+        <p class="fine">We use these details only to answer your question. More in our
+          <a href="/privacy/">privacy policy</a>.</p>
+      </div></div>{booking_rail()}</div></div>
+      <script src="/ask.js" defer></script>""")
 
 
 # ---------------------------------------------------------------- team
@@ -1217,15 +1254,62 @@ def page_account():
       </div></div>
       <script src="/account.js" defer></script>""")
 
+def mailing_address():
+    """The mailing address for student emails: the studio SITE["mailingStudio"]
+       names, written out in full whatever the site shows of it. Empty if that
+       studio has no complete address - the Worker then sends no confirmation
+       and tells the administrators why, rather than the whole site failing to
+       build over one email."""
+    loc = next((l for l in LOCS if l["id"] == SITE.get("mailingStudio")), None)
+    a = (loc or {}).get("address") or {}
+    if not all(a.get(k) for k in ("line1", "city", "province", "postal")):
+        print(f"WARNING: no complete mailing address (studio {SITE.get('mailingStudio')!r}); "
+              f"enrolment confirmations will not be emailed")
+        return ""
+    return f'{a["line1"]}, {a["city"]}, {a["province"]} {a["postal"]}'
+
+def refund_policy():
+    """The refund and cancellation policy, as the checkout links to it: the
+       paragraphs under its heading on the About page, up to the sign-off. The
+       Worker puts it in each buyer's enrolment email, so the email carries the
+       policy they accepted and not a copy of it that can drift. If it cannot
+       be found the build stops, because the checkout's own link to it would
+       be broken too."""
+    page = os.path.join(CLEAN, "page--about-national-association-of-estheticians-beauty-school.html")
+    src = open(page, encoding="utf-8").read() if os.path.exists(page) else ""
+    m = re.search(r'<h[1-6]\b[^>]*>\s*Withdraw and Refund Policy\s*</h[1-6]>', src, flags=re.I)
+    paras = []
+    if m:
+        rest = src[m.end():]
+        nxt = re.search(r'<h[1-6]\b', rest)
+        for p in re.findall(r'<p\b[^>]*>(.*?)</p>', rest[:nxt.start()] if nxt else rest, flags=re.S):
+            t = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', p))).strip()
+            if not t: continue
+            if re.match(r'sincerely', t, flags=re.I): break
+            paras.append(t)
+    if len(paras) < 2:
+        raise SystemExit("refund policy not found under 'Withdraw and Refund Policy' on the About page.\n"
+                         "The checkout links to it and every enrolment email carries it; fix the page and re-run.")
+    intro = paras[0] if paras[0].endswith(":") else ""
+    return {"intro": intro, "items": paras[1:] if intro else paras}
+
 def write_checkout_prices():
+    """Everything the Worker needs from the catalogue, decided at build time
+       where a buyer cannot reach it: the prices, and for the enrolment email
+       the studios, who the seller is, and the refund policy."""
     out = {c["id"]: {"slug": c["slug"], "name": c["name"], "price": c["price"],
                      "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit")),
                      "capAck": bool(c.get("capAck"))}
            for c in COURSES}
+    # Only as much of a studio's address as the site shows (loc_addr).
+    studios = {l["id"]: {"name": l["name"], "address": loc_addr(l)} for l in LOCS}
+    seller = {"name": SITE["legal"], "address": mailing_address(),
+              "phone": SITE["phone"], "email": SITE["email"]}
     path = os.path.join(ROOT, "worker", "prices.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump({"currency": "CAD", "cap": CAP_PRICE, "courses": out}, f, indent=2)
+        json.dump({"currency": "CAD", "cap": CAP_PRICE, "courses": out, "studios": studios,
+                   "seller": seller, "refundPolicy": refund_policy()}, f, indent=2)
     return len(out)
 
 # ---------------------------------------------------------------- build

@@ -1,6 +1,7 @@
 import prices from "./prices.json";
-import { recordEnrolment } from "./enrolments.js";
+import { recordEnrolment, enrolmentNotice, tellEnrolment } from "./enrolments.js";
 import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
+import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
 
 /* The site is static. This Worker serves it, and adds the two endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
@@ -83,13 +84,14 @@ async function accessToken(env) {
   return tokenCache.value;
 }
 
-async function pp(env, path, method, body) {
+async function pp(env, path, method, body, headers = {}) {
   const { base } = ppBase(env);
   const r = await fetch(`${base}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${await accessToken(env)}`,
       "content-type": "application/json",
+      ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -199,14 +201,19 @@ async function handleOrder(request, env) {
   return json({ id: res.body.id });
 }
 
-async function handleCapture(request, env) {
+async function handleCapture(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch (e) { return fail(400, "Expected JSON"); }
 
   const orderId = String(body.orderId || "");
   if (!/^[A-Za-z0-9-]{5,64}$/.test(orderId)) return fail(400, "Missing order id");
 
-  const res = await pp(env, `/v2/checkout/orders/${orderId}/capture`, "POST", {});
+  /* The whole order back, not PayPal's default short reply: that one leaves
+     the purchase unit without its amount, lines and custom_id, so the
+     enrolment would be recorded with no totals and no kit, and the buyer's
+     confirmation could not itemise what they paid. */
+  const res = await pp(env, `/v2/checkout/orders/${orderId}/capture`, "POST", {},
+                       { Prefer: "return=representation" });
   if (!res.ok) return fail(502, "Could not complete the payment", res.raw);
 
   /* Re-read the amount from PayPal rather than trusting what the page thought
@@ -215,7 +222,15 @@ async function handleCapture(request, env) {
   const cap = ((pu.payments || {}).captures || [])[0] || {};
 
   const known = prices.courses[pu.reference_id || ""] || {};
-  await recordEnrolment(env, res.body, pu, cap, body, known.name);
+  const recorded = await recordEnrolment(env, res.body, pu, cap, body, known.name);
+
+  /* The student's confirmation and the administrators' alert, sent by the
+     apps' Worker after this answers. A payment already recorded was already
+     confirmed; one the database could not record still is, because the money
+     moved either way. */
+  if (recorded !== "repeat") {
+    tellEnrolment(env, ctx, enrolmentNotice(env, res.body, pu, cap, body, prices, `HST (${TAX_PERCENT}%)`));
+  }
 
   return json({
     status: res.body.status,
@@ -238,6 +253,10 @@ export default {
 
     if (path.startsWith("/api/")) {
       if (ACCOUNT_PATHS.has(path)) return toAccounts(request, env, path);
+      /* A question from the Contact page (enquiries.js). */
+      if (path === ENQUIRY_PATH && request.method === "POST") {
+        return handleEnquiry(request, env, ctx, prices.courses);
+      }
       if (path === "/api/checkout/config" && request.method === "GET") {
         const { mode } = ppBase(env);
         return json({
@@ -318,7 +337,7 @@ export default {
       }
       if (path === "/api/checkout/capture" && request.method === "POST") {
         if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
-        try { return await handleCapture(request, env); }
+        try { return await handleCapture(request, env, ctx); }
         catch (e) { return fail(500, "Could not complete the payment", e.message); }
       }
       return fail(404, "No such endpoint");

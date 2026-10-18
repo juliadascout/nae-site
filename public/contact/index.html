@@ -36,6 +36,24 @@
       <p class="lede">Ask about any course, or arrange a call.</p><hr class="r">
       <dl class="specs q"><div><dt>Phone</dt><dd>289-968-2028</dd></div>
       <div><dt>Email</dt><dd style="font-size:.84rem">sales@glamsquadcanada.com</dd></div><div><dt>St. Catharines</dt><dd style="font-size:.86rem">249 Carlton St, St. Catharines, ON, L2N 1B6</dd></div><div><dt>Niagara Falls</dt><dd style="font-size:.86rem">Niagara Falls, ON, L2H 0N1</dd></div><div><dt>Richmond Hill</dt><dd style="font-size:.86rem">1255B Reid St, Unit 8B, Richmond Hill, ON</dd></div></dl>
+      </div>
+      <div class="card" id="ask">
+        <h2 style="margin-bottom:.4rem">Ask a question</h2>
+        <p style="margin:0 0 .9rem">Write to us here and we will answer by email.</p>
+        <p class="co-msg" data-msg hidden></p>
+        <form data-form="ask" novalidate>
+          <label class="fld"><span>Your name</span><input id="ask-name" type="text" autocomplete="name" required maxlength="120"></label>
+          <label class="fld"><span>Email</span><input id="ask-email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label class="fld"><span>Phone (optional)</span><input id="ask-phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          <label class="fld"><span>Course (optional)</span><select id="ask-course">
+            <option value="">Not sure yet, or more than one</option><option value="crs-basic-body-sugaring">Basic Body Sugaring</option><option value="crs-basic-body-wax-and-brazilian">Basic Body Wax &amp; Brazilian</option><option value="crs-basic-body-waxing">Basic Body Waxing</option><option value="crs-basic-makeup-training-on-self">Basic Makeup Training (on Self)</option><option value="crs-basic-nail-training">Basic Nail Training</option><option value="crs-braid-in-hair-extensions">Braid-In Hair Extensions</option><option value="crs-brow-lamination-and-wax">Brow Lamination &amp; Wax</option><option value="crs-brow-mapping">Brow Mapping</option><option value="crs-brow-tint-and-wax">Brow Tint &amp; Wax</option><option value="crs-business-development">Business Development</option><option value="crs-classic-and-hybrid-lash-extensions">Classic &amp; Hybrid Lash Extensions</option><option value="crs-classic-and-volume-lash-extensions">Classic &amp; Volume Lash Extensions</option><option value="crs-classic-master-hair-extensions">Classic Master Hair Extensions</option><option value="crs-classic-weave-hair-extensions">Classic Weave Hair Extensions</option><option value="crs-eyebrow-lamination-wax-and-tint">Eyebrow Lamination, Wax &amp; Tint</option><option value="crs-facial-training">Facial Training</option><option value="crs-fusion-hair-extensions">Fusion Hair Extensions</option><option value="crs-grand-master-hair-extensions">Grand Master Hair Extensions</option><option value="crs-grand-master-lash-artist-classic-volume-lift-and-tint">Grand Master Lash Artist (Classic, Volume, Lift &amp; Tint)</option><option value="crs-grand-master-nail-technician-acrylic-gel-tips">Grand Master Nail Technician (Acrylic, Gel, Tips)</option><option value="crs-hybrid-and-volume-lash-extensions">Hybrid &amp; Volume Lash Extensions</option><option value="crs-lash-lift-and-tint">Lash Lift &amp; Tint</option><option value="crs-locs-hair-extensions">Locs Hair Extensions</option><option value="crs-makeup-artist-training-on-other">Makeup Artist Training (on Other)</option><option value="crs-master-acrylic-nail-technician-tips-and-shaping">Master Acrylic Nail Technician, Tips &amp; Shaping</option><option value="crs-master-brow">Master Brow</option><option value="crs-master-gel-and-gel-x-technician-tips-and-shaping">Master Gel &amp; Gel X Technician, Tips &amp; Shaping</option><option value="crs-micro-bead-weave-hair-extensions">Micro Bead Weave Hair Extensions</option><option value="crs-micro-link-micro-loop-and-nano-ring-hair-extensions">Micro Link, Micro Loop &amp; Nano Ring Hair Extensions</option><option value="crs-microblading">Microblading</option><option value="crs-microdermabrasion-and-facial-training">Microdermabrasion &amp; Facial Training</option><option value="crs-pedicure-training-course">Pedicure Training Course</option><option value="crs-relaxation-massage">Relaxation Massage</option><option value="crs-specialty-designs-nail-technician-advanced">Specialty Designs Nail Technician (Advanced)</option><option value="crs-spray-tan">Spray Tan</option><option value="crs-sugaring-brazilian-women-and-men">Sugaring Brazilian (Women &amp; Men)</option><option value="crs-sugaring-brazilian-women">Sugaring Brazilian (Women)</option><option value="crs-tape-in-hair-extensions">Tape-In Hair Extensions</option><option value="crs-teeth-whitening-training">Teeth Whitening Training</option><option value="crs-threading">Threading</option><option value="crs-camille-master-hair-extensions">Weave Master Hair Extensions</option></select></label>
+          <label class="fld"><span>Your question</span><textarea id="ask-message" required maxlength="2000"></textarea></label>
+          <label class="hp" aria-hidden="true">Leave this empty <input id="ask-website" type="text" tabindex="-1" autocomplete="off"></label>
+          <button class="btn btn-p" type="submit">Send my question</button>
+        </form>
+        <noscript><p class="fine">The form needs JavaScript. Call or email us instead.</p></noscript>
+        <p class="fine">We use these details only to answer your question. More in our
+          <a href="/privacy/">privacy policy</a>.</p>
       </div></div><aside class="rail"><div class="card">
   <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:0 0 1rem">
     Talk it through first &mdash; dates, kit, and what the course covers.</p>
@@ -48,9 +66,11 @@
   
   <hr class="r">
   <p style="font-size:.89rem;color:var(--ink-2);margin:0">Call
-    <a href="tel:+12899682028">289-968-2028</a> or email
-    <a href="mailto:sales@glamsquadcanada.com">sales@glamsquadcanada.com</a>.</p>
-</div></aside></div></div></main>
+    <a href="tel:+12899682028">289-968-2028</a>, email
+    <a href="mailto:sales@glamsquadcanada.com">sales@glamsquadcanada.com</a>, or
+    <a href="/contact/#ask">send us a question</a>.</p>
+</div></aside></div></div>
+      <script src="/ask.js" defer></script></main>
 <footer class="ftr"><div class="wrap">
   <div><strong style="color:var(--ink)">National Association of Estheticians Inc.</strong><br>
     289-968-2028 &nbsp;&middot;&nbsp; sales@glamsquadcanada.com</div>
