@@ -20,7 +20,7 @@ const env = {
 
 const req = (path, init = {}) => new Request('https://naeinc.ca' + path, init);
 
-for (const p of ['/api/auth/status', '/api/auth/signup', '/api/auth/login', '/api/auth/logout', '/api/auth/me',
+for (const p of ['/api/auth/status', '/api/auth/signup', '/api/auth/login', '/api/auth/login/code', '/api/auth/logout', '/api/auth/me',
                  '/api/auth/password', '/api/auth/profile',
                  '/api/auth/forgot', '/api/auth/reset', '/api/auth/verify', '/api/auth/verify/resend']) {
   check(`${p} goes to the accounts system`, ACCOUNT_PATHS.has(p));

@@ -53,6 +53,20 @@
         <button class="btn" type="button" data-show="signup">Make an account</button>
       </div>
 
+      <div class="card" data-panel="code" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Check your email</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p data-code-where>We sent a six-digit code to your email address.</p>
+        <form data-form="code" novalidate>
+          <label class="fld"><span>Code</span><input id="cd-code" type="text" autocomplete="one-time-code" required inputmode="numeric" maxlength="7"></label>
+          <button class="btn btn-p" type="submit">Sign in</button>
+        </form>
+        <p class="fine">Your account also opens the work tools, so a device it has not used before needs
+          this code. Once you are in, this device is remembered for 90 days.</p>
+        <p class="fine">No email? Look in spam, or <a href="#" data-code-again>send a new code</a>.
+          <a href="#" data-show="signin">Back to sign in</a></p>
+      </div>
+
       <div class="card" data-panel="signup" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Make an account</h1>
         <p class="co-msg" data-msg hidden></p>

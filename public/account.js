@@ -109,6 +109,17 @@
      twice. Never stored anywhere. */
   var temporary = "";
 
+  /* A sign-in waiting on the code emailed to a new device: the ticket the
+     accounts system gave this browser for it, and what was typed, so "send a
+     new code" can sign in again. In memory only. */
+  var awaiting = null;
+
+  function showCode(b) {
+    $("[data-code-where]").textContent = "We sent a six-digit code to " + b.sentTo + ". It works for " + b.minutes + " minutes.";
+    set("cd-code", "");
+    show("code");
+  }
+
   function signedIn(user, apps) {
     if (user.mustChange) {
       show("change");
@@ -141,6 +152,16 @@
       call("logout", {}).then(function () { temporary = ""; show("signin"); });
       return;
     }
+    /* A new code is a new sign-in with what was typed before. */
+    if (e.target.closest("[data-code-again]")) {
+      e.preventDefault();
+      if (!awaiting) return show("signin");
+      call("login", { email: awaiting.email, password: awaiting.pw }).then(function (r) {
+        if (!r.ok) return say($('[data-panel="code"]'), r.body.error || "Could not send a new code.");
+        if (r.body.code) { awaiting.ticket = r.body.ticket; say($('[data-panel="code"]'), "A new code is on its way.", "done"); }
+      });
+      return;
+    }
     var again = e.target.closest("[data-resend]");
     if (again) {
       again.disabled = true;
@@ -169,9 +190,29 @@
       call("login", { email: email, password: pw }).then(function (r) {
         busy(form, false);
         if (!r.ok) return say(panel, r.body.error || "Could not sign you in.");
-        track("login", { method: "email" });
         set("si-password", "");
+        if (r.body.code) {
+          awaiting = { email: email, pw: pw, ticket: r.body.ticket };
+          return showCode(r.body);
+        }
+        track("login", { method: "email" });
         if (r.body.user && r.body.user.mustChange) temporary = pw;
+        refresh();
+      });
+      return;
+    }
+
+    if (kind === "code") {
+      var digits = val("cd-code").replace(/\D/g, "");
+      if (digits.length !== 6) return say(panel, "Enter the six digits from the email.");
+      if (!awaiting) return show("signin");
+      busy(form, true);
+      call("login/code", { ticket: awaiting.ticket, code: digits }).then(function (r) {
+        busy(form, false);
+        if (!r.ok) return say(panel, r.body.error || "Could not sign you in.");
+        track("login", { method: "email" });
+        if (r.body.user && r.body.user.mustChange) temporary = awaiting.pw;
+        awaiting = null;
         refresh();
       });
       return;

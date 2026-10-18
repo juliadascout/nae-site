@@ -25,6 +25,9 @@ export const ACCOUNT_PATHS = new Set([
   "/api/auth/status",
   "/api/auth/signup",
   "/api/auth/login",
+  /* The second step of signing in on a new device, for an account that also
+     opens the work tools: the code from the email. */
+  "/api/auth/login/code",
   "/api/auth/logout",
   "/api/auth/me",
   "/api/auth/password",
