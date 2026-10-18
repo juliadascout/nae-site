@@ -412,10 +412,15 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 .acct{text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:500;
   padding:.25rem 0;border-bottom:1.5px solid transparent;white-space:nowrap}
 .acct:hover,.acct[aria-current]{border-bottom-color:var(--vir);color:var(--vir-ink)}
-#acct .co-msg{margin:0 0 .9rem}
-#acct .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
-#acct .co-msg[hidden],#acct [hidden]{display:none}
-#acct .fld input:focus{outline:2px solid var(--vir);outline-offset:1px}
+#acct .co-msg,#ask .co-msg{margin:0 0 .9rem}
+#acct .co-msg[data-kind="error"],#ask .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#acct .co-msg[hidden],#acct [hidden],#ask .co-msg[hidden],#ask [hidden]{display:none}
+#acct .fld input:focus,#ask .fld input:focus,#ask .fld select:focus,#ask .fld textarea:focus{outline:2px solid var(--vir);outline-offset:1px}
+/* The question form's field for robots (page_contact): off the page, out of
+   the tab order, and hidden from screen readers, so only a robot fills it. */
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+/* Links to the form land below the sticky header, as .csec does. */
+#ask{scroll-margin-top:80px}
 
 /* ---------- skill tags ---------- */
 /* What a course covers, under its name: the words people search with, shown

@@ -330,5 +330,39 @@
       "hasKit": false,
       "capAck": false
     }
+  },
+  "studios": {
+    "loc-stc": {
+      "name": "St. Catharines",
+      "address": "249 Carlton St, St. Catharines, ON, L2N 1B6"
+    },
+    "loc-nf": {
+      "name": "Niagara Falls",
+      "address": "Niagara Falls, ON, L2H 0N1"
+    },
+    "loc-rch": {
+      "name": "Richmond Hill",
+      "address": "1255B Reid St, Unit 8B, Richmond Hill, ON"
+    },
+    "loc-kw": {
+      "name": "Kitchener-Waterloo",
+      "address": ""
+    }
+  },
+  "seller": {
+    "name": "National Association of Estheticians Inc.",
+    "address": "249 Carlton St, St. Catharines, ON L2N 1B6",
+    "phone": "289-968-2028",
+    "email": "sales@glamsquadcanada.com"
+  },
+  "refundPolicy": {
+    "intro": "The total refund amount, should you choose to withdraw from the program is based on the total amount of training the student has left to complete. The refund policy is as follows:",
+    "items": [
+      "A full refund is provided if the student has not begun the online training and is within one week of the registration date.",
+      "A fifty percent refund of the subtotal is provided for students who have completed their online training, but do not wish to continue with practical training.",
+      "No refund is provided after 2 weeks since registration date.",
+      "No refund is provided for students who have completed their online and practical training.",
+      "A refund questionnaire is issued on refunds of $500 value or more."
+    ]
   }
 }
