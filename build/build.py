@@ -446,6 +446,11 @@ LINK_GUARD = ('\n<script>(function(){function take(){'
               'take();addEventListener("popstate",take);addEventListener("hashchange",take)})()</script>')
 
 def shell(title, desc, path, body, canonical=None):
+    # While naeinc.ca is up, its Register and Book buttons send people here. Say so
+    # in the footer of every page, with a link back, so nobody wonders whose site
+    # this is when the address bar changes.
+    legacy_line = (f'<br>Registration and payment site for '
+                   f'<a href="{LEGACY}/">{E(LEGACY.split("//", 1)[1])}</a>') if LEGACY else ""
     robots = '\n<meta name="robots" content="noindex">' if path in NOINDEX else ""
     guard = LINK_GUARD if path == "/account/" else ""
     # A path is on this site; a full address is a page somewhere else that this one
@@ -488,7 +493,7 @@ def shell(title, desc, path, body, canonical=None):
 <main>{body}</main>
 <footer class="ftr"><div class="wrap">
   <div><strong style="color:var(--ink)">{E(SITE['legal'])}</strong><br>
-    {E(SITE['phone'])} &nbsp;&middot;&nbsp; {E(SITE['email'])}</div>
+    {E(SITE['phone'])} &nbsp;&middot;&nbsp; {E(SITE['email'])}{legacy_line}</div>
   <div>{open_names}</div>
   <div>Kits are optional and priced separately.<br>Certificate of completion issued on every course.</div>
 </div></footer></body></html>"""
