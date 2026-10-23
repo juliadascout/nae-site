@@ -102,7 +102,10 @@ never competes with the real domain in search results. It does not apply there.
 ### Where the site sits
 
 **Decided 9 Oct 2026 (Kalleigh): option E, a new domain of its own.** The
-WordPress site stays up at naeinc.ca for now. Two settings in `SITE` at the top of
+WordPress site stays up at naeinc.ca for now. **Named 22 Oct 2026 (Kalleigh): beautycourse.ca**, with
+naeinc.ca's Register and Book buttons sending people here; beautyschools.ca to redirect.
+While naeinc.ca is up, the 21 area pages are also kept out of search here (they share
+their addresses with naeinc.ca's own area posts). Two settings in `SITE` at the top of
 `build/build.py` carry that, and nothing else does:
 
 - `domain`: where this site is served. Every canonical address, sitemap entry,
