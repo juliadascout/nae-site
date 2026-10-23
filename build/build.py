@@ -48,7 +48,7 @@ LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
-        "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://beautycourse.ca",
+        "phone":"289-968-2028","email":"hello@beautycourse.ca","domain":"https://beautycourse.ca",
         # Setmore. Every booking link on the site points here. It replaced a Google
         # appointment schedule, whose free tier allowed only one schedule per
         # account and could not see the rest of Kalleigh's calendar - so it offered
