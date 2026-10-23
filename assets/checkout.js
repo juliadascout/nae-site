@@ -163,6 +163,12 @@
 
     summary = panel.appendChild(el("div", "co-sum"));
 
+    /* People arrive here from naeinc.ca's Register buttons. Name the school at
+       the moment they pay, so the new address and the PayPal window are not a
+       surprise. */
+    panel.appendChild(el("p", "co-policy",
+      "You're enrolling with National Association of Estheticians Inc., the same school as naeinc.ca. Payment opens a secure PayPal window."));
+
     var policy = el("p", "co-policy");
     policy.appendChild(document.createTextNode("Paying accepts our "));
     var a = document.createElement("a");
@@ -265,7 +271,7 @@
               currency: res.j.amount ? res.j.amount.currency_code : undefined,
             }));
             buttons.hidden = true;
-            say("Paid" + (amt ? " — " + amt : "") + ". We will be in touch to book your dates.", "done");
+            say("Paid" + (amt ? " — " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
           })
           .catch(function (e) {
             track("checkout_error", { step: "capture", reason: String(e.message).slice(0, 100) });
