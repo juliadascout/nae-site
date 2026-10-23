@@ -48,7 +48,7 @@ LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
-        "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://naeinc.ca",
+        "phone":"289-968-2028","email":"sales@glamsquadcanada.com","domain":"https://beautycourse.ca",
         # Setmore. Every booking link on the site points here. It replaced a Google
         # appointment schedule, whose free tier allowed only one schedule per
         # account and could not see the rest of Kalleigh's calendar - so it offered
@@ -65,7 +65,8 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "mailingStudio":"loc-stc",
         # The old WordPress site, while it is still up somewhere else. Kalleigh's
         # decision on 9 Oct 2026 (option E) puts this site on a new domain of its own
-        # and keeps WordPress at naeinc.ca for now. While both are up, set this to
+        # and keeps WordPress at naeinc.ca for now; on 22 Oct she named the domain:
+        # beautycourse.ca, with naeinc.ca's Register and Book buttons sending people here. While both are up, set this to
         # "https://naeinc.ca" (and "domain" above to the new one): every page this site
         # copied from WordPress then names the original as the page to rank
         # (rel=canonical), stays out of this site's sitemap, and the journal's listing
@@ -73,7 +74,7 @@ SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         # older one wins; this way they do not compete at all, and this site ranks for
         # what only it has - the courses, prices, studios and checkout. The day
         # naeinc.ca is redirected here, set it back to None and rebuild.
-        "legacy":None}
+        "legacy":"https://naeinc.ca"}
 
 # Where the site sits on its domain. Empty is the root (naeinc.ca/); NAE_BASE=/beauty-school
 # builds it for a subfolder instead. This is the one place that is decided: every
@@ -1634,6 +1635,14 @@ PAGES.extend(_listings)
 COPIED = {p for p, *_ in MIG} if LEGACY else set()
 if LEGACY:
     NOINDEX |= {p for p, *_ in _listings}
+    # The area pages are built at the same addresses as naeinc.ca's own
+    # "beauty school near" posts, which carry about a fifth of its search clicks.
+    # Indexed here as well, the two sites would compete for every town, and Google's
+    # spam policy lists domains or pages aimed at specific cities that send people on
+    # to one place as doorway abuse. So while naeinc.ca is up they serve visitors but stay out of
+    # search and out of the sitemap. They come back the day naeinc.ca is redirected
+    # here and LEGACY is set to None.
+    NOINDEX |= {path for _, _, path in AREAS}
 ALL = [(p,t,d,b) for p,t,d,b in PAGES] + [(p,t,d,b) for p,t,d,b,_ in MIG]
 
 # WordPress served the same front page at / and at /home/. Both URLs are worth
