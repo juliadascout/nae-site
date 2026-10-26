@@ -16,6 +16,7 @@ trips a BLOCK rule is not written at all - it is quarantined and listed in the
 report. The build is the enforcement point.
 """
 import os, re, csv, json, html, sys, shutil, glob
+from urllib.parse import quote
 sys.path.insert(0, os.path.dirname(__file__))
 from compliance import check
 from skills import SKILLS, SUBJECTS
@@ -843,6 +844,134 @@ def subjects_at(l, n=None):
 SUBJECT_WORD = {"lash": "lash", "brow": "brow", "hair": "hair extension", "skin": "facial",
                 "nails": "nail", "remove": "hair removal", "makeup": "makeup"}
 
+# ---------------------------------------------------------------- photos and video
+# Photos and video drop into assets/media/ and are named in content/media.json
+# (README: "Photos and video"). Every spot keeps what the page showed before -
+# the gradient card, the illustrated silhouette, a hero with no picture - until
+# its file is really there, so a photo still on its way never shows as a broken
+# image. A file is checked here, at build time, not in the browser.
+MEDIA_FILE = os.path.join(ROOT, "content", "media.json")
+MEDIA_NOTES = []                      # printed with the build summary
+ASSET_LIMIT = 25 * 1024 * 1024        # Cloudflare serves no single file over 25 MiB
+VIDEO_HEAVY = 12 * 1024 * 1024        # plays on the home page; heavier than this slows it
+IMAGE_HEAVY = 1_500_000               # a photo shown at most ~1,200px wide
+
+def _load_media():
+    try:
+        with open(MEDIA_FILE, encoding="utf-8") as fh:
+            m = json.load(fh)
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as e:
+        sys.exit(f"content/media.json could not be read: {e}")
+    if not isinstance(m, dict):
+        sys.exit("content/media.json must be one JSON object (see the README)")
+    return m
+MEDIA = _load_media()
+
+def media_url(rel, kind="photo"):
+    """The address of a file named in content/media.json that is really in
+       assets/media/, or None so the caller keeps its placeholder."""
+    rel = str(rel or "").strip().lstrip("/")
+    if not rel:
+        return None
+    parts = rel.split("/")
+    if parts[0] != "media" or ".." in parts:
+        MEDIA_NOTES.append(f"{rel}: not used - files go in assets/media/ (name them media/...)")
+        return None
+    src = os.path.join(ROOT, "assets", *parts)
+    if not os.path.isfile(src):
+        MEDIA_NOTES.append(f"{rel}: named in content/media.json, not in assets/ yet - placeholder kept")
+        return None
+    try:
+        size = os.path.getsize(src)
+    except OSError as e:
+        MEDIA_NOTES.append(f"{rel}: could not be read ({e}) - placeholder kept")
+        return None
+    if size > ASSET_LIMIT:
+        sys.exit(f"{rel} is {size/1048576:.1f} MiB; Cloudflare will not serve a file over 25 MiB. "
+                 f"Export it smaller (see the README) or take it out of content/media.json.")
+    if kind == "video" and size > VIDEO_HEAVY:
+        MEDIA_NOTES.append(f"{rel}: {size/1048576:.1f} MiB - used, but a lighter export loads faster")
+    if kind == "photo" and size > IMAGE_HEAVY:
+        MEDIA_NOTES.append(f"{rel}: {size/1048576:.1f} MiB - used, but 1,600px wide at ~80% JPEG is plenty")
+    return "/" + quote(rel)
+
+def _section(key):
+    """One section of content/media.json as an object. The file is edited by
+       hand, so a section of the wrong shape is reported and treated as empty
+       rather than stopping the build with a Python error."""
+    v = MEDIA.get(key)
+    if v is None or isinstance(v, dict):
+        return v or {}
+    MEDIA_NOTES.append(f'"{key}" in content/media.json should be {{ ... }} - ignored')
+    return {}
+
+def _studio(l):
+    v = _section("studios").get(slugify(l["name"]))
+    if isinstance(v, str):            # "richmond-hill": "media/x.jpg" - plainly meant as the photo
+        return {"photo": v}
+    return v if isinstance(v, dict) else {}
+
+def studio_photo(l):
+    return media_url(_studio(l).get("photo"))
+
+def studio_alt(l):
+    return _studio(l).get("alt") or f"Inside the {l['name']} studio"
+
+def card_ph(l):
+    """The picture strip on a studio card: the studio's photo, or the gradient."""
+    src = studio_photo(l)
+    if not src:
+        return '<div class="ph" aria-hidden="true"></div>'
+    # The card is a link already named by the studio's heading, so the photo
+    # adds nothing to read aloud.
+    return f'<div class="ph ph-img"><img src="{src}" alt="" loading="lazy" decoding="async"></div>'
+
+# The video plays only where it should: not for anyone who asked their device for
+# less motion or to save data, and not on a phone screen, where the still is
+# shown instead. Where it will not play and there is no still, the first frame
+# is shown with controls, so the spot is never an empty box.
+HERO_VIDEO_JS = ('\n<script>(function(){var v=document.querySelector("video[data-src]");if(!v)return;'
+  'var mm=function(q){return window.matchMedia&&matchMedia(q).matches};'
+  'var c=navigator.connection||{};'
+  'var play=!mm("(prefers-reduced-motion: reduce)")&&!c.saveData&&mm("(min-width: 700px)");'
+  'if(play){v.src=v.dataset.src;v.autoplay=true;var p=v.play();if(p&&p.catch)p.catch(function(){v.controls=true})}'
+  'else if(!v.poster){v.preload="metadata";v.src=v.dataset.src;v.controls=true}'
+  '})();</script>')
+
+def hero_media():
+    h = _section("home")
+    poster = media_url(h.get("poster"))
+    video = media_url(h.get("video"), "video")
+    if not (poster or video):
+        return ""
+    alt = E(h.get("alt") or "A student training with an NAE trainer")
+    if video:
+        still = f' poster="{poster}"' if poster else ""
+        return (f'<figure class="hero-media"><video muted loop playsinline preload="none"{still} '
+                f'aria-label="{alt}" data-src="{video}"></video></figure>' + HERO_VIDEO_JS)
+    return f'<figure class="hero-media"><img src="{poster}" alt="{alt}" decoding="async"></figure>'
+
+def team_people():
+    """The real team from content/media.json, in the order listed. Empty until
+       somebody is added, and the page keeps its illustrated placeholders."""
+    out = []
+    team = MEDIA.get("team") or []
+    if not isinstance(team, list):
+        MEDIA_NOTES.append('"team" in content/media.json should be [ ... ] - ignored')
+        team = []
+    for p in team:
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get("name") or "").strip()
+        if not name:
+            continue
+        out.append({"name": name, "role": str(p.get("role") or "").strip(),
+                    "group": "inst" if p.get("group") == "inst" else "lead",
+                    "photo": media_url(p.get("photo"))})
+    return out
+
 def page_home():
     subs = {}
     for c in COURSES: subs.setdefault(c["subject"], []).append(c)
@@ -854,7 +983,7 @@ def page_home():
         f'<h3>{E(label)}</h3><p>From {money(min(c["price"] for c in subs[k]))}</p></a>'
         for k, label in SUBJECTS if subs.get(k))
     locs = "".join(
-        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph" aria-hidden="true"></div>'
+        f'<a class="lcard" href="/locations/{slugify(l["name"])}/">{card_ph(l)}'
         f'<div class="bd"><p class="lbadge">'
         f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p>'
         f'<h3>{E(l["name"])}</h3><p>{E(l["region"])}</p></div></a>' for l in LOCS)
@@ -872,6 +1001,7 @@ def page_home():
     <div><b class="tnum">{len(OPEN)}</b><span>Studios open</span></div>
     <div><b class="tnum">{len(AREAS)}</b><span>Areas served</span></div>
     <div><b class="tnum">{hours_span()}</b><span>Hours per course</span></div></div>
+  {hero_media()}
 </div>
 <div class="wrap pad"><p class="eyebrow">Pick a subject</p>
   <h2 style="margin-bottom:1.4rem">What do you want to learn?</h2><div class="grid3">{tiles}</div></div>
@@ -932,7 +1062,7 @@ def page_courses():
 
 def page_locations():
     cards = "".join(
-        f'<a class="lcard" href="/locations/{slugify(l["name"])}/"><div class="ph" aria-hidden="true"></div>'
+        f'<a class="lcard" href="/locations/{slugify(l["name"])}/">{card_ph(l)}'
         f'<div class="bd"><p class="lbadge">'
         f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p><h2>{E(l["name"])}</h2>'
         f'<p>{E(l["region"])}</p><p style="margin-top:auto;padding-top:.5rem">'
@@ -953,18 +1083,21 @@ def page_location(l):
   <p class="lede" style="margin-top:1.1rem">We are not teaching in {E(l['name'])} yet. Our other studios
     take students travelling in.</p>
   <div class="lcards" style="margin-top:1.4rem">{''.join(
-    f'<a class="lcard" href="/locations/{slugify(x["name"])}/"><div class="ph" aria-hidden="true"></div>'
+    f'<a class="lcard" href="/locations/{slugify(x["name"])}/">{card_ph(x)}'
     f'<div class="bd"><h2>{E(x["name"])}</h2><p>{E(x["region"])}</p></div></a>' for x in OPEN)}</div>
 </div></div>"""
         return (f"/locations/{slugify(l['name'])}/", f"{l['name']} | {SITE['short']}",
                 f"Beauty training coming soon to {l['name']}.", body)
     areas = [a for a in AREAS if a[1] == l["id"]]
+    photo = studio_photo(l)
+    photo_html = (f'<figure class="loc-photo"><img src="{photo}" alt="{E(studio_alt(l))}" '
+                  f'decoding="async"></figure>') if photo else ""
     area_html = ('<div class="card"><h2 style="margin-bottom:1rem">Areas this studio serves</h2><div class="acols">'
                  + "".join(f'<a href="{p}">{E(c)}</a>' for c,_,p in areas) + '</div></div>') if areas else ""
     body = f"""<div class="wrap pad">
 <p class="bcrumb"><a href="/locations/">Locations</a><span>/</span><span>{E(l['name'])}</span></p>
 <div class="two"><div class="stack">
-  <div class="card"><p class="eyebrow">{E(l['region'])}</p>
+  {photo_html}<div class="card"><p class="eyebrow">{E(l['region'])}</p>
     <h1 style="margin-bottom:.8rem">{E(l['name'])}</h1>
     <p class="lede">Training in small groups and one-to-one, scheduled around your availability.</p>
     <hr class="r"><dl class="specs q">
@@ -1084,6 +1217,27 @@ def avatar(i, size=74):
       f'<circle cx="50" cy="45" r="18"/>{HAIR[i % len(HAIR)]}</g></g></svg>')
 
 def page_team():
+    people = team_people()
+    if people:
+        def card(i, p):
+            pic = (f'<img src="{p["photo"]}" alt="" loading="lazy" decoding="async">' if p["photo"]
+                   else avatar(i))
+            return (f'<div class="tcard"><div class="av">{pic}</div><h3>{E(p["name"])}</h3>'
+                    f'<p>{E(p["role"])}</p></div>')
+        lead = [p for p in people if p["group"] == "lead"]
+        inst = [p for p in people if p["group"] == "inst"]
+        sections = "".join(
+            f'<h2 style="margin:1.8rem 0 1rem">{label}</h2><div class="tgrid">'
+            + "".join(card(i, p) for i, p in enumerate(group)) + '</div>'
+            for label, group in (("Leadership", lead), ("Instructors", inst)) if group)
+        body = f"""<div class="wrap pad">
+  <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
+  <p class="lede" style="margin-bottom:1.6rem">The people who run the studios and teach the courses.
+    Instructors teach by subject, so you are taught by someone who does that work.</p>
+  {sections}
+</div>"""
+        return ("/our-team/", f"Our Team | {SITE['short']}",
+                "The people who teach at NAE, across our Ontario studios.", body)
     def grid(kind):
         return "".join(
           f'<div class="tcard"><div class="av">{avatar(i)}</div><h3>{E(t)}</h3>'
@@ -1817,6 +1971,11 @@ print(f"skill tags          : {len(COURSES) - len(UNTAGGED)} of {len(COURSES)} c
       f"{len(ALL_SKILLS)} skills (build/skills.py)")
 for n in UNTAGGED: print(f"    no tags yet - add a line for it: {n}")
 for i in STALE_TAGS: print(f"    tags for a course that is no longer in the catalogue: {i}")
+_have = sum(1 for x in [media_url(_section("home").get("video"), "video"),
+                         media_url(_section("home").get("poster"))] + [studio_photo(l) for l in LOCS] if x)
+print(f"photos and video    : {_have} in place, {len(team_people())} team members listed"
+      + ("" if MEDIA else " (no content/media.json)"))
+for n in sorted(set(MEDIA_NOTES)): print(f"    {n}")
 print(f"course pages moved  : {len(MOVED)}" + (" (301s in public/_redirects)" if MOVED and not BASE else ""))
 for a, b in sorted(MOVED.items()): print(f"    {a} -> {b}")
 

@@ -77,6 +77,31 @@ instructor coverage from them.
 A course added in Inventory publishes straight away with its own name as its only
 tag. The build log lists it under `skill tags` until someone adds a line for it.
 
+## Photos and video
+
+Every photo spot on the generated pages is filled from `content/media.json`. A spot
+that is empty, or names a file that is not in `assets/media/` yet, keeps what the
+page showed before (the gradient on a studio card, the illustrated silhouette on
+the team page, a home page with no picture), so nothing ever shows as broken.
+
+| Spot | In `content/media.json` | Shown on | Best file |
+|---|---|---|---|
+| Home video | `home.video` | Home page, under the numbers | Landscape MP4 (H.264), 16:9, 20-40 s, no sound needed, under 12 MB. It plays on desktop only, muted and looping; phones, "reduce motion" and data-saver users see the still |
+| Home still | `home.poster` | Home page (phones, and while the video loads) | A frame of the same scene, JPG, 1,600 px wide |
+| Studio photo | `studios.<studio>.photo` | The studio's card (home, Locations) and the top of its page | Wide JPG, 1,600 px wide; it is cropped to 16:7 on the page and to a strip on the card, so keep the subject in the middle |
+| Headshot | `team[]`: `name`, `role`, `group` (`lead` or `inst`), `photo` | Our team page | Square JPG, 400 px, face centred. Once anyone is listed, the page shows the listed people instead of the placeholders |
+
+Studio keys are the studio's name as it appears in its address: `richmond-hill`,
+`st-catharines`, `niagara-falls`, `kitchener-waterloo`. Paths start `media/`, e.g.
+`"photo": "media/studios/richmond-hill-wide.jpg"`. Keep the photographer's folder
+and file names if you like: the path just has to match. Cloudflare serves no single
+file over 25 MiB, and the build stops on one; it warns above 12 MB for video and
+1.5 MB for a photo. The build summary lists every spot it filled and every file it
+could not find.
+
+Only put people on the site who have agreed to it (appointment or registration
+form, or contract).
+
 ## Course addresses
 
 A course's address comes from its name, so a rename in Inventory moves its page.
