@@ -267,3 +267,8 @@ __marimo__/
 # dropped by *.json above, renames would silently go back to the 404 page.
 # assets/.assetsignore keeps it off the live site.
 !public/_course-addresses.json
+
+# Which photo or video fills each spot on the site (README, "Photos and video").
+# Source, like taxonomy.json: dropped by *.json above, every spot would go back
+# to its placeholder on a fresh clone.
+!content/media.json
