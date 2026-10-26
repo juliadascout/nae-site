@@ -883,7 +883,11 @@ def media_url(rel, kind="photo"):
     if not os.path.isfile(src):
         MEDIA_NOTES.append(f"{rel}: named in content/media.json, not in assets/ yet - placeholder kept")
         return None
-    size = os.path.getsize(src)
+    try:
+        size = os.path.getsize(src)
+    except OSError as e:
+        MEDIA_NOTES.append(f"{rel}: could not be read ({e}) - placeholder kept")
+        return None
     if size > ASSET_LIMIT:
         sys.exit(f"{rel} is {size/1048576:.1f} MiB; Cloudflare will not serve a file over 25 MiB. "
                  f"Export it smaller (see the README) or take it out of content/media.json.")
@@ -893,11 +897,27 @@ def media_url(rel, kind="photo"):
         MEDIA_NOTES.append(f"{rel}: {size/1048576:.1f} MiB - used, but 1,600px wide at ~80% JPEG is plenty")
     return "/" + quote(rel)
 
+def _section(key):
+    """One section of content/media.json as an object. The file is edited by
+       hand, so a section of the wrong shape is reported and treated as empty
+       rather than stopping the build with a Python error."""
+    v = MEDIA.get(key)
+    if v is None or isinstance(v, dict):
+        return v or {}
+    MEDIA_NOTES.append(f'"{key}" in content/media.json should be {{ ... }} - ignored')
+    return {}
+
+def _studio(l):
+    v = _section("studios").get(slugify(l["name"]))
+    if isinstance(v, str):            # "richmond-hill": "media/x.jpg" - plainly meant as the photo
+        return {"photo": v}
+    return v if isinstance(v, dict) else {}
+
 def studio_photo(l):
-    return media_url(((MEDIA.get("studios") or {}).get(slugify(l["name"])) or {}).get("photo"))
+    return media_url(_studio(l).get("photo"))
 
 def studio_alt(l):
-    return ((MEDIA.get("studios") or {}).get(slugify(l["name"])) or {}).get("alt") or f"Inside the {l['name']} studio"
+    return _studio(l).get("alt") or f"Inside the {l['name']} studio"
 
 def card_ph(l):
     """The picture strip on a studio card: the studio's photo, or the gradient."""
@@ -921,7 +941,7 @@ HERO_VIDEO_JS = ('\n<script>(function(){var v=document.querySelector("video[data
   '})();</script>')
 
 def hero_media():
-    h = MEDIA.get("home") or {}
+    h = _section("home")
     poster = media_url(h.get("poster"))
     video = media_url(h.get("video"), "video")
     if not (poster or video):
@@ -937,7 +957,11 @@ def team_people():
     """The real team from content/media.json, in the order listed. Empty until
        somebody is added, and the page keeps its illustrated placeholders."""
     out = []
-    for p in MEDIA.get("team") or []:
+    team = MEDIA.get("team") or []
+    if not isinstance(team, list):
+        MEDIA_NOTES.append('"team" in content/media.json should be [ ... ] - ignored')
+        team = []
+    for p in team:
         if not isinstance(p, dict):
             continue
         name = str(p.get("name") or "").strip()
@@ -1947,8 +1971,8 @@ print(f"skill tags          : {len(COURSES) - len(UNTAGGED)} of {len(COURSES)} c
       f"{len(ALL_SKILLS)} skills (build/skills.py)")
 for n in UNTAGGED: print(f"    no tags yet - add a line for it: {n}")
 for i in STALE_TAGS: print(f"    tags for a course that is no longer in the catalogue: {i}")
-_have = sum(1 for x in [media_url((MEDIA.get("home") or {}).get("video"), "video"),
-                         media_url((MEDIA.get("home") or {}).get("poster"))] + [studio_photo(l) for l in LOCS] if x)
+_have = sum(1 for x in [media_url(_section("home").get("video"), "video"),
+                         media_url(_section("home").get("poster"))] + [studio_photo(l) for l in LOCS] if x)
 print(f"photos and video    : {_have} in place, {len(team_people())} team members listed"
       + ("" if MEDIA else " (no content/media.json)"))
 for n in sorted(set(MEDIA_NOTES)): print(f"    {n}")
