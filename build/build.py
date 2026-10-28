@@ -1289,6 +1289,10 @@ def _people():
             sys.exit(f"content/people/{fn} could not be read: {e}")
         if not isinstance(d, dict) or not d.get("name") or not d.get("slug"):
             sys.exit(f"content/people/{fn} needs at least a name and a slug")
+        # The slug becomes a folder under public/our-team/ and part of a link,
+        # so only a plain lower-case name is accepted.
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", str(d["slug"])):
+            sys.exit(f"content/people/{fn}: slug must be lower-case letters, digits and hyphens")
         out.append(d)
     return out
 PEOPLE = _people()
@@ -1330,7 +1334,7 @@ def page_profile(p):
         if items:
             paras += f'<ul class="pflist">{items}</ul>'
         secs.append(f'<section class="pfsec reveal" id="{E(s.get("id") or "")}">'
-                    f'<h2>{E(s["heading"])}</h2>{paras}</section>')
+                    f'<h2>{E(s.get("heading") or "")}</h2>{paras}</section>')
     if waiting:
         PROFILE_NOTES.append(f"/our-team/{slug}/: waiting on {', '.join(waiting)}")
 
