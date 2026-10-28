@@ -506,3 +506,4 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
   .btn-p:hover{transform:translateY(-1px)}
 }
 .pfcard p.eyebrow{font-size:.66rem;color:var(--vir-ink);margin-bottom:.2rem}
+.ftr a{color:var(--ink-2)} .ftr a:hover{color:var(--plum)}
