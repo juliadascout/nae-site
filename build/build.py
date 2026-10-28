@@ -446,6 +446,17 @@ LINK_GUARD = ('\n<script>(function(){function take(){'
               'try{window.dispatchEvent(new Event("nae-link"))}catch(e){}}'
               'take();addEventListener("popstate",take);addEventListener("hashchange",take)})()</script>')
 
+# Marks the page as scripted, then fades .reveal blocks in as they scroll into
+# view. Cards and tiles join in without each page having to opt in.
+REVEAL_JS = ('<script>(function(){var d=document.documentElement;d.classList.add("js");'
+  'if(!("IntersectionObserver"in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
+  'var els=document.querySelectorAll(".reveal,.tile,.lcard,.tcard,.card:not(.rail .card),.stats");'
+  'var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)'
+  '{e.target.classList.add("in");io.unobserve(e.target)}})},{rootMargin:"0px 0px -8% 0px"});'
+  'els.forEach(function(el){if(!el.classList.contains("reveal"))el.classList.add("reveal");'
+  'var r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add("in");else io.observe(el)})'
+  '})();</script>')
+
 def shell(title, desc, path, body, canonical=None):
     # While naeinc.ca is up, its Register and Book buttons send people here. Say so
     # in the footer of every page, with a link back, so nobody wonders whose site
@@ -497,7 +508,7 @@ def shell(title, desc, path, body, canonical=None):
     {E(SITE['phone'])} &nbsp;&middot;&nbsp; {E(SITE['email'])}{legacy_line}</div>
   <div>{open_names}</div>
   <div>Kits are optional and priced separately.<br>Certificate of completion issued on every course.</div>
-</div></footer></body></html>"""
+</div></footer>{REVEAL_JS}</body></html>"""
 
 # ---------------------------------------------------------------- partials
 def mobile_bar(course):
@@ -1234,6 +1245,7 @@ def page_team():
   <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
   <p class="lede" style="margin-bottom:1.6rem">The people who run the studios and teach the courses.
     Instructors teach by subject, so you are taught by someone who does that work.</p>
+  {"".join(profile_card(x) for x in PEOPLE)}
   {sections}
 </div>"""
         return ("/our-team/", f"Our Team | {SITE['short']}",
@@ -1248,11 +1260,141 @@ def page_team():
   <p class="lede" style="margin-bottom:1.6rem">Eleven of us across the studios &mdash; a president,
     three directors and coordinators, and seven instructors. Instructors teach by subject, so you are
     taught by someone who does that work.</p>
+  {"".join(profile_card(x) for x in PEOPLE)}
   <h2 style="margin:1.8rem 0 1rem">Leadership</h2><div class="tgrid">{grid('lead')}</div>
   <h2 style="margin:1.8rem 0 1rem">Instructors</h2><div class="tgrid">{grid('inst')}</div>
 </div>"""
     return ("/our-team/", f"Our Team | {SITE['short']}",
             "The people who teach at NAE, across our Ontario studios.", body)
+
+# ---------------------------------------------------------------- profile pages
+# One page per person who is the face of the school, from content/people/<slug>.json.
+# Only "approved" sections with a body are published. A "draft" carries the
+# questions to ask instead of words, so nothing goes up in someone's voice that
+# they have not said; the build lists what is still waiting.
+PEOPLE_DIR = os.path.join(ROOT, "content", "people")
+PROFILE_NOTES = []
+
+def _people():
+    out = []
+    if not os.path.isdir(PEOPLE_DIR):
+        return out
+    for fn in sorted(os.listdir(PEOPLE_DIR)):
+        if not fn.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(PEOPLE_DIR, fn), encoding="utf-8") as fh:
+                d = json.load(fh)
+        except (OSError, ValueError) as e:
+            sys.exit(f"content/people/{fn} could not be read: {e}")
+        if not isinstance(d, dict) or not d.get("name") or not d.get("slug"):
+            sys.exit(f"content/people/{fn} needs at least a name and a slug")
+        out.append(d)
+    return out
+PEOPLE = _people()
+
+def _person_media(slug):
+    v = (MEDIA.get("people") or {}).get(slug) if isinstance(MEDIA.get("people"), dict) else None
+    return v if isinstance(v, dict) else {}
+
+def profile_card(p):
+    """The feature card on Our team that leads to the person's own page."""
+    m = _person_media(p["slug"])
+    photo = media_url(m.get("photo"))
+    pic = (f'<img src="{photo}" alt="" loading="lazy" decoding="async">' if photo
+           else avatar(0, 96))
+    return (f'<a class="pfcard reveal" href="/our-team/{p["slug"]}/"><div class="av">{pic}</div>'
+            f'<div><p class="eyebrow">Meet our {E(p.get("title") or "director").lower()}</p>'
+            f'<h2>{E(p["name"])}</h2><p>{E(p.get("intro") or "")}</p>'
+            f'<span class="pflink">Read her story &rarr;</span></div></a>')
+
+def page_profile(p):
+    slug, name = p["slug"], p["name"]
+    first = name.split()[0]
+    m = _person_media(slug)
+    photo = media_url(m.get("photo"))
+    video = media_url(m.get("video"), "video")
+    poster = media_url(m.get("poster"))
+    portrait = (f'<img src="{photo}" alt="{E(m.get("alt") or name)}" decoding="async">' if photo
+                else avatar(0, 260))
+    secs, waiting = [], []
+    for s in p.get("sections") or []:
+        if not isinstance(s, dict):
+            continue
+        has_body = bool(s.get("body") or s.get("list"))
+        if s.get("status") != "approved" or not has_body:
+            waiting.append(s.get("heading") or s.get("id") or "?")
+            continue
+        paras = "".join(f"<p>{E(t)}</p>" for t in s.get("body") or [])
+        items = "".join(f"<li>{E(t)}</li>" for t in s.get("list") or [])
+        if items:
+            paras += f'<ul class="pflist">{items}</ul>'
+        secs.append(f'<section class="pfsec reveal" id="{E(s.get("id") or "")}">'
+                    f'<h2>{E(s["heading"])}</h2>{paras}</section>')
+    if waiting:
+        PROFILE_NOTES.append(f"/our-team/{slug}/: waiting on {', '.join(waiting)}")
+
+    # Why NAE and the programmes are facts from the course and studio lists, so
+    # they stay true when Inventory changes.
+    subs = {}
+    for c in COURSES: subs.setdefault(c["subject"], []).append(c)
+    why = f"""<section class="pfsec reveal" id="why-nae"><h2>Why NAE?</h2>
+  <p>Training built for students who want to practise on real clients, close to home, at a price they can manage.
+    Every course is hands-on and finishes with a certificate of completion.</p>
+  <div class="stats">
+    <div><b class="tnum">{len(COURSES)}</b><span>Courses</span></div>
+    <div><b class="tnum">{len(OPEN)}</b><span>Beauty schools open</span></div>
+    <div><b>1:1</b><span>Or small-group practicals</span></div>
+    <div><b>Optional</b><span>Kits, priced separately</span></div>
+  </div></section>"""
+    tiles = "".join(
+        f'<a class="tile" href="/courses/#{k}"><p class="mono">{len(subs[k])} course'
+        f'{"" if len(subs[k])==1 else "s"}</p><h3>{E(label)}</h3>'
+        f'<p>From {money(min(c["price"] for c in subs[k]))}</p></a>'
+        for k, label in SUBJECTS if subs.get(k))
+    programs = (f'<section class="pfsec reveal" id="programs"><h2>Programs and training</h2>'
+                f'<p>The curriculum {E(first)} writes, by subject.</p><div class="grid3">{tiles}</div></section>')
+    message = ""
+    if video:
+        still = f' poster="{poster}"' if poster else ""
+        message = (f'<section class="pfsec reveal" id="message"><h2>A message from {E(first)}</h2>'
+                   f'<video class="pfvid" controls playsinline preload="metadata"{still} src="{video}"></video>'
+                   f'</section>')
+    # Each part sits where the brief puts it: about, journey, (vision), mission, ...
+    order = [s.get("id") for s in p.get("sections") or [] if isinstance(s, dict)]
+    def at(sid):
+        return next((h for h in secs if f'id="{sid}"' in h), "")
+    head = "".join(at(i) for i in ("about", "journey", "vision", "mission", "philosophy", "experience"))
+    tail = "".join(at(i) for i in order if i not in
+                   ("about", "journey", "vision", "mission", "philosophy", "experience"))
+    body = f"""<div class="wrap pad">
+  <nav class="crumb"><a href="/our-team/">Our team</a> / {E(name)}</nav>
+  <div class="pfhero">
+    <figure class="pfport reveal">{portrait}</figure>
+    <div class="pfintro">
+      <p class="eyebrow">{E(p.get("title") or "")}</p>
+      <h1>{E(name)}</h1>
+      <p class="lede">{E(p.get("intro") or "")}</p>
+      <div class="ctab" style="margin-top:1.4rem">
+        <a class="btn btn-p" href="/courses/">Explore programs</a>
+        <a class="btn btn-g" href="{SITE["booking"]}" rel="noopener">Book a consultation</a></div>
+    </div>
+  </div>
+  <div class="pfbody">{head}{message}{why}{programs}{tail}</div>
+  <div class="cta pfcta reveal"><div><strong>Start with a conversation</strong>
+    <span>Ask {E(first)}'s team about a course, a beauty school or a start date.</span></div>
+    <div class="ctab"><a class="btn btn-p" href="/courses/">Explore programs</a>
+      <a class="btn btn-g" href="/contact/">Contact NAE</a>
+      <a class="btn btn-g" href="{SITE["booking"]}" rel="noopener">Book a consultation</a></div></div>
+</div>""" + ld({"@type": "ProfilePage", "url": f'{SITE["url"]}/our-team/{slug}/',
+                "mainEntity": {"@type": "Person", "name": name, "jobTitle": p.get("title"),
+                               "worksFor": {"@type": "Organization", "name": SITE["legal"],
+                                            "url": SITE["url"] + "/"},
+                               **({"alumniOf": {"@type": "CollegeOrUniversity", "name": p["alumniOf"]}}
+                                  if p.get("alumniOf") else {})}})
+    return (f"/our-team/{slug}/", f"{name}, {p.get('title') or ''} | {SITE['short']}",
+            p.get("description") or p.get("intro") or name,
+            body)
 
 # ---------------------------------------------------------------- checkout data
 # The Worker prices every order itself. If the amount came from the browser a
@@ -1475,6 +1617,7 @@ def write_checkout_prices():
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
          page_account()]
+PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]
 PAGES += [page_area(*a) for a in AREAS]
@@ -1973,6 +2116,7 @@ for n in UNTAGGED: print(f"    no tags yet - add a line for it: {n}")
 for i in STALE_TAGS: print(f"    tags for a course that is no longer in the catalogue: {i}")
 _have = sum(1 for x in [media_url(_section("home").get("video"), "video"),
                          media_url(_section("home").get("poster"))] + [studio_photo(l) for l in LOCS] if x)
+for _n in PROFILE_NOTES: print(f"profile sections waiting: {_n}")
 print(f"photos and video    : {_have} in place, {len(team_people())} team members listed"
       + ("" if MEDIA else " (no content/media.json)"))
 for n in sorted(set(MEDIA_NOTES)): print(f"    {n}")
