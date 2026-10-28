@@ -2,9 +2,9 @@
   "about": "Kalleigh's page, /our-team/kalleigh-sharp/. Sections follow Vagisha's outline (28 Oct 2026). A section is published only when its status is \"approved\" and it has a body; a \"draft\" stays off the site and the build lists it under 'profile sections waiting'. Every published sentence comes from something Kalleigh has already published or told us - the source line says what. The questions on each draft are what to ask Kalleigh. Photo and video come from content/media.json, under people.kalleigh-sharp.",
   "slug": "kalleigh-sharp",
   "name": "Kalleigh Sharp",
-  "title": "Co-founder and Director",
-  "title_note": "Vagisha's brief says CEO. NAE's own published history calls her a co-founder and director; the team page placeholder says President. Kalleigh picks one and it changes here only.",
-  "intro": "Kalleigh co-founded the National Association of Estheticians Inc. to make hands-on beauty training affordable and close to home. She writes NAE's curriculum and teaches hair courses at our Richmond Hill beauty school.",
+  "title": "Founder & CEO",
+  "title_note": "Founder & CEO per Kalleigh's 2026 curriculum cover and Vagisha's draft (naeinc.ca page 2834, 22 Oct 2026). Emails to students still sign 'Program Director'.",
+  "intro": "Kalleigh is the Founder and CEO of the National Association of Estheticians Inc. An entrepreneur, educator and advocate for accessible career education, she writes NAE's curriculum and teaches hair courses at our Richmond Hill beauty school.",
   "sections": [
     {
       "id": "about",
@@ -39,22 +39,23 @@
       "id": "experience",
       "heading": "Professional experience",
       "status": "approved",
-      "source": "Company History post and the old naeinc.ca home page (About Us)",
+      "source": "Company History post and old naeinc.ca home page; Vagisha's draft, page 2834",
       "list": [
+        "Founder & CEO, National Association of Estheticians Inc.",
         "Writes and illustrates NAE's course curriculum",
-        "Manages NAE's student enrolment",
+        "Oversees educational programming, business development, marketing and student enrolment",
         "Trained in hair extensions, lash extensions and microblading, Pro Beauty Academy (2018)",
-        "Degree in Sociology, University of Guelph (2014)",
-        "Years of partnerships with salons and studios across Niagara and the GTA"
+        "Degree in Sociology, University of Guelph (2014)"
       ]
     },
     {
       "id": "vision",
       "heading": "Her vision",
-      "status": "draft",
-      "ask": [
-        "Where do you want NAE to be in five years?",
-        "What should beauty education in Ontario look like, in your words?"
+      "status": "approved",
+      "source": "Vagisha's draft 'Meet Our Founder', naeinc.ca page 2834 (draft, 22 Oct 2026)",
+      "body": [
+        "Kalleigh built NAE to make professional beauty education more affordable, flexible and accessible: online theory students can work through at home, paired with hands-on, instructor-led workshops at three beauty schools.",
+        "Her goal is training that helps people gain practical skills, start their own business and build greater financial independence."
       ]
     },
     {
@@ -115,5 +116,6 @@
     }
   ],
   "alumniOf": "University of Guelph",
-  "description": "Kalleigh Sharp co-founded NAE to make hands-on beauty training affordable and close to home. Her story, her mission and the courses she writes."
+  "description": "Kalleigh Sharp, Founder and CEO of NAE: her story, her vision for accessible beauty education, and the courses she writes.",
+  "card_label": "Meet our founder"
 }

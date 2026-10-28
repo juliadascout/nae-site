@@ -505,7 +505,9 @@ def shell(title, desc, path, body, canonical=None):
 <main>{body}</main>
 <footer class="ftr"><div class="wrap">
   <div><strong style="color:var(--ink)">{E(SITE['legal'])}</strong><br>
-    {E(SITE['phone'])} &nbsp;&middot;&nbsp; {E(SITE['email'])}{legacy_line}</div>
+    <a href="tel:+1{re.sub(r'\D', '', SITE['phone'])}">{E(SITE['phone'])}</a> &nbsp;&middot;&nbsp;
+    <a href="mailto:{E(SITE['email'])}">{E(SITE['email'])}</a><br>
+    <a href="{SITE['booking']}" rel="noopener">Book a call or tour</a>{legacy_line}</div>
   <div>{open_names}</div>
   <div>Kits are optional and priced separately.<br>Certificate of completion issued on every course.</div>
 </div></footer>{REVEAL_JS}</body></html>"""
@@ -1308,7 +1310,7 @@ def profile_card(p):
     pic = (f'<img src="{photo}" alt="" loading="lazy" decoding="async">' if photo
            else avatar(0, 96))
     return (f'<a class="pfcard reveal" href="/our-team/{p["slug"]}/"><div class="av">{pic}</div>'
-            f'<div><p class="eyebrow">Meet our {E(p.get("title") or "director").lower()}</p>'
+            f'<div><p class="eyebrow">{E(p.get("card_label") or p.get("title") or "")}</p>'
             f'<h2>{E(p["name"])}</h2><p>{E(p.get("intro") or "")}</p>'
             f'<span class="pflink">Read her story &rarr;</span></div></a>')
 
