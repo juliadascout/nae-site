@@ -272,3 +272,6 @@ __marimo__/
 # Source, like taxonomy.json: dropped by *.json above, every spot would go back
 # to its placeholder on a fresh clone.
 !content/media.json
+
+# Profile pages (content/people/<slug>.json): source, like media.json.
+!content/people/*.json

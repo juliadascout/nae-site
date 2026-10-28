@@ -1,0 +1,119 @@
+{
+  "about": "Kalleigh's page, /our-team/kalleigh-sharp/. Sections follow Vagisha's outline (28 Oct 2026). A section is published only when its status is \"approved\" and it has a body; a \"draft\" stays off the site and the build lists it under 'profile sections waiting'. Every published sentence comes from something Kalleigh has already published or told us - the source line says what. The questions on each draft are what to ask Kalleigh. Photo and video come from content/media.json, under people.kalleigh-sharp.",
+  "slug": "kalleigh-sharp",
+  "name": "Kalleigh Sharp",
+  "title": "Co-founder and Director",
+  "title_note": "Vagisha's brief says CEO. NAE's own published history calls her a co-founder and director; the team page placeholder says President. Kalleigh picks one and it changes here only.",
+  "intro": "Kalleigh co-founded the National Association of Estheticians Inc. to make hands-on beauty training affordable and close to home. She writes NAE's curriculum and teaches hair courses at our Richmond Hill beauty school.",
+  "sections": [
+    {
+      "id": "about",
+      "heading": "About Kalleigh",
+      "status": "approved",
+      "source": "Pink News spotlight 'The Road to Becoming a Beautician' and the Company History post, both on naeinc.ca",
+      "body": [
+        "Kalleigh graduated from the University of Guelph with a degree in Sociology in 2014. Like a lot of graduates, she left with student debt and spent years working several jobs at once to pay it down.",
+        "In 2018 she trained in hair extensions, lash extensions and microblading at Pro Beauty Academy, and started building a client list of her own. With no car, she travelled to clients by transit until her bookings filled up and her debt was paid off."
+      ]
+    },
+    {
+      "id": "journey",
+      "heading": "Her journey",
+      "status": "approved",
+      "source": "Company History post on naeinc.ca (June 2019 meeting); Pink News spotlight",
+      "body": [
+        "In June 2019, Kalleigh sat down with a fellow esthetician and salon owner to talk about a problem they both kept running into. Good beauty training in the region was either in Toronto or expensive, and too often it came with thin course content and little support once the class was over.",
+        "They partnered to build NAE around the opposite idea: practical courses taught by people who do the work, at a price a student can manage without taking on debt."
+      ]
+    },
+    {
+      "id": "mission",
+      "heading": "Her mission",
+      "status": "approved",
+      "source": "Pink News spotlight: 'I want to help other women get full time jobs without having to take on the debt.'",
+      "body": [
+        "Kalleigh knows what it costs to start over with a loan hanging over you. Her aim is for every NAE student to learn a skill they can build on, without the debt she had to work her way out of."
+      ]
+    },
+    {
+      "id": "experience",
+      "heading": "Professional experience",
+      "status": "approved",
+      "source": "Company History post and the old naeinc.ca home page (About Us)",
+      "list": [
+        "Writes and illustrates NAE's course curriculum",
+        "Manages NAE's student enrolment",
+        "Trained in hair extensions, lash extensions and microblading, Pro Beauty Academy (2018)",
+        "Degree in Sociology, University of Guelph (2014)",
+        "Years of partnerships with salons and studios across Niagara and the GTA"
+      ]
+    },
+    {
+      "id": "vision",
+      "heading": "Her vision",
+      "status": "draft",
+      "ask": [
+        "Where do you want NAE to be in five years?",
+        "What should beauty education in Ontario look like, in your words?"
+      ]
+    },
+    {
+      "id": "philosophy",
+      "heading": "Leadership philosophy",
+      "status": "draft",
+      "ask": [
+        "What values do you hire instructors for?",
+        "What does a good class look like to you?"
+      ]
+    },
+    {
+      "id": "achievements",
+      "heading": "Achievements and milestones",
+      "status": "draft",
+      "note": "Ontario's registry has NAE incorporated 13 Aug 2015; the Company History post says the partnership formed after a June 2019 meeting. Kalleigh confirms the dates before any timeline goes up. No student count until a record backs it (open question 7).",
+      "ask": [
+        "Which dates are right: when NAE was incorporated, when the partnership started, when each beauty school opened?",
+        "Any awards, press or recognition you can show us a copy of?"
+      ]
+    },
+    {
+      "id": "stories",
+      "heading": "Student success stories",
+      "status": "draft",
+      "note": "Real students only, quoted in their own words, each with written permission to publish their name and photo. Nothing is written for them.",
+      "ask": [
+        "Which past students would be happy to share a few lines, and can we get their written OK?"
+      ]
+    },
+    {
+      "id": "insights",
+      "heading": "Industry insights",
+      "status": "draft",
+      "ask": [
+        "Where do you think the beauty industry is heading?",
+        "What do new artists get wrong, and what do they get right?"
+      ]
+    },
+    {
+      "id": "community",
+      "heading": "Community involvement",
+      "status": "draft",
+      "note": "The 2020 spotlight mentions a free 'Back on Track' scholarship programme. Funding is not promised on the site unless it is running now and Kalleigh confirms it.",
+      "ask": [
+        "Is the Back on Track programme still running?",
+        "Beauty in Business, charity work, events: what should be listed?"
+      ]
+    },
+    {
+      "id": "personal",
+      "heading": "In her own words",
+      "status": "draft",
+      "ask": [
+        "What is your favourite part of the work?",
+        "One piece of advice for someone thinking about starting in beauty?"
+      ]
+    }
+  ],
+  "alumniOf": "University of Guelph",
+  "description": "Kalleigh Sharp co-founded NAE to make hands-on beauty training affordable and close to home. Her story, her mission and the courses she writes."
+}

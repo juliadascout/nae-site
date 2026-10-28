@@ -508,3 +508,60 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
 .loc-photo img{display:block;width:100%;height:100%;object-fit:cover}
 .tcard .av img{display:block;width:74px;height:74px;border-radius:50%;object-fit:cover;
   box-shadow:inset 0 0 0 1px var(--rule-2)}
+
+/* ---------- course booking rail, desktop ---------- */
+/* The rail is sticky, but it was taller than the window, so its foot (the buy
+   button) could only be reached by scrolling to the bottom of the page. Cap it
+   to the space under the header and let it scroll on its own. */
+@media (min-width:1001px){
+  .rail{top:84px;max-height:calc(100vh - 100px);max-height:calc(100dvh - 100px);
+    overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+    scrollbar-color:var(--rule) transparent;padding-right:2px}
+}
+
+/* ---------- profile page ---------- */
+.crumb{font-size:.82rem;color:var(--muted);margin-bottom:1.4rem}
+.crumb a{color:var(--vir-ink)}
+.pfhero{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:clamp(1.4rem,4vw,3rem);
+  align-items:center;margin-bottom:clamp(2rem,5vw,3.4rem)}
+.pfport{margin:0;aspect-ratio:1;border-radius:20px;overflow:hidden;
+  background:linear-gradient(135deg,var(--plum-soft),var(--vir-soft));
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.pfport img{width:100%;height:100%;object-fit:cover;display:block}
+.pfport .avsvg{width:72%;height:auto;box-shadow:none}
+.pfintro h1{margin-bottom:.8rem}
+@media (max-width:760px){.pfhero{grid-template-columns:1fr}.pfport{max-width:240px}}
+.pfbody{max-width:80ch}
+.pfsec{padding-block:clamp(1.3rem,3vw,2rem);border-top:1px solid var(--rule-2)}
+.pfsec h2{font-size:clamp(1.3rem,2.2vw,1.7rem);margin-bottom:.8rem}
+.pfsec p{color:var(--ink-2);margin:0 0 1em}
+.pflist{margin:0;padding-left:1.2em;color:var(--ink-2)} .pflist li{margin-bottom:.45em}
+.pfvid{width:100%;border-radius:12px;background:#000;display:block}
+.pfsec .stats{margin-top:0}
+.pfcta{margin-top:clamp(1.6rem,4vw,2.6rem)}
+.pfcard{display:grid;grid-template-columns:96px minmax(0,1fr);gap:1.2rem;align-items:center;
+  background:var(--rail);border:1px solid var(--rule-2);border-radius:16px;padding:1.3rem;
+  text-decoration:none;color:inherit;margin-bottom:1.6rem;transition:border-color .2s,transform .2s,box-shadow .2s}
+.pfcard:hover{border-color:var(--vir);transform:translateY(-2px);box-shadow:var(--shadow)}
+.pfcard .av{width:96px;height:96px;border-radius:50%;overflow:hidden}
+.pfcard .av img{width:96px;height:96px;object-fit:cover;display:block}
+.pfcard h2{font-size:1.35rem;margin:.1rem 0 .3rem} .pfcard p{margin:0;color:var(--ink-2);font-size:.93rem}
+.pflink{display:inline-block;margin-top:.5rem;font-weight:700;color:var(--vir-ink);font-size:.9rem}
+@media (max-width:520px){.pfcard{grid-template-columns:1fr;text-align:center}.pfcard .av{margin:0 auto}}
+
+/* ---------- motion ---------- */
+/* Sections fade up as they come into view. Only when the script has run (html.js)
+   and the visitor has not asked for less motion, so nothing is ever hidden for
+   someone without JavaScript. */
+@media (prefers-reduced-motion:no-preference){
+  html.js .reveal{opacity:0;transform:translateY(14px);
+    transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+  html.js .reveal.in{opacity:1;transform:none}
+  .hero h1,.pfintro h1{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  .hero .lede,.pfintro .lede{animation:rise .7s .08s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .tile,.lcard,.tcard,.btn{transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+  .tile:hover,.lcard:hover,.tcard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .btn-p:hover{transform:translateY(-1px)}
+}
+.pfcard p.eyebrow{font-size:.66rem;color:var(--vir-ink);margin-bottom:.2rem}
