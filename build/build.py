@@ -448,13 +448,16 @@ LINK_GUARD = ('\n<script>(function(){function take(){'
 
 # Marks the page as scripted, then fades .reveal blocks in as they scroll into
 # view. Cards and tiles join in without each page having to opt in.
-REVEAL_JS = ('<script>(function(){var d=document.documentElement;d.classList.add("js");'
+REVEAL_JS = ('<script>(function(){try{'
   'if(!("IntersectionObserver"in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
-  'var els=document.querySelectorAll(".reveal,.tile,.lcard,.tcard,.card:not(.rail .card),.stats");'
+  'var els=document.querySelectorAll(".reveal,.tile,.lcard,.tcard,.card,.stats");'
   'var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)'
   '{e.target.classList.add("in");io.unobserve(e.target)}})},{rootMargin:"0px 0px -8% 0px"});'
-  'els.forEach(function(el){if(!el.classList.contains("reveal"))el.classList.add("reveal");'
-  'var r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add("in");else io.observe(el)})'
+  'els.forEach(function(el){if(el.closest(".rail"))return;el.classList.add("reveal");'
+  'var r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add("in");else io.observe(el)});'
+  # Only now: the stylesheet hides .reveal under html.js, so if anything above
+  # failed in an older browser the page stays fully visible.
+  'document.documentElement.classList.add("js")}catch(e){}'
   '})();</script>')
 
 def shell(title, desc, path, body, canonical=None):
