@@ -1292,7 +1292,7 @@ def _people():
                 d = json.load(fh)
         except (OSError, ValueError) as e:
             sys.exit(f"content/people/{fn} could not be read: {e}")
-        if not isinstance(d, dict) or not d.get("name") or not d.get("slug"):
+        if not isinstance(d, dict) or not str(d.get("name") or "").strip() or not d.get("slug"):
             sys.exit(f"content/people/{fn} needs at least a name and a slug")
         # The slug becomes a folder under public/our-team/ and part of a link,
         # so only a plain lower-case name is accepted.
