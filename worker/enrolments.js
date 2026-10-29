@@ -1,105 +1,116 @@
 /* Who bought what, kept where we can see it.
 
-   Until now a payment left no trace in NAE's own systems: PayPal had the
-   record and nobody else did, so a sale could not be followed up, counted, or
-   turned into an enrolment without somebody logging into PayPal and reading it
-   off by hand.
+   A payment provider has the record of a sale; this keeps NAE's own, so a sale
+   can be followed up, counted, and turned into an enrolment without somebody
+   logging into the provider's dashboard and reading it off by hand.
 
-   The buyer's name and email come back from PayPal on capture. They are
-   personal data, so they go in D1 and never near the data repository - a
-   contact committed to git is in that history permanently.
+   The buyer's name and email come from the provider. They are personal data,
+   so they go in D1 and never near the data repository - a contact committed to
+   git is in that history permanently.
 
    stage and stage_since are here from the first row on purpose: the pipeline
    that will read this needs to know how long something has sat where it is,
    and a timestamp cannot be invented later for rows that predate it.
 
-   THIS MUST NOT FAIL THE PAYMENT. The money has already moved by the time this
-   runs. A failure here is a bookkeeping problem, loud in the log, and never a
-   reason to tell the buyer something went wrong.
+   THESE MUST NOT FAIL THE CALLER. By the time they run the provider has
+   already decided about the money. A failure here is a bookkeeping problem,
+   loud in the log, and never a reason to tell the buyer something went wrong.
 
-   Returns "new" for a sale recorded now, "repeat" for one already recorded
-   (so it is not confirmed twice), "failed", or "off" with no database. */
+   The sale arrives as a plain object, so nothing here knows which provider
+   sent it (stripe.js builds it from a Checkout Session):
+
+     { provider, sessionId, paymentIntent, courseId, courseName, withKit,
+       currency, subtotal, tax, total, payerName, payerEmail, locationId,
+       paymentStatus, stage, items: [{label, value}], paidAt, livemode } */
 const changes = (r) => (r && r.meta && r.meta.changes) ?? (r && r.changes) ?? 0;
 
-export async function recordEnrolment(env, order, pu, cap, requestBody, courseName) {
+/* Returns "new" for a sale recorded now, "repeat" for one already recorded
+   (so it is not confirmed twice), "failed", or "off" with no database. */
+export async function recordEnrolment(env, sale) {
   if (!env.ENROLMENTS) return "off";
   try {
-    const payer = order.payer || {};
-    const name = [payer.name?.given_name, payer.name?.surname].filter(Boolean).join(" ");
-    const courseId = pu.reference_id || "";
-    const breakdown = (pu.amount || {}).breakdown || {};
-    /* custom_id and the amount sit on the purchase unit in the full order
-       PayPal returns, and on the capture itself in its shorter reply. */
-    const withKit = /\+kit$/.test(pu.custom_id || cap.custom_id || "") ? 1 : 0;
-    const amount = pu.amount || cap.amount || {};
-    const num = (v) => (v == null ? null : Number(v));
     const now = new Date().toISOString();
-
     const r = await env.ENROLMENTS.prepare(
       `INSERT OR IGNORE INTO enrolments
         (id, created_at, source, course_id, course_name, with_kit, currency,
          subtotal, tax, total, payer_name, payer_email, location_id,
-         paypal_order_id, paypal_capture_id, payment_status, stage, stage_since)
-       VALUES (?, ?, 'checkout', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid', ?)`,
+         payment_status, stage, stage_since,
+         provider, stripe_session_id, stripe_payment_intent)
+       VALUES (?, ?, 'checkout', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).bind(
-      crypto.randomUUID(), now, courseId, courseName || pu.description || courseId,
-      withKit, amount.currency_code || "CAD",
-      num((breakdown.item_total || {}).value),
-      num((breakdown.tax_total || {}).value),
-      num(amount.value),
-      name || null, payer.email_address || null,
-      typeof requestBody?.locationId === "string" ? requestBody.locationId.slice(0, 40) : null,
-      order.id, cap.id || null, order.status || null, now,
+      crypto.randomUUID(), now, sale.courseId || "", sale.courseName || sale.courseId || "",
+      sale.withKit ? 1 : 0, sale.currency || "CAD",
+      sale.subtotal ?? null, sale.tax ?? null, sale.total ?? null,
+      sale.payerName || null, sale.payerEmail || null,
+      typeof sale.locationId === "string" && sale.locationId ? sale.locationId.slice(0, 40) : null,
+      sale.paymentStatus || null, sale.stage || "paid", now,
+      sale.provider || "stripe", sale.sessionId || null, sale.paymentIntent || null,
     ).run();
     return changes(r) === 1 ? "new" : "repeat";
   } catch (e) {
     /* Loud, and only here. The buyer is not told, because nothing about their
        payment went wrong. */
-    console.error("enrolment not recorded:", order && order.id, e.message);
+    console.error("enrolment not recorded:", sale && sale.sessionId, e.message);
     return "failed";
   }
 }
 
+/* Move a sale to a new stage - paid, refunded, disputed. Matched by the
+   session or by the payment intent (refunds and disputes only know the
+   latter). Returns how many rows moved: 0 means it was already there, or is
+   not a sale this site took, which callers use to send an email only once.
+   An unchanged stage keeps its stage_since, so "how long has it sat here"
+   stays true. */
+export async function setStage(env, { sessionId, paymentIntent }, stage, paymentStatus) {
+  if (!env.ENROLMENTS) return 0;
+  const col = sessionId ? "stripe_session_id" : "stripe_payment_intent";
+  const key = sessionId || paymentIntent;
+  if (!key) return 0;
+  try {
+    const r = await env.ENROLMENTS.prepare(
+      `UPDATE enrolments
+          SET stage = ?, stage_since = ?, payment_status = COALESCE(?, payment_status)
+        WHERE ${col} = ? AND stage <> ?`,
+    ).bind(stage, new Date().toISOString(), paymentStatus || null, key, stage).run();
+    return changes(r);
+  } catch (e) {
+    console.error("enrolment stage not changed:", key, stage, e.message);
+    return 0;
+  }
+}
+
 /* What the apps' Worker needs to email the student their confirmation and
-   tell the administrators (nae-inc worker/notify.js): the payment as PayPal
-   reports it, and from the build's catalogue the course, the studio, who the
-   seller is, and the refund policy the buyer accepted at checkout. Amounts
-   are PayPal's, never the page's. */
-export function enrolmentNotice(env, order, pu, cap, requestBody, catalogue, taxLabel) {
-  const payer = order.payer || {};
-  const course = (catalogue.courses || {})[pu.reference_id || ""] || {};
+   tell the administrators (nae-inc worker/notify.js): the payment as the
+   provider reports it, and from the build's catalogue the course, the studio,
+   who the seller is, and the refund policy the buyer accepted at checkout.
+   Amounts are the provider's, never the page's. */
+export function enrolmentNotice(sale, catalogue, taxLabel) {
+  const course = (catalogue.courses || {})[sale.courseId || ""] || {};
   const studios = catalogue.studios || {};
-  const locationId = typeof requestBody?.locationId === "string" ? requestBody.locationId : "";
-  const breakdown = (pu.amount || {}).breakdown || {};
-  const amount = cap.amount || pu.amount || {};
-  /* The order's own lines (quote() in index.js): the course is the service,
-     the kit the one physical item. */
-  const items = (Array.isArray(pu.items) ? pu.items : []).map((i) => ({
-    label: i.category === "PHYSICAL_GOODS" ? "Kit" : "Course fee",
-    value: (Number((i.unit_amount || {}).value) * Number(i.quantity || 1)).toFixed(2),
-  }));
+  const locationId = typeof sale.locationId === "string" ? sale.locationId : "";
+  const fixed = (v) => (v == null ? null : Number(v).toFixed(2));
   return {
-    test: env.PAYPAL_ENV !== "live",
-    name: [payer.name?.given_name, payer.name?.surname].filter(Boolean).join(" "),
-    email: payer.email_address || "",
-    course: course.name || pu.description || pu.reference_id || "",
-    withKit: /\+kit$/.test(pu.custom_id || cap.custom_id || ""),
+    test: sale.livemode !== true,
+    name: sale.payerName || "",
+    email: sale.payerEmail || "",
+    course: course.name || sale.courseName || sale.courseId || "",
+    withKit: !!sale.withKit,
     studio: Object.hasOwn(studios, locationId) ? studios[locationId] : null,
-    currency: amount.currency_code || catalogue.currency || "CAD",
-    items,
-    subtotal: (breakdown.item_total || {}).value || null,
-    tax: (breakdown.tax_total || {}).value || null,
+    currency: sale.currency || catalogue.currency || "CAD",
+    items: Array.isArray(sale.items) ? sale.items : [],
+    subtotal: fixed(sale.subtotal),
+    tax: fixed(sale.tax),
     taxLabel,
-    total: amount.value || null,
-    reference: cap.id || order.id,
-    paidAt: cap.create_time || new Date().toISOString(),
+    total: fixed(sale.total),
+    reference: sale.paymentIntent || sale.sessionId || "",
+    paidAt: sale.paidAt || new Date().toISOString(),
     refundPolicy: catalogue.refundPolicy || null,
     seller: catalogue.seller || null,
   };
 }
 
-/* Hand it over. Never makes the buyer wait, and nothing that goes wrong here
-   reaches them: the payment and the record are already done. */
+/* Hand it over. Never makes the caller wait, and nothing that goes wrong here
+   reaches the buyer: the payment and the record are already done. */
 export function tellEnrolment(env, ctx, notice) {
   const telling = (async () => {
     if (!env.NOTIFY) {
