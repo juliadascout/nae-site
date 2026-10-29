@@ -1368,7 +1368,24 @@ def page_profile(p):
     programs = (f'<section class="pfsec reveal" id="programs"><h2>Programs and training</h2>'
                 f'<p>The curriculum {E(first)} writes, by subject.</p><div class="grid3">{tiles}</div></section>')
     message = ""
-    if video:
+    # Kalleigh's YouTube video, as a still with a play button. Nothing is loaded
+    # from YouTube until the visitor presses play (no tracking, no weight on the
+    # page); without JavaScript the still is a plain link to the video.
+    yt = str(m.get("youtube") or "").strip()
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", yt):
+        yt_title = m.get("youtube_title") or f"A message from {first}"
+        yt_still = media_url(m.get("youtube_still"))
+        img = (f'<img src="{yt_still}" alt="" loading="lazy" decoding="async">' if yt_still else "")
+        message = (f'<section class="pfsec reveal" id="message"><h2>{E(yt_title)}</h2>'
+                   f'<a class="pfyt" href="https://www.youtube.com/watch?v={yt}" data-yt="{yt}" '
+                   f'data-title="{E(yt_title)}" aria-label="Play the video: {E(yt_title)}" rel="noopener">{img}'
+                   f'<span class="pfplay" aria-hidden="true"></span></a>'
+                   f'<script>(function(){{var a=document.querySelector(".pfyt[data-yt]");if(!a)return;'
+                   f'a.addEventListener("click",function(e){{e.preventDefault();var f=document.createElement("iframe");'
+                   f'f.src="https://www.youtube-nocookie.com/embed/"+a.getAttribute("data-yt")+"?autoplay=1&rel=0";'
+                   f'f.title=a.getAttribute("data-title");f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";'
+                   f'f.allowFullscreen=true;f.className="pfytf";a.replaceWith(f);}});}})();</script></section>')
+    elif video:
         still = f' poster="{poster}"' if poster else ""
         message = (f'<section class="pfsec reveal" id="message"><h2>A message from {E(first)}</h2>'
                    f'<video class="pfvid" controls playsinline preload="metadata"{still} src="{video}"></video>'

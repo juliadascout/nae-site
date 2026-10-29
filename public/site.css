@@ -537,6 +537,12 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
 .pfsec p{color:var(--ink-2);margin:0 0 1em}
 .pflist{margin:0;padding-left:1.2em;color:var(--ink-2)} .pflist li{margin-bottom:.45em}
 .pfvid{width:100%;border-radius:12px;background:#000;display:block}
+.pfyt{position:relative;display:block;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.pfyt img{width:100%;height:100%;object-fit:cover;display:block;opacity:.88;transition:opacity .2s}
+.pfyt:hover img,.pfyt:focus-visible img{opacity:1}
+.pfplay{position:absolute;left:50%;top:50%;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;background:var(--plum);box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.pfplay::after{content:"";position:absolute;left:29px;top:22px;border-style:solid;border-width:14px 0 14px 22px;border-color:transparent transparent transparent #fff}
+.pfytf{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;display:block;background:#000}
 .pfsec .stats{margin-top:0}
 .pfcta{margin-top:clamp(1.6rem,4vw,2.6rem)}
 .pfcard{display:grid;grid-template-columns:96px minmax(0,1fr);gap:1.2rem;align-items:center;
