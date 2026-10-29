@@ -50,13 +50,17 @@ GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"hello@beautycourse.ca","domain":"https://beautycourse.ca",
-        # Setmore. Every booking link on the site points here. It replaced a Google
-        # appointment schedule, whose free tier allowed only one schedule per
-        # account and could not see the rest of Kalleigh's calendar - so it offered
-        # slots she was not actually free for. To split booking by course or by
-        # studio later, make this a dict keyed by course or location id; every page
-        # reads it from here, so nothing else has to change.
-        "booking":"https://nationalassociationofestheticiansinc.setmore.com/services/3eb667e2-bafc-4c75-8383-ed5f47b2ea27",
+        # Kalleigh's Google Calendar appointment schedule (a phone call with
+        # her). Every booking link on the site points here. It replaced Setmore
+        # on 29 Oct 2026: NAE is on Google Workspace now, so the schedule sits
+        # on the calendar Kalleigh actually uses and blocks against her real
+        # commitments - the reason the free Google schedule was dropped for
+        # Setmore in September no longer holds. If the link changes, assets/
+        # events.js counts clicks by host, so a new Google link still counts.
+        # To split booking by course or by studio later, make this a dict keyed
+        # by course or location id; every page reads it from here, so nothing
+        # else has to change.
+        "booking":"https://calendar.app.google/LCuCVyxqmcADXTeH6",
         # Which studio's address is the mailing address at the foot of a
         # student's enrolment email: Canadian anti-spam law (CASL) wants one on
         # any business email, and the buyer's record of an online purchase
