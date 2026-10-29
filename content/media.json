@@ -1,15 +1,39 @@
 {
-  "about": "Photos and video on the website. Put each file in assets/media/ and write its path here, starting media/ (for example media/studios/richmond-hill-wide.jpg). A spot left empty, or naming a file that is not there yet, keeps the placeholder the page shows today. The build prints what it used. See README, 'Photos and video'.",
-  "home": {
-    "video": "",
-    "poster": "",
-    "alt": "A student training with an NAE trainer"
+ "about": "Photos and video on the website. Put each file in assets/media/ and write its path here, starting media/ (for example media/studios/richmond-hill-wide.jpg). A spot left empty, or naming a file that is not there yet, keeps the placeholder the page shows today. The build prints what it used. See README, 'Photos and video'.",
+ "home": {
+  "video": "",
+  "poster": "",
+  "alt": "A student training with an NAE trainer"
+ },
+ "studios": {
+  "richmond-hill": {
+   "photo": "",
+   "alt": "Inside the Richmond Hill studio"
   },
-  "studios": {
-    "richmond-hill": { "photo": "", "alt": "Inside the Richmond Hill studio" },
-    "st-catharines": { "photo": "", "alt": "Inside the St. Catharines studio" },
-    "niagara-falls": { "photo": "", "alt": "Inside the Niagara Falls studio" },
-    "kitchener-waterloo": { "photo": "", "alt": "Inside the Kitchener-Waterloo studio" }
+  "st-catharines": {
+   "photo": "",
+   "alt": "Inside the St. Catharines studio"
   },
-  "team": []
+  "niagara-falls": {
+   "photo": "",
+   "alt": "Inside the Niagara Falls studio"
+  },
+  "kitchener-waterloo": {
+   "photo": "",
+   "alt": "Inside the Kitchener-Waterloo studio"
+  }
+ },
+ "team": [],
+ "people": {
+  "kalleigh-sharp": {
+   "photo": "",
+   "alt": "Kalleigh Sharp",
+   "video": "",
+   "poster": "",
+   "youtube": "EWJn2A32dPw",
+   "youtube_title": "The Road to Becoming a Beautician",
+   "youtube_still": "media/people/kalleigh-road-to-beautician.jpg",
+   "youtube_note": "Kalleigh's own video (her YouTube channel), sent by Isha/Vagisha 28 Oct 2026. Plays only when a visitor presses play; nothing loads from YouTube before that."
+  }
+ }
 }

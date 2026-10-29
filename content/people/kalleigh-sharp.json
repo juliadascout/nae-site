@@ -10,9 +10,9 @@
       "id": "about",
       "heading": "About Kalleigh",
       "status": "approved",
-      "source": "Pink News spotlight 'The Road to Becoming a Beautician' and the Company History post, both on naeinc.ca",
+      "source": "Pink News spotlight 'The Road to Becoming a Beautician' and the Company History post, both on naeinc.ca; degree wording corrected to 'Bachelor of Arts' per Kalleigh's resume ('Tab 1 resume.docx'), sent from NAE's email to Vagisha and Julia, 28 Oct 2026",
       "body": [
-        "Kalleigh graduated from the University of Guelph with a degree in Sociology in 2014. Like a lot of graduates, she left with student debt and spent years working several jobs at once to pay it down.",
+        "Kalleigh graduated from the University of Guelph with a Bachelor of Arts in 2014. Like a lot of graduates, she left with student debt and spent years working several jobs at once to pay it down.",
         "In 2018 she trained in hair extensions, lash extensions and microblading at Pro Beauty Academy, and started building a client list of her own. With no car, she travelled to clients by transit until her bookings filled up and her debt was paid off."
       ]
     },
@@ -39,13 +39,15 @@
       "id": "experience",
       "heading": "Professional experience",
       "status": "approved",
-      "source": "Company History post and old naeinc.ca home page; Vagisha's draft, page 2834",
+      "source": "Company History post and old naeinc.ca home page; Vagisha's draft, page 2834; dates, business and speaking per Kalleigh's resume ('Tab 1 resume.docx'), sent from NAE's email to Vagisha and Julia, 28 Oct 2026. Her other businesses are not named: how they relate to NAE is not established (compliance rule).",
       "list": [
-        "Founder & CEO, National Association of Estheticians Inc.",
+        "Founder & CEO, National Association of Estheticians Inc. (since 2019)",
         "Writes and illustrates NAE's course curriculum",
         "Oversees educational programming, business development, marketing and student enrolment",
+        "Has run her own beauty services business since 2018",
+        "Guest speaker on entrepreneurship and careers in the beauty industry",
         "Trained in hair extensions, lash extensions and microblading, Pro Beauty Academy (2018)",
-        "Degree in Sociology, University of Guelph (2014)"
+        "Bachelor of Arts, University of Guelph (2014)"
       ]
     },
     {
@@ -70,20 +72,34 @@
     {
       "id": "achievements",
       "heading": "Achievements and milestones",
-      "status": "draft",
-      "note": "Ontario's registry has NAE incorporated 13 Aug 2015; the Company History post says the partnership formed after a June 2019 meeting. Kalleigh confirms the dates before any timeline goes up. No student count until a record backs it (open question 7).",
-      "ask": [
-        "Which dates are right: when NAE was incorporated, when the partnership started, when each beauty school opened?",
-        "Any awards, press or recognition you can show us a copy of?"
+      "status": "approved",
+      "note": "Resume gives 2019 as the founding year, matching the June 2019 partnership on the Company History post. Ontario's registry date (13 Aug 2015) is for the corporation, not stated on the page. No student count until a record backs it (open question 7).",
+      "source": "Kalleigh's resume ('Tab 1 resume.docx'), sent from NAE's email to Vagisha and Julia, 28 Oct 2026. Funding programs and loans are left out: the site never mentions grants or funding (compliance rule).",
+      "body": [
+        "From one partnership in 2019 to beauty schools across Ontario, NAE has grown on the same idea Kalleigh started with: practical training without the debt."
+      ],
+      "list": [
+        "Founded the National Association of Estheticians Inc., 2019",
+        "Opened NAE's first storefront, March 2020",
+        "Took part in the Starter Company Plus program for new Ontario businesses, 2020",
+        "Forbes Entrepreneur of Impact candidate, 2025",
+        "Finalist, Women in Business entrepreneurship award, 2025",
+        "Auditioned for Dragons' Den, 2025"
       ]
     },
     {
       "id": "stories",
       "heading": "Student success stories",
       "status": "draft",
-      "note": "Real students only, quoted in their own words, each with written permission to publish their name and photo. Nothing is written for them.",
+      "note": "READY TO PUBLISH once each student has said yes in writing (an email is enough) to their name and business appearing on the website. Then set status to approved. Photos in the doc can be added the same way.",
       "ask": [
         "Which past students would be happy to share a few lines, and can we get their written OK?"
+      ],
+      "source": "'Student Success Stories for DD.docx', sent from NAE's email 28 Oct 2026. Reworded only to remove a 'leading beautician' superlative.",
+      "body": [
+        "Nicole Viccica took the Microdermabrasion course in fall 2021 and went on to build Skin by Nicole Grace, a natural facial spa at the Rose Manor Bed and Breakfast in Welland. She sees six to eight clients a week alongside her full-time day job, and sells skincare products from her studio.",
+        "Katrina Guiducci took the Eyebrow Lamination, Lift and Tint, Microblading, Lash Lift and Tint, and Nail Technician courses in 2024, straight out of high school and without the student debt of a college program. She went from student to intern to NAE's front desk, while running her own home salon, Rose Beauty Studio.",
+        "Jane Refeza completed the Nail Technician course in summer 2023 and Lash Extensions in winter 2024. A mom in St. Catharines, she opened Nail Adix in her basement, now sees about 12 clients a week, and has since moved into a custom salon on her home's main floor, setting her own hours around her family."
       ]
     },
     {
@@ -98,11 +114,17 @@
     {
       "id": "community",
       "heading": "Community involvement",
-      "status": "draft",
+      "status": "approved",
       "note": "The 2020 spotlight mentions a free 'Back on Track' scholarship programme. Funding is not promised on the site unless it is running now and Kalleigh confirms it.",
-      "ask": [
-        "Is the Back on Track programme still running?",
-        "Beauty in Business, charity work, events: what should be listed?"
+      "source": "Kalleigh's resume ('Tab 1 resume.docx'), sent from NAE's email to Vagisha and Julia, 28 Oct 2026",
+      "body": [
+        "Kalleigh is regularly invited to talk with students and community groups about entrepreneurship and building a career in beauty."
+      ],
+      "list": [
+        "Guest speaker for entrepreneurship and cosmetology classes in Ontario, 2025 to 2026",
+        "Guest speaker on women in business, 2024",
+        "Tiny homes philanthropy project, featured in local media, 2023",
+        "Chair of Philanthropy and Residence Assistant, University of Guelph"
       ]
     },
     {
