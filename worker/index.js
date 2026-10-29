@@ -1,19 +1,18 @@
 import prices from "./prices.json";
-import { recordEnrolment, enrolmentNotice, tellEnrolment } from "./enrolments.js";
 import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
 import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
+import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 
-/* The site is static. This Worker serves it, and adds the two endpoints a
+/* The site is static. This Worker serves it, and adds the endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
    the amount has to be decided somewhere the buyer cannot reach.
 
+   Payment is Stripe Checkout (stripe.js). PayPal was replaced on 29 Oct 2026:
+   Google Calendar's paid bookings take Stripe only, and one processor is one
+   set of payouts and refunds to reconcile.
+
    Everything that is not /api/ falls through to the static assets exactly as
    before, so the Worker is invisible until checkout is switched on. */
-
-const PP_HOST = {
-  sandbox: "https://api-m.sandbox.paypal.com",
-  live: "https://api-m.paypal.com",
-};
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -27,79 +26,6 @@ const fail = (status, message, detail) => {
   if (detail) console.error("checkout:", message, "—", detail);
   return json({ error: message }, status);
 };
-
-/* Credentials announce themselves. Naming the ones we might plausibly confuse
-   turns a 401 nobody can read into a sentence that says what to fix. */
-const FOREIGN_SECRET = (s) => {
-  if (/^github_pat_/.test(s)) return "a GitHub fine-grained token";
-  if (/^gh[pousr]_/.test(s)) return "a GitHub token";
-  if (/^sk-/.test(s)) return "an API key from another service";
-  if (/^-----BEGIN /.test(s)) return "a private key";
-  return null;
-};
-
-function ppBase(env) {
-  const mode = env.PAYPAL_ENV === "live" ? "live" : "sandbox";
-  return { base: PP_HOST[mode], mode };
-}
-
-/* An access token lasts hours; minting one per request would add a round trip
-   to every order. Cached per isolate, refreshed a minute early. */
-let tokenCache = { value: null, expires: 0, mode: null };
-
-async function accessToken(env) {
-  const { base, mode } = ppBase(env);
-  const now = Date.now();
-  if (tokenCache.value && tokenCache.mode === mode && now < tokenCache.expires) {
-    return tokenCache.value;
-  }
-  const id = env.PAYPAL_CLIENT_ID;
-  const secret = env.PAYPAL_CLIENT_SECRET;
-  if (!id || !secret) throw new Error("PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is not set");
-  /* Refuse before the request, not after the 401. A secret set by mistake is
-     still a secret, and sending someone else's credential to a third party who
-     logs failed authentication is worse than the outage it was meant to fix.
-     This has happened once already: a GitHub token was pasted here. */
-  const foreign = FOREIGN_SECRET(secret);
-  if (foreign) throw new Error(`PAYPAL_CLIENT_SECRET holds ${foreign}, not a PayPal secret — it was not sent`);
-
-  const r = await fetch(`${base}/v1/oauth2/token`, {
-    method: "POST",
-    headers: {
-      Authorization: "Basic " + btoa(`${id}:${secret}`),
-      "content-type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials",
-  });
-  if (!r.ok) {
-    const detail = await r.text().catch(() => "");
-    throw new Error(`PayPal rejected the credentials (${r.status} from ${mode}). ${detail.slice(0, 300)}`);
-  }
-  const j = await r.json();
-  tokenCache = {
-    value: j.access_token,
-    mode,
-    expires: now + Math.max(0, (j.expires_in || 0) - 60) * 1000,
-  };
-  return tokenCache.value;
-}
-
-async function pp(env, path, method, body, headers = {}) {
-  const { base } = ppBase(env);
-  const r = await fetch(`${base}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${await accessToken(env)}`,
-      "content-type": "application/json",
-      ...headers,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const text = await r.text();
-  let parsed = null;
-  try { parsed = text ? JSON.parse(text) : null; } catch (e) { /* keep the text */ }
-  return { ok: r.ok, status: r.status, body: parsed, raw: text };
-}
 
 /* Ontario HST at 13%, which is what this charges. It was confirmed on
    18 Sept that HST applies to course fees; NAE's accountant should confirm
@@ -130,8 +56,8 @@ function quote(courseId, withKit) {
     {
       name: c.name.slice(0, 127),
       quantity: "1",
-      /* PayPal has no "service" category; DIGITAL_GOODS is the one that does
-         not demand a shipping address for something nobody ships. */
+      /* The category says which line is the course and which the kit
+         (stripe.js labels the confirmation's lines from it). */
       category: "DIGITAL_GOODS",
       unit_amount: { currency_code: prices.currency, value: money(c.price) },
     },
@@ -169,78 +95,6 @@ function quote(courseId, withKit) {
   };
 }
 
-async function handleOrder(request, env) {
-  let body;
-  try { body = await request.json(); } catch (e) { return fail(400, "Expected JSON"); }
-
-  const courseId = String(body.courseId || "");
-  const withKit = body.withKit === true;
-
-  const q = quote(courseId, withKit);
-  if (q.error) return fail(400, q.error);
-
-  const res = await pp(env, "/v2/checkout/orders", "POST", {
-    intent: "CAPTURE",
-    purchase_units: [
-      {
-        reference_id: courseId,
-        description: `${q.course.name}${withKit ? " with kit" : ""}`.slice(0, 127),
-        custom_id: `${courseId}${withKit ? "+kit" : ""}`.slice(0, 127),
-        items: q.items,
-        amount: q.amount,
-      },
-    ],
-    application_context: {
-      shipping_preference: "NO_SHIPPING",
-      user_action: "PAY_NOW",
-      brand_name: "National Association of Estheticians Inc.",
-    },
-  });
-
-  if (!res.ok) return fail(502, "Could not start the payment", res.raw);
-  return json({ id: res.body.id });
-}
-
-async function handleCapture(request, env, ctx) {
-  let body;
-  try { body = await request.json(); } catch (e) { return fail(400, "Expected JSON"); }
-
-  const orderId = String(body.orderId || "");
-  if (!/^[A-Za-z0-9-]{5,64}$/.test(orderId)) return fail(400, "Missing order id");
-
-  /* The whole order back, not PayPal's default short reply: that one leaves
-     the purchase unit without its amount, lines and custom_id, so the
-     enrolment would be recorded with no totals and no kit, and the buyer's
-     confirmation could not itemise what they paid. */
-  const res = await pp(env, `/v2/checkout/orders/${orderId}/capture`, "POST", {},
-                       { Prefer: "return=representation" });
-  if (!res.ok) return fail(502, "Could not complete the payment", res.raw);
-
-  /* Re-read the amount from PayPal rather than trusting what the page thought
-     it was buying. This is the number that actually moved. */
-  const pu = (res.body.purchase_units || [])[0] || {};
-  const cap = ((pu.payments || {}).captures || [])[0] || {};
-
-  const known = prices.courses[pu.reference_id || ""] || {};
-  const recorded = await recordEnrolment(env, res.body, pu, cap, body, known.name);
-
-  /* The student's confirmation and the administrators' alert, sent by the
-     apps' Worker after this answers. A payment already recorded was already
-     confirmed; one the database could not record still is, because the money
-     moved either way. */
-  if (recorded !== "repeat") {
-    tellEnrolment(env, ctx, enrolmentNotice(env, res.body, pu, cap, body, prices, `HST (${TAX_PERCENT}%)`));
-  }
-
-  return json({
-    status: res.body.status,
-    orderId: res.body.id,
-    captureId: cap.id || null,
-    amount: cap.amount || null,
-    reference: pu.reference_id || null,
-  });
-}
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -258,58 +112,17 @@ export default {
         return handleEnquiry(request, env, ctx, prices.courses);
       }
       if (path === "/api/checkout/config" && request.method === "GET") {
-        const { mode } = ppBase(env);
-        return json({
-          clientId: env.PAYPAL_CLIENT_ID || null,
-          currency: prices.currency,
-          mode,
-          enabled: env.CHECKOUT_ENABLED === "true",
-        });
+        return json({ currency: prices.currency, mode: stripeMode(env), enabled: checkoutReady(env) });
       }
-      /* Does this Worker actually hold a working pair of credentials? A
-         checkout that fails gives the buyer a generic apology by design, so
-         without this the only way to tell a wrong secret from a bad payload is
-         to read the Cloudflare log. Says nothing secret: the client id is
-         public and only its tail is shown, to confirm which app is in use. */
+      /* Is checkout configured, and does Stripe accept the key and the tax
+         rate? A checkout that fails gives the buyer a generic apology by
+         design, so this is how a wrong secret is told from a bad request. */
       if (path === "/api/checkout/health" && request.method === "GET") {
-        const { mode } = ppBase(env);
-        const id = env.PAYPAL_CLIENT_ID || "";
-        /* Enough to compare against the dashboard character by character
-           without publishing anything private. The client id is public by
-           design; the secret is only ever reported as present or absent, and
-           its length and shape, which is what tells a wrong paste from a
-           mismatched pair. */
-        const sec = env.PAYPAL_CLIENT_SECRET || "";
-        const out = {
-          mode,
-          enabled: env.CHECKOUT_ENABLED === "true",
-          clientIdSet: !!id,
-          clientIdHead: id ? id.slice(0, 10) + "…" : null,
-          clientIdTail: id ? "…" + id.slice(-6) : null,
-          clientIdLength: id.length,
-          secretSet: !!sec,
-          secretLength: sec.length,
-          secretHead: sec ? sec.slice(0, 2) + "…" : null,
-          secretLooksTrimmed: sec === sec.trim(),
-        };
-        if (!out.clientIdSet || !out.secretSet) {
-          return json({ ...out, ok: false, reason: "client id or secret missing" }, 200);
-        }
-        const foreign = FOREIGN_SECRET(sec);
-        if (foreign) {
-          return json({ ...out, ok: false,
-            reason: `PAYPAL_CLIENT_SECRET holds ${foreign}, not a PayPal secret. Nothing was sent to PayPal.` }, 200);
-        }
-        try {
-          await accessToken(env);
-          return json({ ...out, ok: true, reason: "credentials accepted" });
-        } catch (e) {
-          return json({ ...out, ok: false, reason: e.message }, 200);
-        }
+        return json(await health(env));
       }
 
-      /* What will I be charged? Answered by the same quote() the order uses,
-         so the total on the page and the total on the invoice cannot disagree. */
+      /* What will I be charged? Answered by the same quote() the session uses,
+         so the total on the page and the total charged cannot disagree. */
       if (path === "/api/checkout/quote" && request.method === "GET") {
         const q = quote(url.searchParams.get("courseId") || "",
                         url.searchParams.get("kit") === "1");
@@ -323,22 +136,39 @@ export default {
           total: q.amount.value,
         });
       }
-      if (path === "/api/checkout/order" && request.method === "POST") {
-        if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
-        try { return await handleOrder(request, env); }
-        catch (e) {
-          /* The buyer gets an apology; whoever is debugging gets the cause.
-             Both come back, because a generic 500 with the reason only in a
-             log nobody is tailing is how "something went wrong" stays
-             unsolved. Nothing here is secret - it is PayPal's own complaint. */
-          console.error("checkout: order failed —", e.message);
-          return json({ error: "Could not start the payment", detail: e.message }, 500);
+      if (path === "/api/checkout/session" && request.method === "POST") {
+        if (!checkoutReady(env)) return fail(503, "Checkout is not open yet");
+        try {
+          const r = await createSession(request, env, quote, url.origin + base);
+          return r.error ? fail(r.status, r.error) : json({ url: r.url });
+        } catch (e) {
+          return fail(502, "Could not start the payment", e.message);
         }
       }
-      if (path === "/api/checkout/capture" && request.method === "POST") {
-        if (env.CHECKOUT_ENABLED !== "true") return fail(503, "Checkout is not open yet");
-        try { return await handleCapture(request, env, ctx); }
-        catch (e) { return fail(500, "Could not complete the payment", e.message); }
+      if (path === "/api/checkout/session" && request.method === "GET") {
+        try {
+          const r = await sessionStatus(env, url.searchParams.get("id") || "");
+          if (r.error) return fail(r.status, r.error);
+          const { status, ...body } = r;
+          return json(body);
+        } catch (e) {
+          return fail(502, "Could not check the payment", e.message);
+        }
+      }
+      /* Stripe's signed notice that a session is paid, a debit cleared or
+         failed, a payment was refunded or disputed. The only thing that
+         records a sale. */
+      if (path === "/api/stripe/webhook" && request.method === "POST") {
+        /* An unexpected failure answers 500, so Stripe retries the event
+           (for up to three days) rather than it being lost. */
+        try {
+          const r = await handleWebhook(request, env, ctx, {
+            catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`,
+          });
+          return json(r.body, r.status);
+        } catch (e) {
+          return fail(500, "Webhook not processed", e.message);
+        }
       }
       return fail(404, "No such endpoint");
     }

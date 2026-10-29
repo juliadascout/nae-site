@@ -13,26 +13,34 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 # Without this the Worker never runs for /api/. With not_found_handling set,
 # the asset router answers anything that does not match a file - so every
-# checkout call got the 404 page as HTML instead of JSON, the PayPal popup
+# checkout call got the 404 page as HTML instead of JSON, the payment popup
 # opened and died instantly, and the only symptom was a generic apology.
 # Assets still win for everything else, so pages keep being served straight
 # from the asset store without waking the Worker.
 run_worker_first = [ "/api/*" ]
 
 [vars]
-PAYPAL_ENV = "sandbox"
-# Public by design - it is embedded in any page that shows a PayPal button.
-# The "Default Application" sandbox app. The newer "NAE site checkout" app was
-# tried first and its id has an unusual shape; this one is the classic REST
-# format and is the pair the stored secret belongs to.
-PAYPAL_CLIENT_ID = "AWEFDASCNFR7T-Hhsp1v2_t3Sn507X4xNGKO9wkr7SmNW9m5-Vx3-iu1h5OCj5A6uxF1ysoNCPkWDjQ7"
-# Price list, HST and the refund policy were all settled on 18 Sept, so the
-# buttons are on. PAYPAL_ENV is still sandbox: this takes test cards, not money.
-# The endpoints refuse with 503 while this is false.
+# Online payment is Stripe Checkout (worker/stripe.js), from 29 Oct 2026.
+# The buttons stay hidden until every piece below is in place, so this can be
+# deployed before Stripe is set up; /api/checkout/health says what is missing.
 CHECKOUT_ENABLED = "true"
 
-# PAYPAL_CLIENT_SECRET is NOT here and never will be. It is set with:
-#   npx wrangler secret put PAYPAL_CLIENT_SECRET
+# HST: one fixed tax rate, created once in the Stripe Dashboard (Product
+# catalogue > Tax rates > New: "HST", 13%, exclusive, Canada / Ontario), and
+# its id pasted here. Not Stripe Tax: that charges a fee on every sale to work
+# out a rate that is always 13% here. Test mode and live mode each have their
+# own id; change this one when switching to live. Empty = checkout stays shut.
+STRIPE_HST_RATE = ""
+
+# STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are NOT here and never will be.
+# They are Worker secrets, set with:
+#   npx wrangler secret put STRIPE_SECRET_KEY        (sk_test_... or sk_live_...)
+#   npx wrangler secret put STRIPE_WEBHOOK_SECRET    (whsec_... from the endpoint)
+# The webhook endpoint is https://beautycourse.ca/api/stripe/webhook, sending:
+#   checkout.session.completed, checkout.session.async_payment_succeeded,
+#   checkout.session.async_payment_failed, charge.refunded,
+#   charge.dispute.created, charge.dispute.closed
+# The old PAYPAL_CLIENT_SECRET can be deleted: npx wrangler secret delete PAYPAL_CLIENT_SECRET
 
 # Accounts: the same ones the apps use, kept by the nae-inc Worker. This is a
 # service binding - a direct call to that Worker inside Cloudflare, not a

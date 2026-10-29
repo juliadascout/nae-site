@@ -45,7 +45,9 @@
     var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
     if (!a) return;
 
-    if (a.hostname && a.hostname.indexOf("setmore.com") !== -1) {
+    /* The short calendar.app.google link and the calendar.google.com address
+       it redirects to: both are the booking page. */
+    if (a.hostname && /(^|\.)calendar\.app\.google$|^calendar\.google\.com$/.test(a.hostname)) {
       send("book_call_click", {
         course: c ? c.item_name : null,
         placement: a.closest(".mbar") ? "mobile bar" : a.closest(".rail") ? "rail" : "page",

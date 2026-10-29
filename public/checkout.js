@@ -65,7 +65,13 @@
     return studios.length === 1 ? studios[0].id : null;
   }
   var wantKit = false;
-  var panel, summary, buttons;
+  var panel, summary, buttons, payButton;
+
+  /* "1,017.00": the server's amount, only punctuated, never recomputed. */
+  function cad(v) {
+    var n = Number(v);
+    return isFinite(n) ? n.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(v);
+  }
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -85,15 +91,15 @@
   fetch(BASE + "/api/checkout/config")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {
-      if (!cfg || !cfg.enabled || !cfg.clientId) return;   // stays hidden
+      if (!cfg || !cfg.enabled) return;   // stays hidden
       mount.hidden = false;
       arm(cfg);
     })
     .catch(function () { /* no checkout, no noise */ });
 
   /* Booking a call stays the first action in this card. Paying is a deliberate
-     second choice behind a toggle, and the SDK is only fetched once somebody
-     asks for it - a page nobody buys from never loads PayPal at all. */
+     second choice behind a toggle. Nothing from Stripe loads on this page at
+     all: paying sends the buyer to Stripe's own checkout page and back. */
   function arm(cfg) {
     var toggle = el("button", "btn btn-g btn-blk co-toggle", "Buy now");
     toggle.type = "button";
@@ -117,7 +123,7 @@
 
   /* Our own content first - the kit choice, the price and the policy - so the
      buyer sees what they are agreeing to whether or not a third-party script
-     ever arrives. Only the buttons wait on PayPal. */
+     ever arrives. */
   function build(cfg) {
     if (cfg.mode !== "live") {
       panel.appendChild(el("p", "co-test", "Test mode — no real payment is taken."));
@@ -138,7 +144,7 @@
           items: [{ item_id: courseId + "-kit", item_name: "Kit", price: kitCost, quantity: 1 }],
         });
         quote();
-        if (buttons) { buttons.innerHTML = ""; paint(); }
+
       });
     }
 
@@ -164,10 +170,10 @@
     summary = panel.appendChild(el("div", "co-sum"));
 
     /* People arrive here from naeinc.ca's Register buttons. Name the school at
-       the moment they pay, so the new address and the PayPal window are not a
+       the moment they pay, so the new address and Stripe's page are not a
        surprise. */
     panel.appendChild(el("p", "co-policy",
-      "You're enrolling with National Association of Estheticians Inc., the same school as naeinc.ca. Payment opens a secure PayPal window."));
+      "You're enrolling with National Association of Estheticians Inc., the same school as naeinc.ca. Payment continues on Stripe's secure checkout page."));
 
     var policy = el("p", "co-policy");
     policy.appendChild(document.createTextNode("Paying accepts our "));
@@ -179,9 +185,13 @@
     panel.appendChild(policy);
 
     buttons = panel.appendChild(el("div", "co-buttons"));
+    payButton = el("button", "btn btn-p btn-blk co-pay", "Continue to payment");
+    payButton.type = "button";
+    payButton.disabled = true;   // until the server has priced it
+    payButton.addEventListener("click", pay);
+    buttons.appendChild(payButton);
 
     quote();
-    loadSdk(cfg);
   }
 
   function quote() {
@@ -197,8 +207,8 @@
            carried no value and no items, which is most of what the event is
            for. Once only - a kit toggle is add_to_cart, not a second start. */
         if (first) track("begin_checkout", ecommerce());
-        var rows = q.items.map(function (i) { return [i.name, "$" + i.value]; });
-        rows.push(["HST (" + q.taxPercent + "%)", "$" + q.tax]);
+        var rows = q.items.map(function (i) { return [i.name, "$" + cad(i.value)]; });
+        rows.push(["HST (" + q.taxPercent + "%)", "$" + cad(q.tax)]);
         rows.forEach(function (r) {
           var line = el("div", "co-row");
           line.appendChild(el("span", null, r[0]));
@@ -207,93 +217,96 @@
         });
         var tot = el("div", "co-row co-total");
         tot.appendChild(el("span", null, "Total"));
-        tot.appendChild(el("span", "tnum", "$" + q.total + " " + q.currency));
+        tot.appendChild(el("span", "tnum", "$" + cad(q.total) + " " + q.currency));
         summary.appendChild(tot);
-      })
-      .catch(function () { /* the buttons still show the real amount */ });
-  }
-
-  function loadSdk(cfg) {
-    var s = document.createElement("script");
-    s.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(cfg.clientId) +
-            "&currency=" + encodeURIComponent(cfg.currency) + "&intent=capture";
-    s.onload = paint;
-    s.onerror = function () {
-      say("Card payment is unavailable right now — please book a call and we will invoice you.", "error");
-    };
-    document.head.appendChild(s);
-  }
-
-  function paint() {
-    if (!window.paypal || !buttons) return;
-    window.paypal.Buttons({
-      style: { layout: "vertical", shape: "rect", label: "pay" },
-
-      createOrder: function () {
-        return fetch(BASE + "/api/checkout/order", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ courseId: courseId, withKit: wantKit, locationId: chosenLocation() })
-        })
-          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (res) {
-            if (!res.ok) {
-              /* Show what the server said and log why. PayPal's onError fires
-                 with its own error and loses this one, so the actual reason
-                 has to be put on screen here or it is never seen. */
-              var why = res.j.detail || res.j.error || "Could not start the payment";
-              track("checkout_error", { step: "create_order", reason: String(why).slice(0, 100) });
-              say(res.j.error || "Could not start the payment", "error");
-              if (window.console) console.error("checkout:", why);
-              throw new Error(why);
-            }
-            return res.j.id;
-          });
-      },
-
-      onApprove: function (data) {
-        say("Completing your payment…");
-        return fetch(BASE + "/api/checkout/capture", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ orderId: data.orderID, locationId: chosenLocation() })
-        })
-          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (res) {
-            if (!res.ok) throw new Error(res.j.error || "Could not complete the payment");
-            var amt = res.j.amount ? res.j.amount.value + " " + res.j.amount.currency_code : "";
-            /* The conversion. transaction_id is PayPal's capture id, so a row
-               in the property and a row in the enrolments table name the same
-               payment and can be reconciled. */
-            track("purchase", ecommerce({
-              transaction_id: res.j.captureId || res.j.orderId,
-              value: res.j.amount ? Number(res.j.amount.value) : undefined,
-              currency: res.j.amount ? res.j.amount.currency_code : undefined,
-            }));
-            buttons.hidden = true;
-            say("Paid" + (amt ? " — " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
-          })
-          .catch(function (e) {
-            track("checkout_error", { step: "capture", reason: String(e.message).slice(0, 100) });
-            say(e.message, "error");
-          });
-      },
-
-      onError: function (err) {
-        /* Only speak if createOrder has not already said something more useful:
-           this fires after it, and a generic apology overwriting the real
-           reason is exactly what made this hard to diagnose. */
-        var n = panel && panel.querySelector(".co-msg");
-        if (!n || n.getAttribute("data-kind") !== "error") {
-          say("Something went wrong with the payment. Nothing has been charged.", "error");
+        if (payButton) {
+          payButton.textContent = "Pay $" + cad(q.total) + " " + q.currency;
+          payButton.disabled = false;
         }
-        if (window.console && err) console.error("checkout (paypal):", err);
-      },
-
-      onCancel: function () {
-        track("checkout_cancel", {});
-        say("Payment cancelled. Nothing has been charged.");
-      }
-    }).render(buttons);
+      })
+      .catch(function () { /* the button stays off until there is a price */ });
   }
+
+  /* The session is made by the Worker from its own price list; this only
+     says which course, whether the kit, which studio, and where to come back
+     to. The buyer pays on Stripe's page, and the sale is recorded when Stripe
+     tells the Worker it is paid - not when the buyer comes back here. */
+  function pay() {
+    payButton.disabled = true;
+    say("Opening secure checkout…");
+    track("add_payment_info", ecommerce({ payment_type: "stripe_checkout" }));
+    fetch(BASE + "/api/checkout/session", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ courseId: courseId, withKit: wantKit, locationId: chosenLocation(),
+                             returnPath: location.pathname })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.j.url) throw new Error(res.j.error || "Could not start the payment");
+        location.assign(res.j.url);
+      })
+      .catch(function (e) {
+        track("checkout_error", { step: "create_session", reason: String(e.message).slice(0, 100) });
+        say((e.message || "Could not start the payment") + " — nothing has been charged. You can also book a call and we will invoice you.", "error");
+        payButton.disabled = false;
+      });
+  }
+
+  /* Back from Stripe. ?paid=<session> after paying, ?checkout=cancelled after
+     the back arrow. Either way the address is cleaned, so a reload or a shared
+     link does not say it again. The purchase event fires once per session id,
+     so a reload cannot count a sale twice. */
+  (function cameBack() {
+    var params = new URLSearchParams(location.search);
+    var sid = params.get("paid");
+    var cancelled = params.get("checkout") === "cancelled";
+    if (!sid && !cancelled) return;
+    try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) { /* old browser */ }
+    mount.hidden = false;
+    /* Its own line at the top of the card, not the panel's: the panel is
+       closed when the buyer lands back here, and a message inside it would
+       not be seen. */
+    var line = el("p", "co-msg");
+    mount.insertBefore(line, mount.firstChild);
+    function tell(msg, kind) {
+      line.textContent = msg;
+      line.setAttribute("data-kind", kind || "info");
+      line.setAttribute("role", kind === "error" ? "alert" : "status");
+    }
+    if (cancelled) {
+      track("checkout_cancel", {});
+      tell("Payment cancelled. Nothing has been charged.");
+      return;
+    }
+    tell("Checking your payment…");
+    fetch(BASE + "/api/checkout/session?id=" + encodeURIComponent(sid))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("unreadable")); })
+      .then(function (s) {
+        var amt = s.total ? "$" + cad(s.total) + " " + s.currency : "";
+        if (s.paid) {
+          var key = "nae-purchase-" + sid;
+          var seen = false;
+          try { seen = sessionStorage.getItem(key) === "1"; sessionStorage.setItem(key, "1"); } catch (e) { /* private mode */ }
+          if (!seen) {
+            /* The conversion. transaction_id is Stripe's payment id, the same
+               reference the enrolments table and the confirmation email carry. */
+            track("purchase", {
+              transaction_id: s.reference, value: Number(s.total), currency: s.currency,
+              items: (s.items || []).map(function (i, n) {
+                return { item_id: s.courseId + (n ? "-kit" : ""), item_name: i.label, price: Number(i.value), quantity: 1 };
+              }),
+            });
+          }
+          tell("Paid" + (amt ? " — " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
+        } else if (s.pending) {
+          tell("Thank you — your bank payment is processing. It can take a few business days to clear; we will email your confirmation when it does.", "done");
+        } else {
+          tell("We could not confirm a payment for this checkout. If you were charged, reply to any email from us or call us and we will sort it out.", "error");
+        }
+      })
+      .catch(function () {
+        tell("We could not check your payment just now. If you completed it, your confirmation email is on its way.", "error");
+      });
+  })();
 })();
