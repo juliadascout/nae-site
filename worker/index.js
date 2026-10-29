@@ -159,10 +159,16 @@ export default {
          failed, a payment was refunded or disputed. The only thing that
          records a sale. */
       if (path === "/api/stripe/webhook" && request.method === "POST") {
-        const r = await handleWebhook(request, env, ctx, {
-          catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`,
-        });
-        return json(r.body, r.status);
+        /* An unexpected failure answers 500, so Stripe retries the event
+           (for up to three days) rather than it being lost. */
+        try {
+          const r = await handleWebhook(request, env, ctx, {
+            catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`,
+          });
+          return json(r.body, r.status);
+        } catch (e) {
+          return fail(500, "Webhook not processed", e.message);
+        }
       }
       return fail(404, "No such endpoint");
     }
