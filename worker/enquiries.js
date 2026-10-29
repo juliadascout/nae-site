@@ -1,3 +1,5 @@
+import { noteLead, addEvent } from "./leads.js";
+
 /* Questions from the Contact page.
 
    The site said "ask about any course" and offered only a phone number and an
@@ -42,9 +44,11 @@ const line = (v, max) => (typeof v === "string"
   : "");
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 
-/* `courses` is the build's catalogue (prices.json): a course must be one of
-   those to be named, and the email gives its name, not the id. */
-export async function handleEnquiry(request, env, ctx, courses) {
+/* `catalogue` is the build's prices.json: a course must be one of its
+   courses to be named, and the emails give its name, not the id. Its seller,
+   booking link and site address go into the reply to the person asking. */
+export async function handleEnquiry(request, env, ctx, catalogue) {
+  const courses = (catalogue && catalogue.courses) || {};
   const db = env.ENROLMENTS;
   if (!db) return refuse(503, "Questions cannot be sent just now. Call or email us instead.");
 
@@ -78,6 +82,7 @@ export async function handleEnquiry(request, env, ctx, courses) {
 
   const ip = request.headers.get("CF-Connecting-IP") || null;
   const now = new Date().toISOString();
+  const enquiryId = crypto.randomUUID();
   try {
     if (ip) {
       const n = await db.prepare(
@@ -90,7 +95,7 @@ export async function handleEnquiry(request, env, ctx, courses) {
     await db.prepare(
       `INSERT INTO enquiries (id, created_at, name, email, phone, course_id, message, ip, stage, stage_since)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)`,
-    ).bind(crypto.randomUUID(), now, name, email, phone || null, courseId, message, ip, now).run();
+    ).bind(enquiryId, now, name, email, phone || null, courseId, message, ip, now).run();
     /* The purge, on the way out: nothing older than a year, and no network
        address older than a day. */
     await db.prepare("DELETE FROM enquiries WHERE created_at < ?").bind(ago(KEEP_DAYS * 86400e3)).run();
@@ -101,12 +106,30 @@ export async function handleEnquiry(request, env, ctx, courses) {
     return refuse(503, "Your question could not be sent just now. Call or email us instead.");
   }
 
-  /* Saved; now the administrators. The visitor does not wait for it, and
-     nothing about it can make their question fail. */
-  const telling = tell(env, {
-    name, email, phone, message, sentAt: now,
-    course: courseId ? courses[courseId].name : "",
-  });
+  /* Saved; now the lead record and the emails. The visitor does not wait
+     for either, and nothing about them can make their question fail. */
+  const course = courseId ? courses[courseId].name : "";
+  const telling = (async () => {
+    const lead = await noteLead(env, {
+      email, name, phone, courseId, source: "enquiry", stage: "new",
+      event: { kind: "enquiry", detail: course ? `Asked about ${course}` : "Asked a question" },
+      consent: "implied_inquiry",
+    });
+    if (lead) {
+      try { await db.prepare("UPDATE enquiries SET lead_id = ? WHERE id = ?").bind(lead.id, enquiryId).run(); }
+      catch (e) { console.error("enquiry not linked to its lead:", e.message); }
+    }
+    const r = await tell(env, {
+      name, email, phone, message, sentAt: now, course,
+      leadId: lead ? lead.id : null,
+      /* For the reply to the person asking: where to book, and who we are
+         (a business email names a mailing address - CASL). */
+      booking: (catalogue && catalogue.booking) || "",
+      site: (catalogue && catalogue.site) || "",
+      seller: (catalogue && catalogue.seller) || null,
+    });
+    if (lead && r && r.reply === "sent") await addEvent(env, lead.id, "auto-reply", "Sent the instant reply");
+  })();
   if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(telling);
   else await telling;
   return json({ ok: true });
@@ -115,12 +138,14 @@ export async function handleEnquiry(request, env, ctx, courses) {
 async function tell(env, question) {
   if (!env.NOTIFY) {
     console.error("enquiry saved, but nobody was emailed: no NOTIFY binding");
-    return;
+    return null;
   }
   try {
     const r = await env.NOTIFY.enquiry(question);
     if (!r || !r.admins) console.error("enquiry saved, but no administrator was emailed:", JSON.stringify(r));
+    return r;
   } catch (e) {
     console.error("enquiry saved, but nobody was emailed:", e.message);
+    return null;
   }
 }

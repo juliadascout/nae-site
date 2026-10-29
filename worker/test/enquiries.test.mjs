@@ -9,13 +9,17 @@ let pass = 0, fail = 0;
 const check = (n, c, d = '') => { c ? (pass++, console.log(`  PASS  ${n}`)) : (fail++, console.log(`  FAIL  ${n}${d ? '  [' + String(d).slice(0, 200) + ']' : ''}`)); };
 
 const COURSES = { 'crs-sample': { name: 'Sample Course' } };
+const CATALOGUE = {
+  courses: COURSES, booking: 'https://calendar.app.google/SAMPLE', site: 'https://site.example',
+  seller: { name: 'National Association of Estheticians Inc.', address: '1 Test St, Testville, ON A1A 1A1', phone: '555-010-0199', email: 'office@example.com' },
+};
 let told, waits, env;
 function fresh({ notify } = {}) {
   told = []; waits = [];
   env = {
     ENROLMENTS: makeDb(SCHEMA),
     NOTIFY: notify === undefined
-      ? { async enquiry(q) { told.push(q); return { admins: 2 }; } }
+      ? { async enquiry(q) { told.push(q); return { admins: 2, reply: 'sent' }; } }
       : notify,
   };
 }
@@ -29,7 +33,7 @@ async function ask(body, { ip = '198.51.100.7', raw } = {}) {
   if (ip) headers['CF-Connecting-IP'] = ip;
   const res = await handleEnquiry(new Request('https://site.example' + ENQUIRY_PATH, {
     method: 'POST', headers, body: raw !== undefined ? raw : JSON.stringify(body),
-  }), env, ctx, COURSES);
+  }), env, ctx, CATALOGUE);
   return { status: res.status, body: await res.json() };
 }
 const rows = () => env.ENROLMENTS.prepare('SELECT * FROM enquiries ORDER BY created_at').all().then((r) => r.results);
@@ -53,6 +57,24 @@ check('...with the course by name, not id', told[0]?.course === 'Sample Course',
 check('...and what they wrote', told[0]?.name === 'Alex Doe' && told[0]?.email === 'alex@inbox.example.ca'
   && told[0]?.message === GOOD.message && told[0]?.phone === '555-010-0123' && !isNaN(Date.parse(told[0]?.sentAt)));
 check('...and nothing else of theirs (no network address)', !('ip' in told[0]));
+check('...with the booking link, site and seller for the instant reply',
+  told[0]?.booking === CATALOGUE.booking && told[0]?.site === CATALOGUE.site && told[0]?.seller === CATALOGUE.seller);
+
+/* ----------------------------------------------------------- the lead */
+const leads = () => env.ENROLMENTS.prepare('SELECT * FROM leads').all().then((x) => x.results);
+let L = await leads();
+check('the person becomes a lead', L.length === 1 && L[0].email === 'alex@inbox.example.ca' && L[0].name === 'Alex Doe');
+check('...new, from an enquiry, about the course', L[0]?.stage === 'new' && L[0]?.source === 'enquiry' && L[0]?.course_id === 'crs-sample');
+check('...and the question is linked to them', (await rows())[0]?.lead_id === L[0]?.id);
+check('the alert can link to the lead', told[0]?.leadId === L[0]?.id);
+const ev = (await env.ENROLMENTS.prepare('SELECT kind, detail FROM lead_events WHERE lead_id = ? ORDER BY at').bind(L[0].id).all()).results;
+check('their timeline shows the question and the instant reply', ev.map((e) => e.kind).join(',') === 'enquiry,auto-reply', JSON.stringify(ev));
+const cons = (await env.ENROLMENTS.prepare('SELECT * FROM consents WHERE lead_id = ?').bind(L[0].id).all()).results;
+check('implied consent is recorded, ending six months on',
+  cons.length === 1 && cons[0].kind === 'implied_inquiry' && Math.round((Date.parse(cons[0].expires_at) - Date.parse(cons[0].given_at)) / 86400e3 / 30) === 6, JSON.stringify(cons));
+await ask({ ...GOOD, email: 'alex@inbox.example.ca', message: 'One more thing' }, { ip: '198.51.100.8' });
+await Promise.all(waits);
+check('asking again is the same lead, not a second one', (await leads()).length === 1);
 
 fresh();
 r = await ask({ ...GOOD, phone: '', courseId: '' });
