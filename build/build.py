@@ -1611,7 +1611,8 @@ def refund_policy():
 def write_checkout_prices():
     """Everything the Worker needs from the catalogue, decided at build time
        where a buyer cannot reach it: the prices, and for the enrolment email
-       the studios, who the seller is, and the refund policy."""
+       the studios, who the seller is, and the refund policy; for the reply
+       to a question, where to book a call and the site's own address."""
     out = {c["id"]: {"slug": c["slug"], "name": c["name"], "price": c["price"],
                      "kitCost": c.get("kitCost") or 0, "hasKit": bool(c.get("hasKit")),
                      "capAck": bool(c.get("capAck"))}
@@ -1624,7 +1625,8 @@ def write_checkout_prices():
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"currency": "CAD", "cap": CAP_PRICE, "courses": out, "studios": studios,
-                   "seller": seller, "refundPolicy": refund_policy()}, f, indent=2)
+                   "seller": seller, "refundPolicy": refund_policy(),
+                   "booking": SITE["booking"], "site": SITE["domain"]}, f, indent=2)
     return len(out)
 
 # ---------------------------------------------------------------- build

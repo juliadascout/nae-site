@@ -109,7 +109,7 @@ export default {
       if (ACCOUNT_PATHS.has(path)) return toAccounts(request, env, path);
       /* A question from the Contact page (enquiries.js). */
       if (path === ENQUIRY_PATH && request.method === "POST") {
-        return handleEnquiry(request, env, ctx, prices.courses);
+        return handleEnquiry(request, env, ctx, prices);
       }
       if (path === "/api/checkout/config" && request.method === "GET") {
         return json({ currency: prices.currency, mode: stripeMode(env), enabled: checkoutReady(env) });

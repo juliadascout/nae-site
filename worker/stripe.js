@@ -1,4 +1,5 @@
 import { recordEnrolment, setStage, enrolmentNotice, tellEnrolment } from "./enrolments.js";
+import { noteLead } from "./leads.js";
 
 /* Stripe Checkout: how the site takes payment (29 Oct 2026, replacing PayPal).
 
@@ -212,6 +213,23 @@ function saleFrom(s, catalogue) {
   };
 }
 
+/* The buyer, onto the lead record: enrolled once paid, and the sale linked
+   to them. A debit still clearing leaves them where they were, with a note. */
+async function leadFromSale(env, sale, paid) {
+  const lead = await noteLead(env, {
+    email: sale.payerEmail, name: sale.payerName, courseId: sale.courseId, locationId: sale.locationId,
+    source: "checkout", stage: paid ? "enrolled" : "new",
+    event: paid
+      ? { kind: "paid", detail: `Paid ${sale.total != null ? sale.total.toFixed(2) : "?"} ${sale.currency} for ${sale.courseName}${sale.withKit ? " with kit" : ""}` }
+      : { kind: "payment pending", detail: `Bank payment for ${sale.courseName} is clearing` },
+    consent: paid ? "implied_purchase" : null,
+  });
+  if (lead && env.ENROLMENTS) {
+    try { await env.ENROLMENTS.prepare("UPDATE enrolments SET lead_id = ? WHERE stripe_session_id = ?").bind(lead.id, sale.sessionId).run(); }
+    catch (e) { console.error("enrolment not linked to its lead:", sale.sessionId, e.message); }
+  }
+}
+
 /* The session was made by this Worker from the price list, so its total can
    only differ from today's quote if the price list or the tax rate changed
    in between - or the tax rate in the Dashboard is not 13%. The money has
@@ -252,6 +270,7 @@ export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLa
       const rec = await recordEnrolment(env, sale);
       if (paid) checkAgainstQuote(sale, quote);
       /* Confirmed once: a redelivered event finds the row already there. */
+      if (rec !== "repeat") await leadFromSale(env, sale, paid);
       if (paid && rec !== "repeat") confirm(sale);
       break;
     }
@@ -263,6 +282,7 @@ export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLa
       const rec = await recordEnrolment(env, sale);
       const moved = rec === "new" ? 1 : await setStage(env, { sessionId: obj.id }, "paid", obj.payment_status);
       checkAgainstQuote(sale, quote);
+      if (moved) await leadFromSale(env, sale, true);
       if (moved && rec !== "failed") confirm(sale);
       break;
     }

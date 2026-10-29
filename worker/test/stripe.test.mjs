@@ -175,9 +175,17 @@ check('...with HST and the payment intent as the reference', nt.taxLabel === 'HS
 check('...marked as a test in test mode', nt.test === true);
 check('...and the seller and refund policy', !!nt.seller?.address && nt.refundPolicy?.items?.length >= 3);
 
+const buyer = await env.ENROLMENTS.prepare('SELECT * FROM leads WHERE email = ?').bind('sam@inbox.example.ca').first();
+check('the buyer is on the lead record as enrolled', buyer?.stage === 'enrolled' && buyer?.source === 'checkout' && buyer?.course_id === courseId, JSON.stringify(buyer));
+check('...the sale linked to them', !!buyer && (await rowFor('cs_test_A1234567890'))?.lead_id === buyer.id);
+check('...with purchase consent kept for two years',
+  (await env.ENROLMENTS.prepare("SELECT COUNT(*) AS n FROM consents WHERE lead_id = ? AND kind = 'implied_purchase'").bind(buyer?.id).first())?.n === 1);
+
 res = await hook({ id: 'evt_1', type: 'checkout.session.completed', data: { object: sessionObj() } });
 await settle();
 check('a redelivered event confirms nothing twice', res.status === 200 && told.length === 1);
+check('...and adds nothing to their timeline twice',
+  (await env.ENROLMENTS.prepare("SELECT COUNT(*) AS n FROM lead_events WHERE lead_id = ? AND kind = 'paid'").bind(buyer?.id).first())?.n === 1);
 
 /* A bank debit: complete at checkout, paid days later. */
 const pend = sessionObj({ id: 'cs_test_PAD1234567', payment_intent: 'pi_test_PAD', payment_status: 'unpaid' });
