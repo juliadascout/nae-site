@@ -14,9 +14,12 @@ import { noteLead } from "./leads.js";
    Configuration (wrangler.toml and Worker secrets):
      STRIPE_SECRET_KEY      secret  sk_test_... / sk_live_... (or a restricted rk_ key)
      STRIPE_WEBHOOK_SECRET  secret  whsec_... from the webhook endpoint
-     STRIPE_HST_RATE        var     txr_... : HST 13%, exclusive, created once in
-                                    the Dashboard (Stripe Tax is NOT used - it
-                                    costs a fee on every sale for a fixed rate)
+     STRIPE_HST_RATE        var     optional. Left empty, the Worker finds or
+                                    creates the "HST 13%" tax rate in Stripe
+                                    itself (hstRate below), so nobody has to
+                                    make one in the Dashboard. Stripe Tax is NOT
+                                    used - it costs a fee on every sale for a
+                                    rate that is always 13% here.
    Test and live each have their own three values; the key's prefix decides
    which mode the site says it is in. */
 
@@ -42,8 +45,7 @@ function keyProblem(env) {
 }
 
 export function checkoutReady(env) {
-  return env.CHECKOUT_ENABLED === "true" && !keyProblem(env)
-    && !!env.STRIPE_WEBHOOK_SECRET && /^txr_/.test(env.STRIPE_HST_RATE || "");
+  return env.CHECKOUT_ENABLED === "true" && !keyProblem(env) && !!env.STRIPE_WEBHOOK_SECRET;
 }
 
 /* Stripe takes form encoding with bracketed keys: line_items[0][price_data][currency]. */
@@ -78,6 +80,26 @@ async function stripe(env, method, path, params) {
 
 const cents = (v) => Math.round(Number(v) * 100);
 
+/* Ontario HST, as one Stripe tax rate. Named in STRIPE_HST_RATE if someone
+   set one; otherwise found among the account's active rates (13%, exclusive,
+   Ontario) or created once, then remembered for this isolate. Test and live
+   are separate accounts as far as tax rates go, so the memory is per key. */
+const HST = { display_name: "HST", percentage: 13, inclusive: false, country: "CA", state: "ON", jurisdiction: "ON", tax_type: "hst", description: "Ontario HST (nae-site)" };
+let hstCache = { key: null, id: null };
+
+const isHst = (r) => r && r.active === true && r.inclusive === false && Number(r.percentage) === HST.percentage
+  && (r.state === "ON" || r.jurisdiction === "ON" || r.tax_type === "hst");
+
+export async function hstRate(env) {
+  if (/^txr_/.test(env.STRIPE_HST_RATE || "")) return env.STRIPE_HST_RATE;
+  if (hstCache.key === env.STRIPE_SECRET_KEY && hstCache.id) return hstCache.id;
+  const list = await stripe(env, "GET", "/tax_rates?active=true&inclusive=false&limit=100");
+  let rate = ((list && list.data) || []).find(isHst);
+  if (!rate) rate = await stripe(env, "POST", "/tax_rates", HST);
+  hstCache = { key: env.STRIPE_SECRET_KEY, id: rate.id };
+  return rate.id;
+}
+
 /* Where the buyer comes back to: a path on this site, never an address the
    request names, so the session cannot be used to send somebody elsewhere. */
 function returnPath(p) {
@@ -108,6 +130,7 @@ export async function createSession(request, env, quote, origin) {
   const locationId = typeof body.locationId === "string" ? body.locationId.slice(0, 40) : "";
   const back = origin + returnPath(body.returnPath);
   const meta = { course_id: courseId, with_kit: withKit ? "1" : "0", location_id: locationId, items: itemsTag(q) };
+  const taxRate = await hstRate(env);
 
   const session = await stripe(env, "POST", "/checkout/sessions", {
     mode: "payment",
@@ -118,7 +141,7 @@ export async function createSession(request, env, quote, origin) {
         unit_amount: cents(i.unit_amount.value),
         product_data: { name: i.name },
       },
-      tax_rates: [env.STRIPE_HST_RATE],
+      tax_rates: [taxRate],
     })),
     /* The phone number is the second way to reach a new student, and the
        pipeline needs one; Stripe asks for it on its page. */
@@ -242,7 +265,7 @@ function checkAgainstQuote(sale, quote) {
   }
   if (cents(q.amount.value) !== Math.round((sale.total || 0) * 100)) {
     console.error(`stripe: paid ${sale.total} but the price list says ${q.amount.value} -`, sale.sessionId,
-      "(check STRIPE_HST_RATE is 13% exclusive)");
+      "(check the HST tax rate in Stripe is 13% exclusive)");
   }
 }
 
@@ -328,12 +351,11 @@ export async function health(env) {
     enabled: env.CHECKOUT_ENABLED === "true",
     keyProblem: keyProblem(env),
     webhookSecretSet: !!env.STRIPE_WEBHOOK_SECRET,
-    hstRateSet: /^txr_/.test(env.STRIPE_HST_RATE || ""),
   };
   if (out.keyProblem) return { ...out, ok: false, reason: out.keyProblem };
-  if (!out.hstRateSet) return { ...out, ok: false, reason: "STRIPE_HST_RATE is not a txr_ id" };
   try {
-    const r = await stripe(env, "GET", `/tax_rates/${env.STRIPE_HST_RATE}`);
+    const id = await hstRate(env);
+    const r = await stripe(env, "GET", `/tax_rates/${id}`);
     out.hstRate = { percentage: r.percentage, inclusive: r.inclusive, active: r.active, name: r.display_name };
     const right = Number(r.percentage) === 13 && r.inclusive === false && r.active === true;
     if (!right) return { ...out, ok: false, reason: "the tax rate is not an active, exclusive 13%" };
