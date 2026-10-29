@@ -34,6 +34,8 @@ const totalCents = Math.round((sub + tax) * 100);
 /* ---------------------------------------------------------- Stripe, stubbed */
 const calls = [];
 let taxRate = { id: 'txr_test_hst', percentage: 13, inclusive: false, active: true, display_name: 'HST' };
+let existingRates = [];
+const createdRates = [];
 globalThis.fetch = async (url, init = {}) => {
   const u = String(url);
   calls.push({ url: u, method: init.method, headers: init.headers || {}, body: init.body ? new URLSearchParams(init.body) : null });
@@ -43,6 +45,12 @@ globalThis.fetch = async (url, init = {}) => {
   const m = u.match(/\/v1\/checkout\/sessions\/(cs_[^/?]+)$/);
   if (m) return new Response(JSON.stringify(sessionObj({ id: m[1] })), { status: 200 });
   if (u.includes('/v1/tax_rates/')) return new Response(JSON.stringify(taxRate), { status: 200 });
+  if (u.includes('/v1/tax_rates?')) return new Response(JSON.stringify({ data: existingRates }), { status: 200 });
+  if (u.endsWith('/v1/tax_rates') && init.method === 'POST') {
+    const made = { id: 'txr_test_created', object: 'tax_rate', active: true, ...Object.fromEntries(new URLSearchParams(init.body)) };
+    made.percentage = Number(made.percentage); made.inclusive = made.inclusive === 'true';
+    createdRates.push(made); return new Response(JSON.stringify(made), { status: 200 });
+  }
   throw new Error('unexpected fetch ' + u);
 };
 
@@ -87,7 +95,6 @@ for (const [what, patch] of [
   ['the publishable key pasted as the secret', { STRIPE_SECRET_KEY: 'pk_test_abc' }],
   ['a GitHub token pasted as the secret', { STRIPE_SECRET_KEY: 'github_pat_abc' }],
   ['no webhook secret', { STRIPE_WEBHOOK_SECRET: '' }],
-  ['no tax rate', { STRIPE_HST_RATE: '' }],
   ['switched off', { CHECKOUT_ENABLED: 'false' }],
 ]) {
   const saved = { ...env }; Object.assign(env, patch);
@@ -238,6 +245,27 @@ await settle();
 console.error = origErr;
 check('a total that disagrees with the price list is recorded and shouted about',
   (await rowFor('cs_test_ODD1234567'))?.total === 1 && logged.some((l) => /price list says/.test(l)), logged.join(' | '));
+
+/* ------------------------------------------- the HST rate, found or made */
+const { hstRate } = await import('../stripe.js');
+const bare = { ...env, STRIPE_HST_RATE: '', STRIPE_SECRET_KEY: 'sk_test_bare1' };
+check('config does not need a tax rate any more', (await (await worker.fetch(new Request('https://beautycourse.ca/api/checkout/config'), bare, ctx)).json()).enabled === true);
+existingRates = [
+  { id: 'txr_other', active: true, inclusive: false, percentage: 5, tax_type: 'gst' },
+  { id: 'txr_on_hst', active: true, inclusive: false, percentage: 13, state: 'ON', tax_type: 'hst' },
+];
+check('an existing Ontario 13% exclusive rate is found and used', (await hstRate(bare)) === 'txr_on_hst' && createdRates.length === 0);
+const before2 = calls.length;
+check('...and remembered, without asking Stripe again', (await hstRate(bare)) === 'txr_on_hst' && calls.length === before2);
+existingRates = [{ id: 'txr_inclusive', active: true, inclusive: true, percentage: 13, state: 'ON' }];
+const fresh = { ...bare, STRIPE_SECRET_KEY: 'sk_test_bare2' };
+check('with none suitable, one is created', (await hstRate(fresh)) === 'txr_test_created' && createdRates.length === 1);
+const cr = createdRates[0] || {};
+check('...as HST, 13%, exclusive, Canada / Ontario', cr.display_name === 'HST' && cr.percentage === 13 && cr.inclusive === false && cr.country === 'CA' && cr.state === 'ON' && cr.tax_type === 'hst', JSON.stringify(cr));
+res = await worker.fetch(new Request('https://beautycourse.ca/api/checkout/session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ courseId }) }), fresh, ctx);
+const lastSess = calls.filter((c) => c.url.endsWith('/v1/checkout/sessions') && c.method === 'POST').pop().body;
+check('a session uses the created rate', res.status === 200 && lastSess.get('line_items[0][tax_rates][0]') === 'txr_test_created');
+check('a rate named in the settings still wins', (await hstRate({ ...fresh, STRIPE_HST_RATE: 'txr_forced' })) === 'txr_forced');
 
 /* PayPal is gone from the front door. */
 for (const path of ['/api/checkout/order', '/api/checkout/capture']) {

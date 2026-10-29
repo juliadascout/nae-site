@@ -25,11 +25,9 @@ run_worker_first = [ "/api/*" ]
 # deployed before Stripe is set up; /api/checkout/health says what is missing.
 CHECKOUT_ENABLED = "true"
 
-# HST: one fixed tax rate, created once in the Stripe Dashboard (Product
-# catalogue > Tax rates > New: "HST", 13%, exclusive, Canada / Ontario), and
-# its id pasted here. Not Stripe Tax: that charges a fee on every sale to work
-# out a rate that is always 13% here. Test mode and live mode each have their
-# own id; change this one when switching to live. Empty = checkout stays shut.
+# HST: optional. Left empty, the Worker finds or creates the 13% HST tax
+# rate in Stripe by itself (worker/stripe.js, hstRate). Put a txr_ id here
+# only to force a particular rate.
 STRIPE_HST_RATE = ""
 
 # STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are NOT here and never will be.
