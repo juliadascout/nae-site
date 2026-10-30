@@ -101,6 +101,26 @@ a{color:var(--vir-ink)}
   padding:.25rem 0;border-bottom:1.5px solid transparent}
 .nav a:hover,.nav a[aria-current]{border-bottom-color:var(--vir);color:var(--vir-ink)}
 @media (max-width:860px){.nav{display:none}}
+/* Phones and narrow tablets: the links fold into a Menu button. A <details>
+   element, so it opens and closes with no JavaScript. Account moves into it,
+   leaving the header to the logo, Book a call and Menu. */
+.mnav{display:none;position:static}
+.mnav summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.4rem;
+  font-size:.88rem;font-weight:700;color:var(--ink);padding:.55rem .2rem;min-height:44px}
+.mnav summary::-webkit-details-marker{display:none}
+.mnav-ic,.mnav-ic::before,.mnav-ic::after{display:block;width:18px;height:2px;background:currentColor;border-radius:2px;position:relative}
+.mnav-ic::before,.mnav-ic::after{content:"";position:absolute;left:0}
+.mnav-ic::before{top:-6px} .mnav-ic::after{top:6px}
+.mnav[open] .mnav-ic{background:transparent}
+.mnav[open] .mnav-ic::before{top:0;transform:rotate(45deg)}
+.mnav[open] .mnav-ic::after{top:0;transform:rotate(-45deg)}
+.mnav-list{position:absolute;left:0;right:0;top:100%;background:var(--paper);border-bottom:1px solid var(--rule);
+  box-shadow:var(--shadow);display:flex;flex-direction:column;padding:.4rem var(--gut,16px) .9rem}
+.mnav-list a{display:block;padding:.85rem .2rem;border-bottom:1px solid var(--rule);text-decoration:none;
+  color:var(--ink);font-weight:600;font-size:1rem}
+.mnav-list a:last-child{border-bottom:0}
+.mnav-list a[aria-current]{color:var(--vir-ink)}
+@media (max-width:860px){.mnav{display:block}.acct{display:none}.hdr .wrap{gap:.8rem;position:relative}}
 
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;
@@ -319,6 +339,7 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
   .mbar b{font-family:var(--display);font-size:1.24rem;display:block;line-height:1.1}
   .mbar span{font-size:.72rem;color:var(--muted)}
   .mbar .btn{padding:.62rem .85rem;font-size:.84rem}
+  .mbar>div{margin-right:auto} .mbar{gap:.5rem}
   /* only where the fixed bar actually renders - it is course pages only */
   body:has(.mbar){padding-bottom:74px}
   /* Order on mobile only: description, then the booking box, then the detail,
@@ -440,8 +461,9 @@ hr.r{border:0;border-top:1px solid var(--rule-2);margin:1.15rem 0}
 /* Checkout, on a course page. Hidden until the Worker says it is open - the
    element ships on every course page and stays invisible while the flag is
    off, so switching it on is a config change and not a rebuild. */
-.co{margin:1rem 0 0;padding:1rem;border:1px solid var(--rule);border-radius:12px;
-  background:var(--card);display:flex;flex-direction:column;gap:.7rem}
+/* No box of its own: Buy now is a full-strength button right under Book a
+   call, not an outline tucked inside a bordered panel (it read as disabled). */
+.co{margin:.7rem 0 0;display:flex;flex-direction:column;gap:.7rem}
 /* display:flex above beats the user agent's [hidden]{display:none}, which would
    have left an empty bordered box on all 41 course pages while checkout is off. */
 .co[hidden]{display:none}
