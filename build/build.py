@@ -508,6 +508,8 @@ def shell(title, desc, path, body, canonical=None):
   <nav class="nav">{nav_html}</nav>
   <a class="acct" href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a>
   <a class="btn btn-p" href="/contact/">Book a call</a>
+  <details class="mnav"><summary aria-label="Menu"><span class="mnav-ic" aria-hidden="true"></span>Menu</summary>
+    <nav class="mnav-list">{nav_html}<a href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a></nav></details>
 </div></header>
 <main>{body}</main>
 <footer class="ftr"><div class="wrap">
