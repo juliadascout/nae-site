@@ -1,5 +1,6 @@
 import prices from "./prices.json";
 import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
+import { myCourses } from "./mycourses.js";
 import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 
@@ -107,6 +108,8 @@ export default {
 
     if (path.startsWith("/api/")) {
       if (ACCOUNT_PATHS.has(path)) return toAccounts(request, env, path);
+      /* What this signed-in person has bought, for the account page. */
+      if (path === "/api/account/courses" && request.method === "GET") return myCourses(request, env, prices);
       /* A question from the Contact page (enquiries.js). */
       if (path === ENQUIRY_PATH && request.method === "POST") {
         return handleEnquiry(request, env, ctx, prices);

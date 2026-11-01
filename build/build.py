@@ -1445,6 +1445,20 @@ def _fld(label, id_, type_="text", ac="", extra=""):
     auto = f' autocomplete="{ac}"' if ac else ""
     return f'<label class="fld"><span>{label}</span><input id="{id_}" type="{type_}"{auto}{extra}></label>'
 
+# The four-colour G, as Google supplies it for sign-in buttons. Never recoloured.
+GOOGLE_G = ('<svg viewBox="0 0 48 48" aria-hidden="true">'
+  '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>'
+  '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>'
+  '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>'
+  '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>')
+
+# Shown only once the accounts system says Google sign-in is set up
+# (assets/account.js reads /api/auth/status), so a half-configured button
+# never appears.
+def _google(label):
+    return (f'<div data-google hidden><a class="btn-google" href="#" data-google-go>{GOOGLE_G}'
+            f'<span>{label}</span></a><p class="or">or with your email</p></div>')
+
 def page_account():
     fld = _fld
     return ("/account/", f"Your account | {SITE['short']}",
@@ -1455,6 +1469,7 @@ def page_account():
       <div class="card" data-panel="signin" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Sign in</h1>
         <p class="co-msg" data-msg hidden></p>
+        {_google("Continue with Google")}
         <form data-form="signin" novalidate>
           {fld("Email", "si-email", "email", "username", " required")}
           {fld("Password", "si-password", "password", "current-password", " required")}
@@ -1465,7 +1480,7 @@ def page_account():
           and we will set you a new one.</p>
         <hr class="r">
         <h2 style="margin-bottom:.4rem">New here?</h2>
-        <p style="margin:0 0 .9rem">Make an account with your email and a password.</p>
+        <p style="margin:0 0 .9rem">Make an account with Google, or with your email and a password.</p>
         <button class="btn" type="button" data-show="signup">Make an account</button>
       </div>
 
@@ -1486,6 +1501,7 @@ def page_account():
       <div class="card" data-panel="signup" hidden>
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Make an account</h1>
         <p class="co-msg" data-msg hidden></p>
+        {_google("Sign up with Google")}
         <form data-form="signup" novalidate>
           {fld("Your name", "su-name", "text", "name", ' required maxlength="120"')}
           {fld("Email", "su-email", "email", "email", " required")}
@@ -1534,41 +1550,102 @@ def page_account():
       </div>
 
       <div class="card" data-panel="me" hidden>
-        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.4rem" data-hello>Hello</h1>
-        <p class="lede" style="margin-bottom:1rem" data-email></p>
+        <div class="dash-head">
+          <div><p class="eyebrow">Your account</p><h1 data-hello>Hello</h1>
+            <p class="lede" data-email></p><span class="role-chip" data-role></span></div>
+          <button class="btn btn-g dash-out" type="button" data-signout>Sign out</button>
+        </div>
         <p class="co-msg" data-msg="me" hidden></p>
-        <div data-verify hidden>
-          <p style="margin:0 0 .9rem">Please confirm your email address: we sent you a link when you
-            made your account.</p>
-          <p class="co-msg" data-msg="verify" hidden></p>
-          <button class="btn" type="button" data-resend>Send the link again</button>
-          <hr class="r">
-        </div>
-        <div data-apps hidden>
-          <p style="margin:0 0 .9rem">Your account also opens the work tools &mdash; Hours &amp; invoices,
-            and whatever else your role includes.</p>
-          <a class="btn btn-p" data-apps-link href="#">Open the work tools</a>
-          <hr class="r">
-        </div>
-        <h2 style="margin-bottom:.6rem">Your details</h2>
-        <p class="co-msg" data-msg="details" hidden></p>
-        <form data-form="details" novalidate>
-          {fld("Name", "me-name", "text", "name", ' maxlength="120"')}
-          {fld("Phone", "me-phone", "tel", "tel", ' maxlength="40"')}
-          <button class="btn" type="submit">Save</button>
-        </form>
-        <hr class="r">
-        <h2 style="margin-bottom:.6rem">Password</h2>
-        <p class="co-msg" data-msg="password" hidden></p>
-        <form data-form="password" novalidate>
-          {fld("Current password", "pw-current", "password", "current-password", " required")}
-          {fld("New password &mdash; at least 12 characters", "pw-next", "password", "new-password", ' required minlength="12"')}
-          {fld("Type it once more", "pw-again", "password", "new-password", ' required minlength="12"')}
-          <button class="btn" type="submit">Change password</button>
-        </form>
-        <p class="fine">Changing it signs you out everywhere else.</p>
-        <hr class="r">
-        <button class="btn" type="button" data-signout>Sign out</button>
+        <nav class="dash-tabs" role="tablist" aria-label="Your account">
+          <a href="#home" role="tab" data-tab="home">Home</a>
+          <a href="#courses" role="tab" data-tab="courses" hidden>My courses</a>
+          <a href="#tools" role="tab" data-tab="tools" hidden>Work tools</a>
+          <a href="#details" role="tab" data-tab="details">Details</a>
+          <a href="#security" role="tab" data-tab="security">Security</a>
+        </nav>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="home">
+          <div class="dash-alert" data-verify hidden>
+            <p>Please confirm your email address: we sent you a link when you made your account.</p>
+            <p class="co-msg" data-msg="verify" hidden></p>
+            <button class="btn" type="button" data-resend>Send the link again</button>
+          </div>
+          <div class="dash-tiles" data-tiles></div>
+        </section>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="courses" hidden>
+          <h2>My courses</h2>
+          <p class="co-msg" data-msg="courses" hidden></p>
+          <ul class="dash-list" data-courses></ul>
+          <div data-courses-empty hidden>
+            <p>No courses on this account yet. Courses you pay for online, with this email address, show
+              up here.</p>
+            <p><a class="btn btn-p" href="/courses/">Browse courses</a>
+              <a class="btn btn-g" href="{SITE["booking"]}" rel="noopener">Book a call</a></p>
+          </div>
+          <p class="fine">Questions about a course you have paid for? Call {E(SITE['phone'])} or email
+            {E(SITE['email'])}.</p>
+        </section>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="tools" hidden>
+          <h2>Work tools</h2>
+          <p>Your role opens these. Each one opens in a new tab and may ask you to sign in there too.</p>
+          <div class="dash-tiles" data-tools></div>
+          <p class="fine">Need something your role does not open? Ask an administrator.</p>
+        </section>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="details" hidden>
+          <h2>Your details</h2>
+          <p class="co-msg" data-msg="details" hidden></p>
+          <form data-form="details" novalidate>
+            <label class="fld"><span>Email</span><input id="me-email" type="email" disabled></label>
+            {fld("Name", "me-name", "text", "name", ' maxlength="120"')}
+            {fld("Phone", "me-phone", "tel", "tel", ' maxlength="40"')}
+            <button class="btn btn-p" type="submit">Save</button>
+          </form>
+          <p class="fine">To change your email address or close your account, call {E(SITE['phone'])} or
+            email {E(SITE['email'])}.</p>
+        </section>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="security" hidden>
+          <h2>Sign in with Google</h2>
+          <p class="co-msg" data-msg="google" hidden></p>
+          <div class="dash-row" data-google-linked hidden>
+            <p>Connected to <strong data-google-email></strong>.</p>
+            <button class="btn btn-g" type="button" data-unlink>Disconnect</button>
+          </div>
+          <div class="dash-row" data-google-unlinked hidden>
+            <p>Connect your Google account to sign in with one tap.</p>
+            <a class="btn-google" style="width:auto" href="#" data-google-link>{GOOGLE_G}<span>Connect Google</span></a>
+          </div>
+          <p class="fine" data-google-off hidden>Signing in with Google is not available just now.</p>
+
+          <h2>Password</h2>
+          <p class="co-msg" data-msg="password" hidden></p>
+          <div class="dash-row">
+            <p data-pw-summary>You sign in with your email and password.</p>
+            <button class="btn btn-g" type="button" data-pw-open>Change password</button>
+          </div>
+          <form class="dash-more" data-form="password" novalidate hidden>
+            <span data-pw-current>{fld("Current password", "pw-current", "password", "current-password")}</span>
+            {fld("New password &mdash; at least 12 characters", "pw-next", "password", "new-password", ' required minlength="12"')}
+            {fld("Type it once more", "pw-again", "password", "new-password", ' required minlength="12"')}
+            <button class="btn btn-p" type="submit" data-pw-save>Save password</button>
+            <button class="btn btn-g" type="button" data-pw-cancel>Cancel</button>
+            <p class="fine" data-pw-note>Saving it signs you out everywhere else.</p>
+          </form>
+
+          <h2>About your account</h2>
+          <ul class="bul">
+            <li>One account for everything with {E(SITE['short'])}. If you work with us, the same sign-in
+              opens the work tools.</li>
+            <li>We keep your name, your email, your phone number if you give it, and your password in a
+              form that cannot be read back by anyone, including us. With Google, we keep only your
+              name, your email and Google's id for your account &mdash; never your Google password.</li>
+            <li>Making an account does not sign you up for marketing email.</li>
+          </ul>
+          <p class="fine">More in our <a href="/privacy/">privacy policy</a>.</p>
+        </section>
       </div>
       </div>
 
