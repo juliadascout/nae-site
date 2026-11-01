@@ -60,5 +60,12 @@ check('without the accounts binding: 503', r.status === 503);
 r = await ask('nae_session=sam', { ACCOUNTS: { fetch: async () => { throw new Error('down'); } }, ENROLMENTS: db });
 check('accounts unreachable: 503, not a crash', r.status === 503);
 
+const quiet = console.error; console.error = () => {};
+r = await ask('nae_session=sam', { ACCOUNTS: { fetch: async () => new Response('not json', { status: 200 }) }, ENROLMENTS: db });
+check('an unreadable answer from accounts: 503, not a crash', r.status === 503);
+r = await ask('nae_session=sam', { ACCOUNTS: accounts, ENROLMENTS: { prepare() { throw new Error('D1 is down'); } } });
+check('the sales cannot be read: 503 with a message', r.status === 503 && typeof r.body.error === 'string');
+console.error = quiet;
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
