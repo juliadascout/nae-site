@@ -22,7 +22,8 @@ const req = (path, init = {}) => new Request('https://naeinc.ca' + path, init);
 
 for (const p of ['/api/auth/status', '/api/auth/signup', '/api/auth/login', '/api/auth/login/code', '/api/auth/logout', '/api/auth/me',
                  '/api/auth/password', '/api/auth/profile',
-                 '/api/auth/forgot', '/api/auth/reset', '/api/auth/verify', '/api/auth/verify/resend']) {
+                 '/api/auth/forgot', '/api/auth/reset', '/api/auth/verify', '/api/auth/verify/resend',
+                 '/api/auth/google/start', '/api/auth/google/callback', '/api/auth/google/unlink']) {
   check(`${p} goes to the accounts system`, ACCOUNT_PATHS.has(p));
 }
 for (const p of ['/api/admin/users', '/api/auth/bootstrap', '/api/data/tracker', '/api/me', '/api/auth/../admin/users',
@@ -50,6 +51,22 @@ check('the answer comes back with its cookie', res.status === 200 && /nae_sessio
 
 res = await toAccounts(req('/beauty-school/api/auth/me'), env, '/api/auth/me');
 check('under a subfolder, the path without it is what is passed on', new URL(seen.at(-1).url).pathname === '/api/auth/me' && seen.at(-1).method === 'GET');
+
+res = await toAccounts(req('/api/auth/google/callback?state=abc&code=xyz'), env, '/api/auth/google/callback');
+check("Google's answer keeps its query string on the way through",
+      new URL(seen.at(-1).url).search === '?state=abc&code=xyz', seen.at(-1).url);
+
+const redirecting = { ACCOUNTS: { async fetch(r) {
+  seen.push({ redirect: r.redirect });
+  const h = new Headers({ Location: 'https://accounts.google.com/o/oauth2/v2/auth?x=1' });
+  h.append('Set-Cookie', 'nae_google=b; Path=/api/auth/google; HttpOnly; Secure; SameSite=Lax');
+  return new Response(null, { status: 302, headers: h });
+} } };
+res = await toAccounts(req('/api/auth/google/start'), redirecting, '/api/auth/google/start');
+check('a redirect is not chased here', seen.at(-1).redirect === 'manual');
+check('the redirect comes back to the browser, cookie and all',
+      res.status === 302 && res.headers.get('Location').startsWith('https://accounts.google.com/') &&
+      /nae_google=b/.test(res.headers.get('Set-Cookie') || ''));
 
 res = await toAccounts(req('/api/auth/me'), {}, '/api/auth/me');
 check('without the binding, it says accounts are unavailable', res.status === 503);

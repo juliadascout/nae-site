@@ -38,6 +38,12 @@ export const ACCOUNT_PATHS = new Set([
   "/api/auth/reset",
   "/api/auth/verify",
   "/api/auth/verify/resend",
+  /* Sign in with Google. Google sends people back to this site's address, so
+     the session it ends with is this site's - the callback has to come
+     through here, query string and all. */
+  "/api/auth/google/start",
+  "/api/auth/google/callback",
+  "/api/auth/google/unlink",
 ]);
 
 export async function toAccounts(request, env, path) {
@@ -50,9 +56,14 @@ export async function toAccounts(request, env, path) {
   headers.delete("Cf-Access-Authenticated-User-Email");
   /* The host is not looked at on the other side - a service binding goes to
      that Worker whatever it says - but the path is. */
-  const forwarded = new Request(new URL(path, "https://accounts.internal").toString(), {
+  /* The query string goes too: Google's answer (code, state) is in it. */
+  const forwarded = new Request(new URL(path + new URL(request.url).search, "https://accounts.internal").toString(), {
     method: request.method,
     headers,
+    /* A redirect from the accounts system (to Google, or back to the account
+       page) is for the browser to follow, with its cookies - not for this
+       Worker to chase on its behalf. */
+    redirect: "manual",
     /* Read whole: these are a few hundred bytes of JSON, and a buffer goes
        anywhere a stream might not. */
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(),
