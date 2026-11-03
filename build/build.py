@@ -1163,7 +1163,7 @@ def page_areas():
             f"{len(AREAS)} areas across Niagara Region, Hamilton and the GTA.",
             f'<div class="wrap pad"><p class="eyebrow">Areas served</p>'
             f'<h1 style="margin-bottom:.7rem">Where students travel from</h1>'
-            f'<p class="lede" style="margin-bottom:1.4rem">{len(AREAS)} areas, each with its own page.</p>'
+            f'<p class="lede" style="margin-bottom:1.4rem">Pick your town to see the beauty school closest to you.</p>'
             + "".join(out) + '</div>')
 
 def page_contact():
@@ -1349,26 +1349,9 @@ def page_profile(p):
     if waiting:
         PROFILE_NOTES.append(f"/our-team/{slug}/: waiting on {', '.join(waiting)}")
 
-    # Why NAE and the programmes are facts from the course and studio lists, so
-    # they stay true when Inventory changes.
-    subs = {}
-    for c in COURSES: subs.setdefault(c["subject"], []).append(c)
-    why = f"""<section class="pfsec reveal" id="why-nae"><h2>Why NAE?</h2>
-  <p>Training built for students who want to practise on real clients, close to home, at a price they can manage.
-    Every course is hands-on and finishes with a certificate of completion.</p>
-  <div class="stats">
-    <div><b class="tnum">{len(COURSES)}</b><span>Courses</span></div>
-    <div><b class="tnum">{len(OPEN)}</b><span>Beauty schools open</span></div>
-    <div><b>1:1</b><span>Or small-group practicals</span></div>
-    <div><b>Optional</b><span>Kits, priced separately</span></div>
-  </div></section>"""
-    tiles = "".join(
-        f'<a class="tile" href="/courses/#{k}"><p class="mono">{len(subs[k])} course'
-        f'{"" if len(subs[k])==1 else "s"}</p><h3>{E(label)}</h3>'
-        f'<p>From {money(min(c["price"] for c in subs[k]))}</p></a>'
-        for k, label in SUBJECTS if subs.get(k))
-    programs = (f'<section class="pfsec reveal" id="programs"><h2>Programs and training</h2>'
-                f'<p>The curriculum {E(first)} writes, by subject.</p><div class="grid3">{tiles}</div></section>')
+    # The page is about the person (Vagisha, 2 Nov 2026: "keep the page limited
+    # to her", "just one button that takes people to the courses"). What NAE
+    # offers lives on the course and studio pages, one button away.
     message = ""
     # Kalleigh's YouTube video, as a still with a play button. Nothing is loaded
     # from YouTube until the visitor presses play (no tracking, no weight on the
@@ -1408,16 +1391,13 @@ def page_profile(p):
       <h1>{E(name)}</h1>
       <p class="lede">{E(p.get("intro") or "")}</p>
       <div class="ctab" style="margin-top:1.4rem">
-        <a class="btn btn-p" href="/courses/">Explore programs</a>
-        <a class="btn btn-g" href="{SITE["booking"]}" rel="noopener">Book a consultation</a></div>
+        <a class="btn btn-p" href="/courses/">Explore courses</a></div>
     </div>
   </div>
-  <div class="pfbody">{head}{message}{why}{programs}{tail}</div>
-  <div class="cta pfcta reveal"><div><strong>Start with a conversation</strong>
-    <span>Ask {E(first)}'s team about a course, a beauty school or a start date.</span></div>
-    <div class="ctab"><a class="btn btn-p" href="/courses/">Explore programs</a>
-      <a class="btn btn-g" href="/contact/">Contact NAE</a>
-      <a class="btn btn-g" href="{SITE["booking"]}" rel="noopener">Book a consultation</a></div></div>
+  <div class="pfbody">{head}{message}{tail}</div>
+  <div class="cta pfcta reveal"><div><strong>Learn from {E(first)}</strong>
+    <span>See every course {E(first)} has written for NAE.</span></div>
+    <div class="ctab"><a class="btn btn-p" href="/courses/">Explore courses</a></div></div>
 </div>""" + ld({"@type": "ProfilePage", "url": f'{SITE["url"]}/our-team/{slug}/',
                 "mainEntity": {"@type": "Person", "name": name, "jobTitle": p.get("title"),
                                "worksFor": {"@type": "Organization", "name": SITE["legal"],
