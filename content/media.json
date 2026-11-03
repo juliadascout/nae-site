@@ -26,14 +26,15 @@
  "team": [],
  "people": {
   "kalleigh-sharp": {
-   "photo": "",
-   "alt": "Kalleigh Sharp",
+   "photo": "media/people/kalleigh-sharp-headshot.jpg",
+   "alt": "Kalleigh Sharp, Founder and CEO of NAE, in a red dress, smiling",
    "video": "",
    "poster": "",
    "youtube": "EWJn2A32dPw",
    "youtube_title": "The Road to Becoming a Beautician",
    "youtube_still": "media/people/kalleigh-road-to-beautician.jpg",
-   "youtube_note": "Kalleigh's own video (her YouTube channel), sent by Isha/Vagisha 28 Oct 2026. Plays only when a visitor presses play; nothing loads from YouTube before that."
+   "youtube_note": "Kalleigh's own video (her YouTube channel), sent by Isha/Vagisha 28 Oct 2026. Plays only when a visitor presses play; nothing loads from YouTube before that.",
+   "photo_note": "'Headshot.jpg' from the October 2026 shoot, delivered as final images by Vagisha (Drive folder, 30 Oct 2026). 'Headshot2.jpg' is the alternative."
   }
  }
 }
