@@ -1053,6 +1053,35 @@ def hours_span():
     hi = max(c["hi"] for c in COURSES)
     return f"{lo:g}&ndash;{hi:g}"
 
+# One page per subject, at the address the old site's "Beauty Courses" menu can
+# link to (Vagisha, 3 Nov 2026: "for all these headings can I have respective
+# pages"). Keyed by subject, so a course moves page when its subject changes.
+SUBJECT_PAGE = {"lash": "lash-courses", "brow": "brow-courses", "hair": "hair-extension-courses",
+                "skin": "face-and-skin-courses", "nails": "nail-technician-training",
+                "remove": "hair-removal-courses", "makeup": "makeup-courses", "body": "other-beauty-courses"}
+SUBJECT_TITLE = {"lash": "Lash courses", "brow": "Brow courses", "hair": "Hair extension courses",
+                 "skin": "Face and skin courses", "nails": "Nail technician training",
+                 "remove": "Hair removal courses", "makeup": "Makeup courses", "body": "More beauty courses"}
+
+def page_subject(k):
+    cs = [c for c in COURSES if c["subject"] == k]
+    title = SUBJECT_TITLE[k]
+    skills = (f'<p class="csec-skills">{E(" · ".join(SUBJECT_SKILLS[k]))}</p>'
+              if SUBJECT_SKILLS.get(k) else "")
+    low = min(c["price"] for c in cs)
+    body = (f'<div class="wrap pad"><nav class="crumb"><a href="/courses/">Courses</a> / {E(title)}</nav>'
+            f'<p class="eyebrow">{len(cs)} course{"" if len(cs) == 1 else "s"}</p>'
+            f'<h1 style="margin-bottom:.7rem">{E(title)}</h1>'
+            f'<p class="lede" style="margin-bottom:1.2rem">{E(BLURB[k])} '
+            f'<strong>Kits are optional</strong> and never part of the course fee.</p>{skills}'
+            + "".join(crow(c) for c in cs)
+            + f'<div class="cta reveal" style="margin-top:2rem"><div><strong>Not sure which course?</strong>'
+              f'<span>Book a call and we will help you choose.</span></div>'
+              f'<div class="ctab"><a class="btn btn-p" href="{SITE["booking"]}" rel="noopener">Book a call</a>'
+              f'<a class="btn btn-g" href="/courses/">All courses</a></div></div></div>')
+    desc = f"{title} at {SITE['short']}: {len(cs)} hands-on course{'' if len(cs) == 1 else 's'}, from {money(low)}."
+    return (f"/{SUBJECT_PAGE[k]}/", f"{title} | {SITE['short']}", desc[:160], body)
+
 def page_courses():
     subs = {}
     for c in COURSES: subs.setdefault(c["subject"], []).append(c)
@@ -1060,7 +1089,7 @@ def page_courses():
             f'<p class="lede" style="margin-bottom:1.6rem">Hours shown are the full programme. '
             f'<strong>Kits are optional</strong> and never part of the course fee.</p>'
             + "".join(
-                f'<section class="csec" id="{k}"><h2>{E(label)}</h2>'
+                f'<section class="csec" id="{k}"><h2><a href="/{SUBJECT_PAGE[k]}/">{E(label)}</a></h2>'
                 + (f'<p class="csec-skills">{E(" · ".join(SUBJECT_SKILLS[k]))}</p>' if SUBJECT_SKILLS.get(k) else "")
                 + "".join(crow(c) for c in subs[k]) + '</section>'
                 for k, label in SUBJECTS if subs.get(k))
@@ -1205,12 +1234,9 @@ def page_contact():
 
 
 # ---------------------------------------------------------------- team
-# Eleven roles, no names and no photographs. Each person signs off on their own
-# name, portrait and biography before any of it is published. Portraits are
-# original silhouettes drawn for this site - no third-party artwork.
-TEAM = [("President","lead"),("Regional Director of Operations","lead"),
-        ("Director of Marketing","lead"),("Programme Coordinator","lead")] + \
-       [("Instructor","inst")]*7
+# No names and no photographs until each person signs off on their own name,
+# portrait and biography (content/media.json "team"). Silhouettes below are
+# original drawings for this site, used only beside a real name.
 HAIR = [
  '<path d="M27,46 Q27,19 50,19 Q73,19 73,46 L73,78 L65,78 L65,45 Q65,31 50,31 Q35,31 35,45 L35,78 L27,78 Z"/>',
  '<path d="M29,46 Q29,24 50,24 Q71,24 71,46 L71,52 L64,52 L64,44 Q64,32 50,32 Q36,32 36,44 L36,52 L29,52 Z"/><circle cx="50" cy="14" r="8.5"/>',
@@ -1261,19 +1287,19 @@ def page_team():
 </div>"""
         return ("/our-team/", f"Our Team | {SITE['short']}",
                 "The people who teach at NAE, across our Ontario studios.", body)
-    def grid(kind):
-        return "".join(
-          f'<div class="tcard"><div class="av">{avatar(i)}</div><h3>{E(t)}</h3>'
-          f'<p>{"Across all studios" if k=="lead" else "Teaches by subject"}</p></div>'
-          for i,(t,k) in enumerate(TEAM) if k == kind)
+    # No approved names or photos yet (content/media.json "team"): the page
+    # shows the founder and what the team is, and no rows of placeholder
+    # silhouettes, which read as unfinished (Vagisha, 3 Nov 2026: "This page is
+    # also not ready"). The cards come back by themselves once "team" is filled.
     body = f"""<div class="wrap pad">
   <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
   <p class="lede" style="margin-bottom:1.6rem">Eleven of us across the studios &mdash; a president,
     three directors and coordinators, and seven instructors. Instructors teach by subject, so you are
     taught by someone who does that work.</p>
   {"".join(profile_card(x) for x in PEOPLE)}
-  <h2 style="margin:1.8rem 0 1rem">Leadership</h2><div class="tgrid">{grid('lead')}</div>
-  <h2 style="margin:1.8rem 0 1rem">Instructors</h2><div class="tgrid">{grid('inst')}</div>
+  <div class="cta reveal" style="margin-top:2rem"><div><strong>Learn from people who do the work</strong>
+    <span>Every course is taught by an instructor who works in that subject.</span></div>
+    <div class="ctab"><a class="btn btn-p" href="/courses/">Explore courses</a></div></div>
 </div>"""
     return ("/our-team/", f"Our Team | {SITE['short']}",
             "The people who teach at NAE, across our Ontario studios.", body)
@@ -1711,6 +1737,7 @@ PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_conta
 PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]
+PAGES += [page_subject(k) for k, _ in SUBJECTS if any(c["subject"] == k for c in COURSES)]
 PAGES += [page_area(*a) for a in AREAS]
 
 
