@@ -941,6 +941,25 @@ def studio_photo(l):
 def studio_alt(l):
     return _studio(l).get("alt") or f"Inside the {l['name']} studio"
 
+def yt_section(sid, yt, title, still, cls="pfsec reveal"):
+    """A YouTube video as a still with a play button. Nothing is loaded from
+       YouTube until the visitor presses play (no tracking, no weight on the
+       page); without JavaScript the still is a plain link to the video. Empty
+       unless yt looks like a YouTube video id."""
+    yt = str(yt or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", yt):
+        return ""
+    img = f'<img src="{still}" alt="" loading="lazy" decoding="async">' if still else ""
+    return (f'<section class="{cls}" id="{sid}"><h2 style="margin-bottom:.8rem">{E(title)}</h2>'
+            f'<a class="pfyt" href="https://www.youtube.com/watch?v={yt}" data-yt="{yt}" '
+            f'data-title="{E(title)}" aria-label="Play the video: {E(title)}" rel="noopener">{img}'
+            f'<span class="pfplay" aria-hidden="true"></span></a>'
+            f'<script>(function(){{var a=document.querySelector(\'.pfyt[data-yt="{yt}"]\');if(!a)return;'
+            f'a.addEventListener("click",function(e){{e.preventDefault();var f=document.createElement("iframe");'
+            f'f.src="https://www.youtube-nocookie.com/embed/"+a.getAttribute("data-yt")+"?autoplay=1&rel=0";'
+            f'f.title=a.getAttribute("data-title");f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";'
+            f'f.allowFullscreen=true;f.className="pfytf";a.replaceWith(f);}});}})();</script></section>')
+
 def card_ph(l):
     """The picture strip on a studio card: the studio's photo, or the gradient."""
     src = studio_photo(l)
@@ -1143,6 +1162,10 @@ def page_location(l):
     photo = studio_photo(l)
     photo_html = (f'<figure class="loc-photo"><img src="{photo}" alt="{E(studio_alt(l))}" '
                   f'decoding="async"></figure>') if photo else ""
+    st = _studio(l)
+    tour = yt_section("tour", st.get("youtube"), st.get("youtube_title") or f"Tour the {l['name']} studio",
+                      media_url(st.get("youtube_still")), cls="")
+    tour_html = f'<div class="card">{tour}</div>' if tour else ""
     area_html = ('<div class="card"><h2 style="margin-bottom:1rem">Areas this studio serves</h2><div class="acols">'
                  + "".join(f'<a href="{p}">{E(c)}</a>' for c,_,p in areas) + '</div></div>') if areas else ""
     body = f"""<div class="wrap pad">
@@ -1157,7 +1180,7 @@ def page_location(l):
       <div><dt>Phone</dt><dd>{E(SITE['phone'])}</dd></div>
       <div><dt>Courses here</dt><dd>{len(cs)} of {len(COURSES)}</dd></div>
       <div><dt>Enrolling</dt><dd>Yes<small>current intake</small></dd></div></dl></div>
-  <div class="card"><h2 style="margin-bottom:.35rem">Courses taught here</h2>
+  {tour_html}<div class="card"><h2 style="margin-bottom:.35rem">Courses taught here</h2>
     <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">{len(cs)} of the {len(COURSES)} courses
       run at this studio, covering {E(subjects_at(l).lower())} training.</p>{''.join(crow(c) for c in cs)}</div>
   {area_html}
@@ -1378,25 +1401,11 @@ def page_profile(p):
     # The page is about the person (Vagisha, 2 Nov 2026: "keep the page limited
     # to her", "just one button that takes people to the courses"). What NAE
     # offers lives on the course and studio pages, one button away.
-    message = ""
-    # Kalleigh's YouTube video, as a still with a play button. Nothing is loaded
-    # from YouTube until the visitor presses play (no tracking, no weight on the
-    # page); without JavaScript the still is a plain link to the video.
-    yt = str(m.get("youtube") or "").strip()
-    if re.fullmatch(r"[A-Za-z0-9_-]{11}", yt):
-        yt_title = m.get("youtube_title") or f"A message from {first}"
-        yt_still = media_url(m.get("youtube_still"))
-        img = (f'<img src="{yt_still}" alt="" loading="lazy" decoding="async">' if yt_still else "")
-        message = (f'<section class="pfsec reveal" id="message"><h2>{E(yt_title)}</h2>'
-                   f'<a class="pfyt" href="https://www.youtube.com/watch?v={yt}" data-yt="{yt}" '
-                   f'data-title="{E(yt_title)}" aria-label="Play the video: {E(yt_title)}" rel="noopener">{img}'
-                   f'<span class="pfplay" aria-hidden="true"></span></a>'
-                   f'<script>(function(){{var a=document.querySelector(".pfyt[data-yt]");if(!a)return;'
-                   f'a.addEventListener("click",function(e){{e.preventDefault();var f=document.createElement("iframe");'
-                   f'f.src="https://www.youtube-nocookie.com/embed/"+a.getAttribute("data-yt")+"?autoplay=1&rel=0";'
-                   f'f.title=a.getAttribute("data-title");f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";'
-                   f'f.allowFullscreen=true;f.className="pfytf";a.replaceWith(f);}});}})();</script></section>')
-    elif video:
+    # Her YouTube video, if there is one (yt_section); otherwise a video file.
+    message = yt_section("message", m.get("youtube"),
+                         m.get("youtube_title") or f"A message from {first}",
+                         media_url(m.get("youtube_still")))
+    if not message and video:
         still = f' poster="{poster}"' if poster else ""
         message = (f'<section class="pfsec reveal" id="message"><h2>A message from {E(first)}</h2>'
                    f'<video class="pfvid" controls playsinline preload="metadata"{still} src="{video}"></video>'
