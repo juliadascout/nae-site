@@ -214,3 +214,189 @@ SKILLS = {
         "teaches": ["Beauty business development"],
         "lede": "The business side of running your own beauty services."},
 }
+
+# What each course page says first, under the course name. One or two sentences,
+# then the page adds how long the programme runs. Replaces both the subject's
+# general line (BLURB in build.py) and any "lede" above.
+#
+# The same honesty rule as the tags: every sentence comes from something written
+# down - the course name and its parts, its kit and equipment in the catalogue,
+# or, for the two skin courses, the 2026 Facial and Microdermabrasion Training
+# Manual. "Live model" appears only where the page already said so; hair
+# extensions and microblading say what the kit gives you to practise on
+# (mannequin head, practice skin). Nothing promises an outcome, a status, or a
+# protected title. Reviewed for the copy pass of 4 Nov 2026.
+ABOUT = {
+    # ---------------------------------------------------------------- lash
+    "crs-classic-and-hybrid-lash-extensions":
+        "Classic and hybrid lash extensions from consultation to aftercare: isolation, "
+        "placement and retention. You work on a live model with your trainer beside you "
+        "until each extension goes on cleanly and lasts.",
+    "crs-hybrid-and-volume-lash-extensions":
+        "Hybrid and volume lash extensions: mapping a fuller set, placing several fine "
+        "extensions on one natural lash, and keeping the weight safe for it. Practised on "
+        "a live model with your trainer beside you, with the retention and aftercare a "
+        "full set needs.",
+    "crs-classic-and-volume-lash-extensions":
+        "Classic, hybrid and volume lash extensions in one programme, so you can offer "
+        "every set from natural to full. You practise on a live model with your trainer "
+        "beside you, covering isolation, placement, retention and aftercare for each style.",
+    "crs-lash-lift-and-tint":
+        "Lifting and tinting the natural lash: consultation, choosing the rod size, timing "
+        "the lift solution and tinting safely around the eye. Practised on a live model "
+        "with your trainer beside you.",
+    "crs-grand-master-lash-artist-classic-volume-lift-and-tint":
+        "Classic, hybrid and volume extensions plus the lash lift and tint, so you can offer "
+        "every lash service from one chair. Practised on a live model with your trainer "
+        "beside you, covering placement, retention, lifting, tinting and aftercare.",
+    # ---------------------------------------------------------------- brow
+    "crs-brow-mapping":
+        "Measuring and mapping brows to suit each face with a caliper, ruler and mapping "
+        "string, then shaping to the map. You finish able to draw a balanced brow outline "
+        "and repeat it client after client.",
+    "crs-eyebrow-lamination-wax-and-tint":
+        "Brow lamination, waxing and tinting in one appointment: mapping the shape, setting "
+        "the brow hairs in place, tinting, and a wax clean-up to finish. You learn timing, "
+        "product handling and aftercare so the result is consistent client after client.",
+    "crs-brow-lamination-and-wax":
+        "Brow lamination and waxing: mapping the shape, setting the brow hairs in place with "
+        "the lift solution, and a wax clean-up to finish. You learn timing, product handling "
+        "and aftercare so the result is consistent client after client.",
+    "crs-brow-tint-and-wax":
+        "Brow tinting and waxing: mapping the shape, mixing and timing tint to suit the "
+        "client's colouring, and a wax clean-up to finish. You learn product handling and "
+        "aftercare so the result is consistent client after client.",
+    "crs-microblading":
+        "Brow mapping, stroke patterns and pigment work for microblading, starting on "
+        "practice skin before any live work. You also learn the hygiene and aftercare a "
+        "semi-permanent brow depends on.",
+    "crs-master-brow":
+        "Every brow service in one programme: mapping and shaping, lamination, tinting, "
+        "waxing and microblading. You build from the quicker services to semi-permanent "
+        "work, so you can offer a full brow menu.",
+    # ---------------------------------------------------------------- hair extensions
+    "crs-fusion-hair-extensions":
+        "Applying fusion (bonded) extensions, colour-matching and blending them into the "
+        "natural hair, and removing them safely. You practise on a mannequin head before "
+        "any live work.",
+    "crs-tape-in-hair-extensions":
+        "Placing tape-in extensions in clean sections, colour-matching and blending them, "
+        "and removing them safely. You practise on a mannequin head before any live work.",
+    "crs-micro-link-micro-loop-and-nano-ring-hair-extensions":
+        "Three bead methods (micro link, micro loop and nano ring) with the pliers and loop "
+        "tool each one needs, plus colour-matching, blending and safe removal. You practise "
+        "on a mannequin head before any live work.",
+    "crs-braid-in-hair-extensions":
+        "Braiding a secure base and attaching extension hair to it, then blending and "
+        "finishing the style. You practise on a mannequin head with practice hair before "
+        "any live work.",
+    "crs-classic-weave-hair-extensions":
+        "Braiding a foundation and attaching weft hair for a classic weave, then blending "
+        "and finishing the style. You practise on a mannequin head with practice hair "
+        "before any live work.",
+    "crs-micro-bead-weave-hair-extensions":
+        "Fitting a row of micro beads and sewing weft hair onto it with needle and thread, "
+        "with no braids underneath, then blending it into the natural hair. You practise on "
+        "a mannequin head before any live work.",
+    "crs-locs-hair-extensions":
+        "Installing loc extensions with a crochet hook, then sectioning, finishing and "
+        "caring for them. You practise on a mannequin head before any live work.",
+    "crs-classic-master-hair-extensions":
+        "Fusion, tape-in, and micro link, micro loop and nano ring extensions in one "
+        "programme, so you can match the method to each client's hair. You practise every "
+        "method on a mannequin head before any live work, with colour-matching, blending "
+        "and safe removal for each.",
+    "crs-camille-master-hair-extensions":
+        "Braid-in, classic weave and locs extensions in one programme, covering the main "
+        "braided and woven styles. You practise on a mannequin head before any live work, "
+        "with blending, finishing and aftercare for each method.",
+    "crs-grand-master-hair-extensions":
+        "All seven hair extension methods we teach, from fusion and tape-in to weaves and "
+        "locs, in one programme. You practise each on a mannequin head before any live work, "
+        "and learn to match the method to the client's hair and lifestyle.",
+    # ---------------------------------------------------------------- skin
+    "crs-facial-training":
+        "A complete facial from consultation to aftercare: skin analysis, cleansing, "
+        "exfoliation, extractions where suitable, massage, masks and moisturizing. You also "
+        "learn to screen for contraindications, keep a clean workstation and write a "
+        "treatment record for every client.",
+    "crs-microdermabrasion-and-facial-training":
+        "The full facial sequence plus microdermabrasion, used as the exfoliation step once "
+        "a client has been screened as suitable. You learn consultation and consent, "
+        "contraindications, safe machine use, and the aftercare and records that go with "
+        "every treatment.",
+    # ---------------------------------------------------------------- hair removal
+    "crs-basic-body-sugaring":
+        "Sugaring the face, limbs and underarms: preparing the skin, working the sugar at "
+        "the right temperature and removing hair cleanly. You also learn the aftercare that "
+        "keeps skin calm afterwards.",
+    "crs-sugaring-brazilian-women":
+        "Brazilian sugaring for women, building on Basic Body Sugaring: client comfort, "
+        "positioning, hygiene and technique for the bikini area. You finish with the "
+        "aftercare advice to give every client.",
+    "crs-sugaring-brazilian-women-and-men":
+        "Brazilian sugaring for women and men, building on Basic Body Sugaring: client "
+        "comfort, positioning, hygiene and technique for each. You finish with the aftercare "
+        "advice to give every client.",
+    "crs-basic-body-waxing":
+        "Body waxing with soft and hard wax: preparing the skin, getting the wax temperature "
+        "right, and applying and removing it cleanly. You also learn the aftercare that "
+        "keeps skin calm afterwards.",
+    "crs-basic-body-wax-and-brazilian":
+        "Body waxing plus the Brazilian, with soft and hard wax: skin preparation, wax "
+        "temperature, clean application and removal, and client comfort for the bikini "
+        "area. You also learn the hygiene and aftercare each service needs.",
+    "crs-threading":
+        "Thread handling and technique for brows and face, from shaping a brow to removing "
+        "fine facial hair. Practised on a live model with your trainer beside you.",
+    # ---------------------------------------------------------------- nails
+    "crs-basic-nail-training":
+        "The foundations of nail work: hygiene and tool cleaning, nail preparation, "
+        "manicures and polish. You build up preparation, shaping and finish until the "
+        "result is consistent.",
+    "crs-master-acrylic-nail-technician-tips-and-shaping":
+        "Acrylic nail enhancements: preparing the natural nail, applying tips, building and "
+        "shaping acrylic, and finishing. You practise until the shape and thickness are "
+        "consistent nail after nail.",
+    "crs-master-gel-and-gel-x-technician-tips-and-shaping":
+        "Gel and Gel X nail extensions: preparing the natural nail, applying tips, building "
+        "and shaping gel, curing and finishing. You practise until the shape and finish are "
+        "consistent nail after nail.",
+    "crs-grand-master-nail-technician-acrylic-gel-tips":
+        "Acrylic, gel and tips in one programme, so you can offer the main nail enhancement "
+        "services. You practise preparation, application, shaping and finish for each until "
+        "the result is consistent.",
+    "crs-pedicure-training-course":
+        "A full pedicure: preparing and soaking the feet, trimming and shaping, cuticle "
+        "care, exfoliation and polish. You also learn the hygiene and tool cleaning a "
+        "pedicure station needs.",
+    "crs-specialty-designs-nail-technician-advanced":
+        "Nail art and design for clients who want more than one colour, building on the nail "
+        "skills you already have. You practise each design until it is neat and repeatable.",
+    # ---------------------------------------------------------------- makeup
+    "crs-basic-makeup-training-on-self":
+        "Doing your own makeup well: skin preparation, base, brows, eyes and lips, and "
+        "choosing products that suit you. Your trainer gives you a product guide during the "
+        "course, so you know what to buy afterwards.",
+    "crs-makeup-artist-training-on-other":
+        "Doing makeup on other people: skin preparation, matching foundation, brows, eyes "
+        "and lips, and building a finished look. You and your trainer shop for your products "
+        "together during training, so your kit suits the work you want to do.",
+    # ---------------------------------------------------------------- body & other
+    "crs-spray-tan":
+        "Client preparation, even application and aftercare for spray tanning, practised on "
+        "a live model with your trainer beside you. You also learn to set up the tent and "
+        "machine and look after the equipment.",
+    "crs-relaxation-massage":
+        "Relaxation massage: draping, client positioning, flowing strokes and steady "
+        "pressure. You learn to keep clients comfortable from the start of the session to "
+        "the end.",
+    "crs-teeth-whitening-training":
+        "Client preparation, whitening application and aftercare for cosmetic teeth "
+        "whitening, practised on a live model with your trainer beside you. You also learn "
+        "to use an LED light, if your kit includes one.",
+    "crs-business-development":
+        "The business side of running your own beauty services: choosing who you serve, "
+        "naming and registering a business, pricing, records, insurance and marketing. You "
+        "work through each step for the services you plan to offer.",
+}

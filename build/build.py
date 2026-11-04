@@ -19,7 +19,7 @@ import os, re, csv, json, html, sys, shutil, glob
 from urllib.parse import quote
 sys.path.insert(0, os.path.dirname(__file__))
 from compliance import check
-from skills import SKILLS, SUBJECTS
+from skills import SKILLS, SUBJECTS, ABOUT
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -562,10 +562,10 @@ def booking_rail(course=None, location=None):
                  f'excludes HST</p><hr class="r">')
     return f"""<aside class="rail"><div class="card">{price}
   <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:0 0 1rem">
-    Talk it through first &mdash; dates, kit, and what the course covers.</p>
+    Talk it through first: dates, kit, and what the course covers.</p>
   <a class="btn btn-p btn-blk" href="{SITE['booking']}" rel="noopener">Book a 15-minute call</a>
   <ul class="bul">
-    <li>Pick a time that suits you &mdash; no account needed.</li>
+    <li>Pick a time that suits you. No account needed.</li>
     <li>Kits are optional and never part of the course fee.</li>
     <li>Training dates are set directly with your trainer.</li>
     <li>Certificate of completion on finishing.</li></ul>
@@ -627,7 +627,7 @@ for c in COURSES:
     if c["subject"] not in SUBJECT_LABEL or c["subject"] not in BLURB:
         raise SystemExit(f'{c["name"]}: subject {c["subject"]!r} is not one of '
                          f'{[k for k, _ in SUBJECTS]} (build/skills.py)')
-    c["lede"] = (SKILLS.get(c["id"]) or {}).get("lede") or BLURB[c["subject"]]
+    c["lede"] = ABOUT.get(c["id"]) or (SKILLS.get(c["id"]) or {}).get("lede") or BLURB[c["subject"]]
 
 # Every skill taught anywhere, in subject order, each once. The organisation's
 # knowsAbout on the home page, and the skills line under each subject on the
@@ -718,10 +718,10 @@ def page_course(c):
           + '</div>')
     kit_html = ""
     if c["hasKit"]:
-        kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit &mdash; optional</h2>'
+        kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit (optional)</h2>'
           f'<div class="kitbar"><div><em>Optional &middot; not part of the course fee</em>'
           f'<div style="margin-top:.2rem"><b>{money(c["kitCost"]) if c["kitFixed"] else E(c["kitNote"] or "Options available")}</b> '
-          f'<span style="font-size:.85rem;color:var(--muted)">&mdash; yours to keep</span></div></div>'
+          f'<span style="font-size:.85rem;color:var(--muted)">yours to keep</span></div></div>'
           + (f'<span class="chip">{len(c["kitList"])} {"items" if c["kitFixed"] else "options"}</span>'
              if c["kitList"] else "") + '</div>'
           + (f'<p style="font-size:.9rem;color:var(--ink-2);margin:.1rem 0 0"><b>{E(c["kitNote"])}</b></p>'
@@ -830,9 +830,9 @@ def page_area(city, locid, path):
       sessions, scheduled around your availability.</p></div>
   <div class="card"><h2 style="margin-bottom:.8rem">Getting to {E(l['name'])} from {E(city)}</h2>
     <p style="color:var(--ink-2);margin:0">{E(loc_addr(l)) or 'Address on request.'}
-      Most students travelling in book two or three longer days rather than coming weekly.
+      If you are travelling in, you can book longer days rather than coming weekly.
       Parking details come with your booking confirmation.</p></div>
-  <div class="card"><h2 style="margin-bottom:.35rem">Popular with {E(city)} students</h2>
+  <div class="card"><h2 style="margin-bottom:.35rem">Courses at {E(l['name'])}</h2>
     <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Every course at
       {E(l['name'])} is open to you.</p>{''.join(crow(c) for c in picks)}</div>
   <div class="card"><h2 style="margin-bottom:.9rem">Questions from {E(city)} students</h2><div class="faq">
@@ -841,7 +841,7 @@ def page_area(city, locid, path):
     <details><summary>Are kits included?</summary>
       <p>No. Kits are optional and priced separately from the course fee.</p></details>
     <details><summary>Can I train over consecutive days?</summary>
-      <p>Usually, yes. It is the most common arrangement for students travelling in.</p></details>
+      <p>Usually, yes. Tell us the dates that suit you and we will plan your sessions around them.</p></details>
   </div></div>
 </div>{booking_rail(location=l)}</div></div>"""
     # The title and address stay exactly as they are - these pages carry the
@@ -1030,7 +1030,7 @@ def page_home():
         f'<h3>{E(l["name"])}</h3><p>{E(l["region"])}</p></div></a>' for l in LOCS)
     body = f"""<div class="wrap hero">
   <p class="eyebrow">Hands-on beauty training &middot; Ontario</p>
-  <h1>Learn on a real client,<br>with a trainer beside you.</h1>
+  <h1>Learn by doing,<br>with a trainer beside you.</h1>
   <p class="lede">{len(COURSES)} courses in {E(subject_sentence())}.
     {len(OPEN)} studios open across Niagara and York Region. Every course finishes with a certificate
     of completion, and kits are always optional.</p>
@@ -1303,8 +1303,9 @@ def page_team():
             for label, group in (("Leadership", lead), ("Instructors", inst)) if group)
         body = f"""<div class="wrap pad">
   <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
-  <p class="lede" style="margin-bottom:1.6rem">The people who run the studios and teach the courses.
-    Instructors teach by subject, so you are taught by someone who does that work.</p>
+  <p class="lede" style="margin-bottom:1.6rem">The people who run our studios and teach our courses.
+    Each course is taught by an instructor who works in that subject, so you learn from someone who
+    does the work every day.</p>
   {"".join(profile_card(x) for x in PEOPLE)}
   {sections}
 </div>"""
@@ -1316,12 +1317,11 @@ def page_team():
     # also not ready"). The cards come back by themselves once "team" is filled.
     body = f"""<div class="wrap pad">
   <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
-  <p class="lede" style="margin-bottom:1.6rem">Eleven of us across the studios &mdash; a president,
-    three directors and coordinators, and seven instructors. Instructors teach by subject, so you are
-    taught by someone who does that work.</p>
+  <p class="lede" style="margin-bottom:1.6rem">The people behind NAE. Each course is taught by an
+    instructor who works in that subject, so you learn from someone who does the work every day.</p>
   {"".join(profile_card(x) for x in PEOPLE)}
-  <div class="cta reveal" style="margin-top:2rem"><div><strong>Learn from people who do the work</strong>
-    <span>Every course is taught by an instructor who works in that subject.</span></div>
+  <div class="cta reveal" style="margin-top:2rem"><div><strong>Ready to start?</strong>
+    <span>Browse every course, or book a call and we will help you choose.</span></div>
     <div class="ctab"><a class="btn btn-p" href="/courses/">Explore courses</a></div></div>
 </div>"""
     return ("/our-team/", f"Our Team | {SITE['short']}",
@@ -1521,7 +1521,7 @@ def page_account():
           {fld("Your name", "su-name", "text", "name", ' required maxlength="120"')}
           {fld("Email", "su-email", "email", "email", " required")}
           {fld("Phone (optional)", "su-phone", "tel", "tel", ' maxlength="40"')}
-          {fld("Password &mdash; at least 12 characters", "su-password", "password", "new-password", ' required minlength="12"')}
+          {fld("Password (at least 12 characters)", "su-password", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "su-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Make my account</button>
         </form>
@@ -1544,7 +1544,7 @@ def page_account():
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose a new password</h1>
         <p class="co-msg" data-msg hidden></p>
         <form data-form="reset" novalidate>
-          {fld("New password &mdash; at least 12 characters", "re-next", "password", "new-password", ' required minlength="12"')}
+          {fld("New password (at least 12 characters)", "re-next", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "re-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Save and sign in</button>
         </form>
@@ -1558,7 +1558,7 @@ def page_account():
         <p>The password you were given is temporary. Pick one only you know.</p>
         <form data-form="change" novalidate>
           {fld("The temporary password you were given", "ch-current", "password", "current-password")}
-          {fld("New password &mdash; at least 12 characters", "ch-next", "password", "new-password", ' required minlength="12"')}
+          {fld("New password (at least 12 characters)", "ch-next", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "ch-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Save and continue</button>
         </form>
@@ -1643,7 +1643,7 @@ def page_account():
           </div>
           <form class="dash-more" data-form="password" novalidate hidden>
             <span data-pw-current>{fld("Current password", "pw-current", "password", "current-password")}</span>
-            {fld("New password &mdash; at least 12 characters", "pw-next", "password", "new-password", ' required minlength="12"')}
+            {fld("New password (at least 12 characters)", "pw-next", "password", "new-password", ' required minlength="12"')}
             {fld("Type it once more", "pw-again", "password", "new-password", ' required minlength="12"')}
             <button class="btn btn-p" type="submit" data-pw-save>Save password</button>
             <button class="btn btn-g" type="button" data-pw-cancel>Cancel</button>
@@ -1656,7 +1656,7 @@ def page_account():
               opens the work tools.</li>
             <li>We keep your name, your email, your phone number if you give it, and your password in a
               form that cannot be read back by anyone, including us. With Google, we keep only your
-              name, your email and Google's id for your account &mdash; never your Google password.</li>
+              name, your email and Google's id for your account, never your Google password.</li>
             <li>Making an account does not sign you up for marketing email.</li>
           </ul>
           <p class="fine">More in our <a href="/privacy/">privacy policy</a>.</p>
