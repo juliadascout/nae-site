@@ -97,8 +97,8 @@
     })
     .catch(function () { /* no checkout, no noise */ });
 
-  /* Booking a call stays the first action in this card. Paying is a deliberate
-     second choice behind a toggle. Nothing from Stripe loads on this page at
+  /* Paying is the first action in this card, with booking a call outlined
+     beneath it; the payment form itself opens behind a toggle. Nothing from Stripe loads on this page at
      all: paying sends the buyer to Stripe's own checkout page and back. */
   function arm(cfg) {
     var toggle = el("button", "btn btn-p btn-blk co-toggle", "Buy now \u2014 pay online");
@@ -115,7 +115,7 @@
        so Buy now goes there too, beside Book a call. It opens the same panel. */
     var bar = document.querySelector(".mbar");
     if (bar && !bar.querySelector(".mbar-buy")) {
-      var quick = el("button", "btn btn-g mbar-buy", "Buy now");
+      var quick = el("button", "btn btn-p mbar-buy", "Buy now");
       quick.type = "button";
       quick.addEventListener("click", function () {
         if (panel.hidden) toggle.click();
