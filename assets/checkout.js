@@ -97,8 +97,8 @@
     })
     .catch(function () { /* no checkout, no noise */ });
 
-  /* Booking a call stays the first action in this card. Paying is a deliberate
-     second choice behind a toggle. Nothing from Stripe loads on this page at
+  /* Paying is the first action in this card, with booking a call outlined
+     beneath it; the payment form itself opens behind a toggle. Nothing from Stripe loads on this page at
      all: paying sends the buyer to Stripe's own checkout page and back. */
   function arm(cfg) {
     var toggle = el("button", "btn btn-p btn-blk co-toggle", "Buy now \u2014 pay online");
@@ -115,7 +115,7 @@
        so Buy now goes there too, beside Book a call. It opens the same panel. */
     var bar = document.querySelector(".mbar");
     if (bar && !bar.querySelector(".mbar-buy")) {
-      var quick = el("button", "btn btn-g mbar-buy", "Buy now");
+      var quick = el("button", "btn btn-p mbar-buy", "Buy now");
       quick.type = "button";
       quick.addEventListener("click", function () {
         if (panel.hidden) toggle.click();
@@ -139,7 +139,7 @@
      ever arrives. */
   function build(cfg) {
     if (cfg.mode !== "live") {
-      panel.appendChild(el("p", "co-test", "Test mode. No real payment is taken."));
+      panel.appendChild(el("p", "co-test", "Test mode — no real payment is taken."));
     }
 
     if (kitCost > 0) {
@@ -261,7 +261,7 @@
       })
       .catch(function (e) {
         track("checkout_error", { step: "create_session", reason: String(e.message).slice(0, 100) });
-        say((e.message || "Could not start the payment") + ". Nothing has been charged. You can also book a call and we will invoice you.", "error");
+        say((e.message || "Could not start the payment") + " — nothing has been charged. You can also book a call and we will invoice you.", "error");
         payButton.disabled = false;
       });
   }
@@ -311,9 +311,9 @@
               }),
             });
           }
-          tell("Paid" + (amt ? ": " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
+          tell("Paid" + (amt ? " — " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
         } else if (s.pending) {
-          tell("Thank you. Your bank payment is processing. It can take a few business days to clear; we will email your confirmation when it does.", "done");
+          tell("Thank you — your bank payment is processing. It can take a few business days to clear; we will email your confirmation when it does.", "done");
         } else {
           tell("We could not confirm a payment for this checkout. If you were charged, reply to any email from us or call us and we will sort it out.", "error");
         }
