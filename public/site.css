@@ -132,6 +132,20 @@ a{color:var(--vir-ink)}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn-p{color:#fff}}
 .btn-g{background:transparent;color:var(--ink);border-color:var(--rule)}
 .btn-g:hover{border-color:var(--plum);color:var(--plum)}
+/* Outline: the second action beside a filled .btn-p (the booking call under
+   "Buy now" on a course page). Same purple, reversed. */
+.btn-o{background:var(--paper);color:var(--vir);border-color:var(--vir)}
+.btn-o:hover{background:var(--vir-soft);color:var(--vir-ink);border-color:var(--vir-ink)}
+/* If online payment is unavailable (checkout switched off, or its script did not
+   load) the call is the only action left, so it fills like .btn-p. */
+.co[hidden] ~ .btn-o{background:var(--vir);color:#fff;border-color:var(--vir)}
+:root[data-theme="dark"] .co[hidden] ~ .btn-o,:root:not([data-theme="light"]) .co[hidden] ~ .btn-o{color:#0C1A17}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .co[hidden] ~ .btn-o{color:#fff}}
+/* The same on the phone bar: until checkout adds its "Buy now" there, the call
+   is the bar's only button. */
+.mbar:not(:has(.mbar-buy)) .btn-o{background:var(--vir);color:#fff;border-color:var(--vir)}
+:root[data-theme="dark"] .mbar:not(:has(.mbar-buy)) .btn-o,:root:not([data-theme="light"]) .mbar:not(:has(.mbar-buy)) .btn-o{color:#0C1A17}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .mbar:not(:has(.mbar-buy)) .btn-o{color:#fff}}
 .btn-blk{width:100%}
 
 .chip{display:inline-flex;align-items:center;gap:.35rem;font:500 .72rem/1 var(--mono);
