@@ -49,7 +49,7 @@ LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
-        "phone":"289-968-2028","email":"hello@beautycourse.ca","domain":"https://beautycourse.ca",
+        "phone":"289-968-2028","email":"hello@naeinc.ca","domain":"https://beautycourse.ca",
         # Kalleigh's Google Calendar appointment schedule (a phone call with
         # her). Every booking link on the site points here. It replaced Setmore
         # on 29 Oct 2026: NAE is on Google Workspace now, so the schedule sits
@@ -507,7 +507,7 @@ def shell(title, desc, path, body, canonical=None):
     <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="acct" href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a>
-  <a class="btn btn-p" href="/contact/">Book a call</a>
+  <a class="btn btn-p" href="{SITE['booking']}" rel="noopener">Book a call</a>
   <details class="mnav"><summary aria-label="Menu"><span class="mnav-ic" aria-hidden="true"></span>Menu</summary>
     <nav class="mnav-list">{nav_html}<a href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a></nav></details>
 </div></header>
@@ -527,7 +527,7 @@ def mobile_bar(course):
        foot of the page for it; without the bar that was just dead space."""
     return (f'<div class="mbar"><div><b class="tnum">{money(course["price"])}</b>'
             f'<span>excludes HST</span></div>'
-            f'<a class="btn btn-p" href="{SITE["booking"]}" rel="noopener">Book a call</a></div>')
+            f'<a class="btn {"btn-o" if sellable_online(course) else "btn-p"}" href="{SITE["booking"]}" rel="noopener">Book a call</a></div>')
 
 def sellable_online(c):
     """The same test the checkout Worker applies: a fee at or over the cap is not
@@ -560,16 +560,20 @@ def booking_rail(course=None, location=None):
                  f'<p style="font-size:.85rem;color:var(--muted);margin:.25rem 0 0">'
                  f'{"Optional kit " + money(course["kitCost"]) + " &middot; " if course["kitFixed"] else ("Kit options &middot; " if course["hasKit"] else "")}'
                  f'excludes HST</p><hr class="r">')
+    # Where the course can be bought online, paying comes first and the call is
+    # the second, outlined action beneath it (Jules, 4 Nov 2026). Where it can't,
+    # the call is the only action and keeps the filled button.
+    call_cls = "btn btn-o btn-blk" if checkout else "btn btn-p btn-blk"
     return f"""<aside class="rail"><div class="card">{price}
-  <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:0 0 1rem">
-    Talk it through first: dates, kit, and what the course covers.</p>
-  <a class="btn btn-p btn-blk" href="{SITE['booking']}" rel="noopener">Book a 15-minute call</a>
+  {checkout}
+  <p style="text-align:center;font-size:.85rem;color:var(--muted);margin:{'1rem' if checkout else '0'} 0 .6rem">
+    Talk it through first &mdash; dates, kit, and what the course covers.</p>
+  <a class="{call_cls}" href="{SITE['booking']}" rel="noopener">Book a 15-minute call</a>
   <ul class="bul">
-    <li>Pick a time that suits you. No account needed.</li>
+    <li>Pick a time that suits you &mdash; no account needed.</li>
     <li>Kits are optional and never part of the course fee.</li>
     <li>Training dates are set directly with your trainer.</li>
     <li>Certificate of completion on finishing.</li></ul>
-  {checkout}
   <hr class="r">
   <p style="font-size:.89rem;color:var(--ink-2);margin:0">Call
     <a href="tel:+12899682028">{E(SITE['phone'])}</a>, email
@@ -718,10 +722,10 @@ def page_course(c):
           + '</div>')
     kit_html = ""
     if c["hasKit"]:
-        kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit (optional)</h2>'
+        kit_html = (f'<div class="card c-kit"><h2 style="margin-bottom:.8rem">Your kit &mdash; optional</h2>'
           f'<div class="kitbar"><div><em>Optional &middot; not part of the course fee</em>'
           f'<div style="margin-top:.2rem"><b>{money(c["kitCost"]) if c["kitFixed"] else E(c["kitNote"] or "Options available")}</b> '
-          f'<span style="font-size:.85rem;color:var(--muted)">yours to keep</span></div></div>'
+          f'<span style="font-size:.85rem;color:var(--muted)">&mdash; yours to keep</span></div></div>'
           + (f'<span class="chip">{len(c["kitList"])} {"items" if c["kitFixed"] else "options"}</span>'
              if c["kitList"] else "") + '</div>'
           + (f'<p style="font-size:.9rem;color:var(--ink-2);margin:.1rem 0 0"><b>{E(c["kitNote"])}</b></p>'
@@ -1521,7 +1525,7 @@ def page_account():
           {fld("Your name", "su-name", "text", "name", ' required maxlength="120"')}
           {fld("Email", "su-email", "email", "email", " required")}
           {fld("Phone (optional)", "su-phone", "tel", "tel", ' maxlength="40"')}
-          {fld("Password (at least 12 characters)", "su-password", "password", "new-password", ' required minlength="12"')}
+          {fld("Password &mdash; at least 12 characters", "su-password", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "su-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Make my account</button>
         </form>
@@ -1544,7 +1548,7 @@ def page_account():
         <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">Choose a new password</h1>
         <p class="co-msg" data-msg hidden></p>
         <form data-form="reset" novalidate>
-          {fld("New password (at least 12 characters)", "re-next", "password", "new-password", ' required minlength="12"')}
+          {fld("New password &mdash; at least 12 characters", "re-next", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "re-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Save and sign in</button>
         </form>
@@ -1558,7 +1562,7 @@ def page_account():
         <p>The password you were given is temporary. Pick one only you know.</p>
         <form data-form="change" novalidate>
           {fld("The temporary password you were given", "ch-current", "password", "current-password")}
-          {fld("New password (at least 12 characters)", "ch-next", "password", "new-password", ' required minlength="12"')}
+          {fld("New password &mdash; at least 12 characters", "ch-next", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "ch-again", "password", "new-password", ' required minlength="12"')}
           <button class="btn btn-p" type="submit">Save and continue</button>
         </form>
@@ -1643,7 +1647,7 @@ def page_account():
           </div>
           <form class="dash-more" data-form="password" novalidate hidden>
             <span data-pw-current>{fld("Current password", "pw-current", "password", "current-password")}</span>
-            {fld("New password (at least 12 characters)", "pw-next", "password", "new-password", ' required minlength="12"')}
+            {fld("New password &mdash; at least 12 characters", "pw-next", "password", "new-password", ' required minlength="12"')}
             {fld("Type it once more", "pw-again", "password", "new-password", ' required minlength="12"')}
             <button class="btn btn-p" type="submit" data-pw-save>Save password</button>
             <button class="btn btn-g" type="button" data-pw-cancel>Cancel</button>
@@ -1656,7 +1660,7 @@ def page_account():
               opens the work tools.</li>
             <li>We keep your name, your email, your phone number if you give it, and your password in a
               form that cannot be read back by anyone, including us. With Google, we keep only your
-              name, your email and Google's id for your account, never your Google password.</li>
+              name, your email and Google's id for your account &mdash; never your Google password.</li>
             <li>Making an account does not sign you up for marketing email.</li>
           </ul>
           <p class="fine">More in our <a href="/privacy/">privacy policy</a>.</p>
