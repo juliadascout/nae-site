@@ -35,8 +35,8 @@ export async function recordEnrolment(env, sale) {
         (id, created_at, source, course_id, course_name, with_kit, currency,
          subtotal, tax, total, payer_name, payer_email, location_id,
          payment_status, stage, stage_since,
-         provider, stripe_session_id, stripe_payment_intent)
-       VALUES (?, ?, 'checkout', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         provider, stripe_session_id, stripe_payment_intent, discount)
+       VALUES (?, ?, 'checkout', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).bind(
       crypto.randomUUID(), now, sale.courseId || "", sale.courseName || sale.courseId || "",
       sale.withKit ? 1 : 0, sale.currency || "CAD",
@@ -45,6 +45,7 @@ export async function recordEnrolment(env, sale) {
       typeof sale.locationId === "string" && sale.locationId ? sale.locationId.slice(0, 40) : null,
       sale.paymentStatus || null, sale.stage || "paid", now,
       sale.provider || "stripe", sale.sessionId || null, sale.paymentIntent || null,
+      sale.discount ?? null,
     ).run();
     return changes(r) === 1 ? "new" : "repeat";
   } catch (e) {
@@ -99,6 +100,7 @@ export function enrolmentNotice(sale, catalogue, taxLabel) {
     currency: sale.currency || catalogue.currency || "CAD",
     items: Array.isArray(sale.items) ? sale.items : [],
     subtotal: fixed(sale.subtotal),
+    discount: fixed(sale.discount),
     tax: fixed(sale.tax),
     taxLabel,
     total: fixed(sale.total),

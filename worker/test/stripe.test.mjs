@@ -135,6 +135,7 @@ check('the course, kit, studio and lines ride on the session', p.get('metadata[c
 check('...and the course on the payment, for refunds and disputes', p.get('payment_intent_data[metadata][course_id]') === courseId);
 check('the buyer comes back to the course page', p.get('success_url') === `https://beautycourse.ca/courses/${course.slug}/?paid={CHECKOUT_SESSION_ID}` && p.get('cancel_url') === `https://beautycourse.ca/courses/${course.slug}/?checkout=cancelled`, p.get('success_url'));
 check('a phone number is asked for', p.get('phone_number_collection[enabled]') === 'true');
+check('the buyer can enter a promotion code', p.get('allow_promotion_codes') === 'true');
 check('the secret key is sent as a bearer token', made.headers.Authorization === 'Bearer sk_test_abc123');
 
 await post('/api/checkout/session', { courseId, withKit: false, returnPath: 'https://evil.example/' });
@@ -181,6 +182,8 @@ check('...naming the course, studio and lines', nt.course === course.name && nt.
 check('...with HST and the payment intent as the reference', nt.taxLabel === 'HST (13%)' && nt.tax === tax.toFixed(2) && nt.reference === 'pi_test_A123');
 check('...marked as a test in test mode', nt.test === true);
 check('...and the seller and refund policy', !!nt.seller?.address && nt.refundPolicy?.items?.length >= 3);
+check('no code used: no discount recorded or shown', row?.discount === null && nt.discount === null);
+
 
 const buyer = await env.ENROLMENTS.prepare('SELECT * FROM leads WHERE email = ?').bind('sam@inbox.example.ca').first();
 check('the buyer is on the lead record as enrolled', buyer?.stage === 'enrolled' && buyer?.source === 'checkout' && buyer?.course_id === courseId, JSON.stringify(buyer));
@@ -270,6 +273,23 @@ check('a rate named in the settings still wins', (await hstRate({ ...fresh, STRI
 /* PayPal is gone from the front door. */
 for (const path of ['/api/checkout/order', '/api/checkout/capture']) {
   check(`${path} no longer exists`, (await post(path, {})).status === 404);
+}
+
+/* A promotion code: Stripe takes it off before HST. The record keeps the list
+   subtotal and the discount, so subtotal - discount + tax = total. */
+{
+  const off = 100, dsub = sub - off, dtax = Math.round(dsub * 13) / 100;
+  told.length = 0;
+  await hook({ id: 'evt_promo', type: 'checkout.session.completed', data: { object: sessionObj({
+    id: 'cs_test_PROMO123456', payment_intent: 'pi_test_PROMO',
+    customer_details: { name: 'Pat Promo', email: 'pat@inbox.example.ca', phone: '+15550100200' },
+    amount_total: Math.round((dsub + dtax) * 100),
+    total_details: { amount_tax: Math.round(dtax * 100), amount_discount: off * 100 } }) } });
+  await settle();
+  const pr = await rowFor('cs_test_PROMO123456');
+  check('a promo code: the discount is recorded', pr?.discount === off && pr?.subtotal === sub, JSON.stringify(pr));
+  check('...and the rows add up to what was paid', Math.abs(pr.subtotal - pr.discount + pr.tax - pr.total) < 0.005, `${pr?.subtotal}-${pr?.discount}+${pr?.tax} vs ${pr?.total}`);
+  check('...and the confirmation carries it', told[0]?.discount === off.toFixed(2));
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed`);
