@@ -32,6 +32,10 @@
   --shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
   --display:"Lora",Georgia,"Times New Roman",serif;
   --body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  /* Brand accent face (Dancing Script, SIL OFL 1.1, served by Google Fonts).
+     Ivy Ora Display (headings) drops into --display once NAE's web licence
+     and webfont files are in hand. */
+  --script:"Dancing Script","Brush Script MT",cursive;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --wrap:1200px; --gut:clamp(1.1rem,3.5vw,2.2rem);
 }

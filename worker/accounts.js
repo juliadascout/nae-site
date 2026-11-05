@@ -32,6 +32,8 @@ export const ACCOUNT_PATHS = new Set([
   "/api/auth/me",
   "/api/auth/password",
   "/api/auth/profile",
+  /* Agreeing to the Terms and Privacy Policy, once per version. */
+  "/api/auth/terms",
   /* The links in account emails lead to this site's account page, so
      choosing a password from one, and confirming an address, happen here. */
   "/api/auth/forgot",

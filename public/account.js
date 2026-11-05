@@ -80,6 +80,7 @@
 
   function $(sel) { return root.querySelector(sel); }
   function val(id) { var n = document.getElementById(id); return n ? n.value : ""; }
+  function ticked(id) { var n = document.getElementById(id); return !!(n && n.checked); }
   function set(id, v) { var n = document.getElementById(id); if (n) n.value = v; }
 
   function show(name) {
@@ -162,6 +163,7 @@
 
   var ROLE = { admin: "Administrator", staff: "Staff", instructor: "Instructor" };
   var me = null;            // { user, apps, google } from /api/auth/me
+  var awaitingTerms = null; // { apps, google } while the agreement is asked for
   var courseCount = null;   // null until loaded
 
   /* What each role opens in the apps. The apps decide what is actually
@@ -294,6 +296,13 @@
       if (cur) cur.closest("label").hidden = !!temporary;
       return;
     }
+    /* Made before the box existed, made with Google, or the policy has
+       changed since: asked once, then on to the account as usual. */
+    if (user.needsTerms) {
+      awaitingTerms = { apps: apps || null, google: google || null };
+      show("terms");
+      return;
+    }
     me = { user: user, apps: apps || null, google: google || null };
     $("[data-hello]").textContent = user.name ? "Hello, " + user.name.split(" ")[0] : "Hello";
     $("[data-email]").textContent = user.email;
@@ -396,6 +405,7 @@
 
   var tooShort = "Use at least 12 characters.";
   var noMatch = "Those two passwords do not match.";
+  var mustAgree = "Tick the box to agree to the Terms and the Privacy Policy.";
 
   root.addEventListener("submit", function (e) {
     var form = e.target.closest("form[data-form]");
@@ -445,9 +455,10 @@
       if (!val("su-email").trim()) return say(panel, "Add your email.");
       if (p1.length < 12) return say(panel, tooShort);
       if (p1 !== val("su-again")) return say(panel, noMatch);
+      if (!ticked("su-agree")) return say(panel, mustAgree);
       busy(form, true);
       call("signup", {
-        name: val("su-name"), email: val("su-email"), phone: val("su-phone"), password: p1,
+        name: val("su-name"), email: val("su-email"), phone: val("su-phone"), password: p1, agree: true,
       }).then(function (r) {
         busy(form, false);
         if (!r.ok) return say(panel, r.body.error || "Could not make your account.");
@@ -455,6 +466,19 @@
         set("su-password", ""); set("su-again", "");
         signedIn(r.body.user, null, null);
         say("me", "Welcome. Your account is ready.", "done");
+      });
+      return;
+    }
+
+    if (kind === "terms") {
+      if (!ticked("te-agree")) return say(panel, mustAgree);
+      busy(form, true);
+      call("terms", { agree: true }).then(function (r) {
+        busy(form, false);
+        if (!r.ok) return say(panel, r.body.error || "Could not save that. Try again.");
+        var w = awaitingTerms || {};
+        awaitingTerms = null;
+        signedIn(r.body.user, w.apps, w.google);
       });
       return;
     }

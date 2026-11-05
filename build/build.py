@@ -487,7 +487,7 @@ def shell(title, desc, path, body, canonical=None):
 <link rel="canonical" href="{E(canon)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Lato:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Dancing+Script:wght@600&display=swap">
 <link rel="stylesheet" href="/site.css">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/nae-favicon-32.png">
@@ -1527,9 +1527,26 @@ def page_account():
           {fld("Phone (optional)", "su-phone", "tel", "tel", ' maxlength="40"')}
           {fld("Password &mdash; at least 12 characters", "su-password", "password", "new-password", ' required minlength="12"')}
           {fld("Type it once more", "su-again", "password", "new-password", ' required minlength="12"')}
+          <label class="agree"><input type="checkbox" id="su-agree" required>
+            <span>I agree to the <a href="/terms/" target="_blank" rel="noopener">Terms</a> and the
+            <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
           <button class="btn btn-p" type="submit">Make my account</button>
         </form>
         <p class="fine">Already have one? <a href="#" data-show="signin">Sign in instead</a>.</p>
+      </div>
+
+      <div class="card" data-panel="terms" hidden>
+        <p class="eyebrow">Your account</p><h1 style="margin-bottom:.8rem">One quick thing</h1>
+        <p class="co-msg" data-msg hidden></p>
+        <p>We have updated our <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>
+          and <a href="/terms/" target="_blank" rel="noopener">Terms</a>. Please read them and agree to
+          carry on to your account.</p>
+        <form data-form="terms" novalidate>
+          <label class="agree"><input type="checkbox" id="te-agree" required>
+            <span>I agree to the Terms and the Privacy Policy.</span></label>
+          <button class="btn btn-p" type="submit">Agree and continue</button>
+        </form>
+        <p class="fine">Not now? <a href="#" data-signout>Sign out</a>.</p>
       </div>
 
       <div class="card" data-panel="forgot" hidden>
