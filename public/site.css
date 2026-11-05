@@ -32,6 +32,10 @@
   --shadow:0 1px 2px rgba(26,20,32,.05), 0 8px 24px -12px rgba(26,20,32,.14);
   --display:"Lora",Georgia,"Times New Roman",serif;
   --body:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  /* Brand accent face (Dancing Script, SIL OFL 1.1, served by Google Fonts).
+     Ivy Ora Display (headings) drops into --display once NAE's web licence
+     and webfont files are in hand. */
+  --script:"Dancing Script","Brush Script MT",cursive;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --wrap:1200px; --gut:clamp(1.1rem,3.5vw,2.2rem);
 }
@@ -71,8 +75,8 @@ p{margin:0 0 1em}
 a{color:var(--vir-ink)}
 :focus-visible{outline:2.5px solid var(--vir);outline-offset:2px;border-radius:3px}
 .wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gut)}
-.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--vir-ink);font-weight:500;margin:0 0 .6rem}
+.eyebrow{font-family:var(--script);font-size:1.3rem;line-height:1.2;letter-spacing:0;
+  color:var(--vir-ink);font-weight:600;margin:0 0 .5rem}
 .lede{font-size:clamp(1.02rem,1.7vw,1.19rem);line-height:1.55;color:var(--ink-2);max-width:64ch}
 .mono{font-family:var(--mono)}
 .tnum{font-variant-numeric:tabular-nums}
@@ -606,7 +610,7 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
   .tile:hover,.lcard:hover,.tcard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
   .btn-p:hover{transform:translateY(-1px)}
 }
-.pfcard p.eyebrow{font-size:.66rem;color:var(--vir-ink);margin-bottom:.2rem}
+.pfcard p.eyebrow{font-size:1.1rem;color:var(--vir-ink);margin-bottom:.2rem}
 .ftr a{color:var(--ink-2)} .ftr a:hover{color:var(--plum)}
 
 /* ---------- account dashboard ---------- */
@@ -672,3 +676,7 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-google{background:#131314;color:#E3E3E3;border-color:#8E918F}}
 .or{display:flex;align-items:center;gap:.7rem;margin:1rem 0;color:var(--muted);font-size:.82rem}
 .or::before,.or::after{content:"";flex:1;border-top:1px solid var(--rule-2)}
+
+/* The Terms and Privacy Policy box on sign-up, and when asked again. */
+.agree{display:flex;gap:.6rem;align-items:flex-start;margin:.4rem 0 1rem;font-size:.95rem;line-height:1.45;color:var(--ink-2)}
+.agree input{width:1.15rem;height:1.15rem;margin-top:.15rem;flex:none;accent-color:var(--plum)}
