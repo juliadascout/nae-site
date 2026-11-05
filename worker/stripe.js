@@ -146,6 +146,11 @@ export async function createSession(request, env, quote, origin) {
     /* The phone number is the second way to reach a new student, and the
        pipeline needs one; Stripe asks for it on its page. */
     phone_number_collection: { enabled: true },
+    /* A box for a promotion code on Stripe's page. Codes are made in the
+       Stripe dashboard (Product catalogue > Coupons), so an offer such as
+       "$100 off" is honoured without changing a price here. HST is charged
+       on the price after the discount. */
+    allow_promotion_codes: true,
     metadata: meta,
     /* On the payment too: refunds and disputes arrive naming the payment,
        and this says which course it was without a lookup. */
@@ -226,6 +231,7 @@ function saleFrom(s, catalogue) {
     currency: (s.currency || "cad").toUpperCase(),
     subtotal: money(s.amount_subtotal),
     tax: money((s.total_details || {}).amount_tax),
+    discount: money((s.total_details || {}).amount_discount) || null,
     total: money(s.amount_total),
     payerName: cd.name || null,
     payerEmail: cd.email || null,

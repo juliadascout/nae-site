@@ -49,7 +49,7 @@ LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
-        "phone":"289-968-2028","email":"hello@naeinc.ca","domain":"https://beautycourse.ca",
+        "phone":"289-968-2028","email":"info@naeinc.ca","domain":"https://beautycourse.ca",
         # Kalleigh's Google Calendar appointment schedule (a phone call with
         # her). Every booking link on the site points here. It replaced Setmore
         # on 29 Oct 2026: NAE is on Google Workspace now, so the schedule sits
