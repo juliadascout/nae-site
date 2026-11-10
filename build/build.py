@@ -47,6 +47,10 @@ LOCS     = json.load(open(f"{DATA}/locations.json"))["locations"]
 # and the site would go quietly dark again. NAE_GA4_ID still overrides it, for
 # testing against a separate property.
 GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
+# Google Tag Manager container (Jules, 10 Nov 2026). It carries its own GA4
+# property (G-FVZYNR4LZN at install), separate from GA4_ID above, so the two
+# do not double-count. NAE_GTM_ID overrides it; set it empty to leave GTM out.
+GTM_ID = os.environ.get("NAE_GTM_ID", "GTM-5KKRMVWX").strip()
 
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"info@naeinc.ca","domain":"https://beautycourse.ca",
@@ -437,6 +441,26 @@ def ga_tag():
             f'gtag("js",new Date());gtag("config","{GA4_ID}");</script>'
             f'\n<script src="/events.js" defer></script>')
 
+def gtm_tag():
+    """Google Tag Manager, as Google's standard install: the head snippet
+       pushes gtm.start, which the container's page-view triggers wait for.
+       Emitted after the account page's link guard (below), so a one-time code
+       in the address is gone before the container can read the URL."""
+    if not GTM_ID:
+        return ""
+    return ("\n<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':"
+            "new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],"
+            "j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src="
+            "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);"
+            f"}})(window,document,'script','dataLayer','{GTM_ID}');</script>")
+
+def gtm_noscript():
+    """The no-JavaScript half of the standard install, first thing in <body>."""
+    if not GTM_ID:
+        return ""
+    return (f'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={GTM_ID}" '
+            'height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>\n')
+
 # An emailed account link carries a one-time code after the # (#reset=...,
 # #verify=...). This runs first in the account page's head, before analytics
 # loads, takes the code off the address bar and leaves it in NAE_LINK for
@@ -499,9 +523,9 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{E(canon)}">
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
-<meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}
+<meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}{gtm_tag()}
 </head><body>
-<header class="hdr"><div class="wrap">
+{gtm_noscript()}<header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
     <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
     <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
