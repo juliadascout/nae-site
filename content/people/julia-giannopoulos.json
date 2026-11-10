@@ -1,0 +1,22 @@
+{
+ "slug": "julia-giannopoulos",
+ "order": 2,
+ "name": "Julia Giannopoulos",
+ "title": "Director, Richmond Hill",
+ "card_label": "Director, Richmond Hill",
+ "intro": "Julia runs NAE's Richmond Hill studio: the instructors, the student experience from the first call to the certificate of completion, and the systems behind booking and enrolment.",
+ "description": "Julia Giannopoulos, Director of NAE's Richmond Hill studio.",
+ "cta_line": "Book a call and Julia's team will help you choose a course.",
+ "sections": [
+  {
+   "id": "about",
+   "heading": "About Julia",
+   "status": "approved",
+   "source": "Julia's own description of her role (interviews, Aug 2026) and her instruction to write this bio (10 Nov 2026). Julia approves the wording.",
+   "body": [
+    "Julia hires and supports NAE's instructors and makes sure every student knows what happens next, from booking a call to finishing their course.",
+    "Behind the scenes, Julia built the systems students use without noticing: online booking, secure checkout and the course records that follow each student from enquiry to completion."
+   ]
+  }
+ ]
+}

@@ -600,15 +600,11 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
    and the visitor has not asked for less motion, so nothing is ever hidden for
    someone without JavaScript. */
 @media (prefers-reduced-motion:no-preference){
-  html.js .reveal{opacity:0;transform:translateY(14px);
-    transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
-  html.js .reveal.in{opacity:1;transform:none}
+  /* One entrance, on the hero only. Nothing else animates on its own. */
   .hero h1,.pfintro h1{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
   .hero .lede,.pfintro .lede{animation:rise .7s .08s cubic-bezier(.2,.7,.2,1) both}
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  .tile,.lcard,.tcard,.btn{transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
-  .tile:hover,.lcard:hover,.tcard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-  .btn-p:hover{transform:translateY(-1px)}
+  .tile,.lcard,.pfcard,.btn{transition:border-color .2s,background .2s}
 }
 .pfcard p.eyebrow{font-size:1.1rem;color:var(--vir-ink);margin-bottom:.2rem}
 .ftr a{color:var(--ink-2)} .ftr a:hover{color:var(--plum)}
@@ -680,3 +676,39 @@ a.chip:hover{text-decoration:underline;text-underline-offset:2px}
 /* The Terms and Privacy Policy box on sign-up, and when asked again. */
 .agree{display:flex;gap:.6rem;align-items:flex-start;margin:.4rem 0 1rem;font-size:.95rem;line-height:1.45;color:var(--ink-2)}
 .agree input{width:1.15rem;height:1.15rem;margin-top:.15rem;flex:none;accent-color:var(--plum)}
+
+/* ---------- UX review, 10 Nov 2026 ---------- */
+/* Small labels read as plain words, not tracked-out capitals in a code font:
+   counts, badges, spec names and chips are information, not decoration. */
+.stats span,.tile .mono,.lbadge,.specs dt,.chip,.skills-h,.kitbar em,.pfrole{
+  font-family:var(--body);text-transform:none;letter-spacing:0}
+.stats span{font-size:.86rem;font-weight:400}
+.tile .mono,.lbadge,.pfrole{font-size:.84rem;font-weight:700}
+.specs dt,.skills-h{font-size:.8rem;font-weight:700}
+.chip{font-size:.8rem}
+
+/* Home hero: the words and a real studio, side by side on a wide screen. */
+@media (min-width:960px){
+  .hero.has-media{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+    gap:clamp(2rem,4vw,3.5rem);align-items:center}
+  .hero.has-media .hero-media{margin:0;aspect-ratio:4/5}
+}
+
+/* Team: every person gets a card, two across on a wide screen. */
+.pfgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:1rem}
+.pfgrid .pfcard{margin:0;height:100%}
+.pfrole{margin:0 0 .15rem;color:var(--vir-ink)}
+.pfcard .initials{display:grid;place-items:center;width:96px;height:96px;border-radius:50%;
+  background:var(--plum-soft);color:var(--plum);font:700 2.2rem/1 var(--display)}
+.pfcard:hover h2{text-decoration:underline;text-underline-offset:3px}
+/* Headlines break into even lines, never one word left on its own. */
+h1,h2{text-wrap:balance}
+/* Beside the photo the stats have half the width: two by two, never 3 + 1. */
+@media (min-width:960px){.hero.has-media .stats{grid-template-columns:repeat(2,1fr)}}
+/* Phones: subjects two across, so the list is a glance rather than a scroll. */
+@media (max-width:560px){
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+  .grid3 .tile{padding:.9rem}
+}
+/* Beside the photo the headline has half the width: size it to that column. */
+@media (min-width:960px){.hero.has-media h1{font-size:clamp(2.3rem,3.4vw,2.85rem)}}
