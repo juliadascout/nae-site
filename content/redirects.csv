@@ -68,3 +68,9 @@ from,to,why
 /product_cat-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
 /author-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
 /feed/,/blog/,old WordPress feed
+/about,/about-national-association-of-estheticians-beauty-school/,"short address people type; 31 visits Oct 23 - Nov 6 found nothing"
+/about/,/about-national-association-of-estheticians-beauty-school/,"short address people type; the about page lives at its old WordPress address"
+/press/,/blog/,"old WordPress section name; the journal is at /blog/"
+/news/,/blog/,"old WordPress section name; the journal is at /blog/"
+/salon-spa-business-commercial-room-rentals-downtown-stcatharines-niagara/,/locations/st-catharines/,"retired: rooms at 255 Church St, an address NAE left; the studio is 249 Carlton St (Jules, 6 Nov 2026)"
+/st-catharines-beauty-school-has-commercial-space-for-rent/,/locations/st-catharines/,"retired: space for rent on Church Street, an address NAE left; the studio is 249 Carlton St (Jules, 6 Nov 2026)"

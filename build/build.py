@@ -2226,7 +2226,16 @@ open(f"{OUT}/sitemap.xml","w").write(
   + "".join(f"  <url><loc>{SITE['url']}{p}</loc></url>\n"
               for p in sorted(p for p, _ in docs)
               if p not in CANONICAL and p not in NOINDEX and p not in COPIED) + "</urlset>\n")
-open(f"{OUT}/robots.txt","w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['url']}/sitemap.xml\n")
+# Content Signals (contentsignals.org): how the site may be used once read.
+# search=yes - list and link it in search results. ai-input=yes - AI assistants
+# may read a page to answer someone's question about courses, which is how
+# people now find a school. ai-train=no - not for training models. A signal
+# states a preference; it does not block a crawler.
+open(f"{OUT}/robots.txt","w").write(
+    "User-agent: *\n"
+    "Content-Signal: search=yes, ai-input=yes, ai-train=no\n"
+    "Allow: /\n"
+    f"Sitemap: {SITE['url']}/sitemap.xml\n")
 
 if REDIRECTS and not BASE:
     with open(os.path.join(OUT, "_redirects"), "w", encoding="utf-8") as fh:

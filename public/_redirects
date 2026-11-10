@@ -68,3 +68,9 @@
 /product_cat-sitemap.xml /sitemap.xml 301
 /author-sitemap.xml /sitemap.xml 301
 /feed/ /blog/ 301
+/about /about-national-association-of-estheticians-beauty-school/ 301
+/about/ /about-national-association-of-estheticians-beauty-school/ 301
+/press/ /blog/ 301
+/news/ /blog/ 301
+/salon-spa-business-commercial-room-rentals-downtown-stcatharines-niagara/ /locations/st-catharines/ 301
+/st-catharines-beauty-school-has-commercial-space-for-rent/ /locations/st-catharines/ 301
