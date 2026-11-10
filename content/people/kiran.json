@@ -1,0 +1,37 @@
+{
+ "slug": "kiran",
+ "order": 4,
+ "name": "Kiran S.",
+ "title": "Instructor: skin, lashes and brows",
+ "card_label": "Skin, lash & brow instructor",
+ "intro": "Kiran brings more than 13 years in esthetics to NAE, including years of teaching other estheticians in spas and schools across the GTA.",
+ "description": "Kiran, NAE instructor for facials, microdermabrasion, lashes and brows.",
+ "cta_line": "See the skin, lash and brow courses Kiran teaches.",
+ "cta_href": "/courses/",
+ "sections": [
+  {
+   "id": "about",
+   "heading": "About Kiran",
+   "status": "approved",
+   "source": "Kiran's resume (ResumeKiranS.pdf, Drive, Aug 2026). Laser, IPL, microneedling, piercing, chemical peels and status wording left out (NAE compliance rules). Other employers are not named. Kiran approves the wording.",
+   "body": [
+    "Kiran has worked in esthetics since 2012, in spas and salons and as an educator training new and experienced estheticians.",
+    "Teaching is where Kiran shines: clear demonstrations, hands-on practice, and keeping track of every student's progress until they are ready to work on their own clients."
+   ]
+  },
+  {
+   "id": "experience",
+   "heading": "What Kiran teaches",
+   "status": "approved",
+   "source": "Kiran's resume, services and courses taught.",
+   "list": [
+    "Facials and microdermabrasion",
+    "Lash extensions (classic, hybrid and volume) and lash lifts",
+    "Brow mapping, lamination, tinting and microblading",
+    "Waxing, sugaring and threading",
+    "Manicures, pedicures and gel nails",
+    "Makeup"
+   ]
+  }
+ ]
+}

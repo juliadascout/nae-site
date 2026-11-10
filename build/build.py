@@ -474,19 +474,11 @@ LINK_GUARD = ('\n<script>(function(){function take(){'
               'try{window.dispatchEvent(new Event("nae-link"))}catch(e){}}'
               'take();addEventListener("popstate",take);addEventListener("hashchange",take)})()</script>')
 
-# Marks the page as scripted, then fades .reveal blocks in as they scroll into
-# view. Cards and tiles join in without each page having to opt in.
-REVEAL_JS = ('<script>(function(){try{'
-  'if(!("IntersectionObserver"in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
-  'var els=document.querySelectorAll(".reveal,.tile,.lcard,.tcard,.card,.stats");'
-  'var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)'
-  '{e.target.classList.add("in");io.unobserve(e.target)}})},{rootMargin:"0px 0px -8% 0px"});'
-  'els.forEach(function(el){if(el.closest(".rail"))return;el.classList.add("reveal");'
-  'var r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add("in");else io.observe(el)});'
-  # Only now: the stylesheet hides .reveal under html.js, so if anything above
-  # failed in an older browser the page stays fully visible.
-  'document.documentElement.classList.add("js")}catch(e){}'
-  '})();</script>')
+# Content is never hidden waiting for a scroll. The old fade-in-on-scroll left
+# whole sections blank to anything that did not scroll (previews, screenshots,
+# a fast skim), and fading every block in is a template habit rather than a
+# choice (UX review, 10 Nov 2026). The hero keeps its one entrance.
+REVEAL_JS = ""
 
 def shell(title, desc, path, body, canonical=None):
     # While naeinc.ca is up, its Register and Book buttons send people here. Say so
@@ -1056,7 +1048,8 @@ def page_home():
         f'<div class="bd"><p class="lbadge">'
         f'{"Now enrolling" if l["status"]=="open" else "Coming soon"}</p>'
         f'<h3>{E(l["name"])}</h3><p>{E(l["region"])}</p></div></a>' for l in LOCS)
-    body = f"""<div class="wrap hero">
+    media = hero_media()
+    body = f"""<div class="wrap hero{' has-media' if media else ''}"><div class="hero-copy">
   <p class="eyebrow">Hands-on beauty training &middot; Ontario</p>
   <h1>Learn by doing,<br>with a trainer beside you.</h1>
   <p class="lede">{len(COURSES)} courses in {E(subject_sentence())}.
@@ -1070,7 +1063,7 @@ def page_home():
     <div><b class="tnum">{len(OPEN)}</b><span>Studios open</span></div>
     <div><b class="tnum">{len(AREAS)}</b><span>Areas served</span></div>
     <div><b class="tnum">{hours_span()}</b><span>Hours per course</span></div></div>
-  {hero_media()}
+  </div>{media}
 </div>
 <div class="wrap pad"><p class="eyebrow">Pick a subject</p>
   <h2 style="margin-bottom:1.4rem">What do you want to learn?</h2><div class="grid3">{tiles}</div></div>
@@ -1334,7 +1327,7 @@ def page_team():
   <p class="lede" style="margin-bottom:1.6rem">The people who run our studios and teach our courses.
     Each course is taught by an instructor who works in that subject, so you learn from someone who
     does the work every day.</p>
-  {"".join(profile_card(x) for x in PEOPLE)}
+  <div class="pfgrid">{"".join(profile_card(x) for x in PEOPLE)}</div>
   {sections}
 </div>"""
         return ("/our-team/", f"Our Team | {SITE['short']}",
@@ -1347,8 +1340,8 @@ def page_team():
   <p class="eyebrow">Who you will be working with</p><h1 style="margin-bottom:.7rem">Our team</h1>
   <p class="lede" style="margin-bottom:1.6rem">The people behind NAE. Each course is taught by an
     instructor who works in that subject, so you learn from someone who does the work every day.</p>
-  {"".join(profile_card(x) for x in PEOPLE)}
-  <div class="cta reveal" style="margin-top:2rem"><div><strong>Ready to start?</strong>
+  <div class="pfgrid">{"".join(profile_card(x) for x in PEOPLE)}</div>
+  <div class="cta" style="margin-top:2rem"><div><strong>Ready to start?</strong>
     <span>Browse every course, or book a call and we will help you choose.</span></div>
     <div class="ctab"><a class="btn btn-p" href="/courses/">Explore courses</a></div></div>
 </div>"""
@@ -1381,8 +1374,12 @@ def _people():
         # so only a plain lower-case name is accepted.
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", str(d["slug"])):
             sys.exit(f"content/people/{fn}: slug must be lower-case letters, digits and hyphens")
+        if str(d.get("status") or "").lower() == "draft":
+            PROFILE_NOTES.append(f"/our-team/{d['slug']}/: whole profile is a draft - "
+                                 + (d.get("status_note") or "not published"))
+            continue
         out.append(d)
-    return out
+    return sorted(out, key=lambda d: (d.get("order", 99), d["name"]))
 PEOPLE = _people()
 
 def _person_media(slug):
@@ -1392,13 +1389,16 @@ def _person_media(slug):
 def profile_card(p):
     """The feature card on Our team that leads to the person's own page."""
     m = _person_media(p["slug"])
-    photo = media_url(m.get("photo"))
+    # "card_photo" lets a person's page use a wider shot (two people, a studio)
+    # while the round card waits for a portrait; set to "" it shows initials.
+    photo = media_url(m["card_photo"]) if "card_photo" in m else media_url(m.get("photo"))
+    first = p["name"].split()[0]
     pic = (f'<img src="{photo}" alt="" loading="lazy" decoding="async">' if photo
-           else avatar(0, 96))
-    return (f'<a class="pfcard reveal" href="/our-team/{p["slug"]}/"><div class="av">{pic}</div>'
-            f'<div><p class="eyebrow">{E(p.get("card_label") or p.get("title") or "")}</p>'
+           else f'<span class="initials" aria-hidden="true">{E(first[:1])}</span>')
+    return (f'<a class="pfcard" href="/our-team/{p["slug"]}/"><div class="av">{pic}</div>'
+            f'<div><p class="pfrole">{E(p.get("card_label") or p.get("title") or "")}</p>'
             f'<h2>{E(p["name"])}</h2><p>{E(p.get("intro") or "")}</p>'
-            f'<span class="pflink">Read her story &rarr;</span></div></a>')
+            f'<span class="pflink">Meet {E(first)}</span></div></a>')
 
 def page_profile(p):
     slug, name = p["slug"], p["name"]
@@ -1454,13 +1454,13 @@ def page_profile(p):
       <h1>{E(name)}</h1>
       <p class="lede">{E(p.get("intro") or "")}</p>
       <div class="ctab" style="margin-top:1.4rem">
-        <a class="btn btn-p" href="/courses/">Explore courses</a></div>
+        <a class="btn btn-p" href="{E(p.get("cta_href") or "/courses/")}">Explore courses</a></div>
     </div>
   </div>
   <div class="pfbody">{head}{message}{tail}</div>
-  <div class="cta pfcta reveal"><div><strong>Learn from {E(first)}</strong>
-    <span>See every course {E(first)} has written for NAE.</span></div>
-    <div class="ctab"><a class="btn btn-p" href="/courses/">Explore courses</a></div></div>
+  <div class="cta pfcta"><div><strong>Learn from {E(first)}</strong>
+    <span>{E(p.get("cta_line") or "See the courses at NAE.")}</span></div>
+    <div class="ctab"><a class="btn btn-p" href="{E(p.get("cta_href") or "/courses/")}">Explore courses</a></div></div>
 </div>""" + ld({"@type": "ProfilePage", "url": f'{SITE["url"]}/our-team/{slug}/',
                 "mainEntity": {"@type": "Person", "name": name, "jobTitle": p.get("title"),
                                "worksFor": {"@type": "Organization", "name": SITE["legal"],

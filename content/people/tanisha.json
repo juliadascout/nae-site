@@ -1,0 +1,23 @@
+{
+ "slug": "tanisha",
+ "order": 3,
+ "name": "Tanisha",
+ "title": "Nail technician instructor",
+ "card_label": "Nail instructor",
+ "intro": "Tanisha teaches NAE's nail courses: manicures, pedicures and nail art. Students and clients say she makes them feel at ease from the moment they walk in.",
+ "description": "Tanisha, nail technician instructor at NAE: manicures, pedicures and nail art.",
+ "cta_line": "See the nail courses Tanisha teaches.",
+ "cta_href": "/courses/#nails",
+ "sections": [
+  {
+   "id": "about",
+   "heading": "About Tanisha",
+   "status": "approved",
+   "source": "naeinc.ca nail technician pages and the 'Fall Fun, Fashion & Beauty' Pink News post ('our nail technician instructor Tanisha'; 'makes you feel as though you have known her your entire life'; full manicures and pedicures including hand and foot massage; Instagram @royalelegance.beauty).",
+   "body": [
+    "Tanisha takes special care with every set: full manicures and pedicures, including hand and foot massage, finished with detailed nail art.",
+    "See more of Tanisha's nail art on Instagram at @royalelegance.beauty."
+   ]
+  }
+ ]
+}
