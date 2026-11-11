@@ -1,57 +1,57 @@
 {
- "about": "Photos and video on the website. Put each file in assets/media/ and write its path here, starting media/ (for example media/studios/richmond-hill-wide.jpg). A spot left empty, or naming a file that is not there yet, keeps the placeholder the page shows today. The build prints what it used. See README, 'Photos and video'.",
- "home": {
-  "video": "",
-  "poster": "media/studios/richmond-hill-wide.jpg",
-  "alt": "The Richmond Hill studio: hair stations, a nail table and a shampoo basin"
- },
- "studios": {
-  "richmond-hill": {
-   "photo": "media/studios/richmond-hill-wide.jpg",
-   "alt": "The Richmond Hill studio: hair stations, a nail table and a shampoo basin",
-   "youtube": "OiCxixDhGCA",
-   "youtube_title": "Tour the Richmond Hill studio",
-   "youtube_still": "media/studios/richmond-hill-tour.jpg",
-   "note": "Photo 'Studio1.jpg' from Vagisha's October shoot (Drive, 30 Oct 2026); tour video 'NAE Richmond Hill Tour' on NAE's YouTube channel, sent by Julia 3 Nov 2026."
+  "about": "Photos and video on the website. Put each file in assets/media/ and write its path here, starting media/ (for example media/studios/richmond-hill-wide.jpg). A spot left empty, or naming a file that is not there yet, keeps the placeholder the page shows today. The build prints what it used. See README, 'Photos and video'.",
+  "home": {
+    "video": "",
+    "poster": "media/studios/richmond-hill-wide.jpg",
+    "alt": "The Richmond Hill studio: hair stations, a nail table and a shampoo basin"
   },
-  "st-catharines": {
-   "photo": "media/studios/st-catharines-training.jpg",
-   "alt": "A facial training session at the St. Catharines studio",
-   "note": "Temporary (Jules, 10 Nov 2026): naeinc.ca wp-content/uploads/2024/04/IMG_4652, captioned 'Facial Training Course Niagara St. Catharines'."
+  "studios": {
+    "richmond-hill": {
+      "photo": "media/studios/richmond-hill-wide.jpg",
+      "alt": "The Richmond Hill studio: hair stations, a nail table and a shampoo basin",
+      "youtube": "OiCxixDhGCA",
+      "youtube_title": "Tour the Richmond Hill studio",
+      "youtube_still": "media/studios/richmond-hill-tour.jpg",
+      "note": "Photo 'Studio1.jpg' from Vagisha's October shoot (Drive, 30 Oct 2026); tour video 'NAE Richmond Hill Tour' on NAE's YouTube channel, sent by Julia 3 Nov 2026."
+    },
+    "st-catharines": {
+      "photo": "media/studios/st-catharines-training.jpg",
+      "alt": "A facial training session at the St. Catharines studio",
+      "note": "Temporary (Jules, 10 Nov 2026): naeinc.ca wp-content/uploads/2024/04/IMG_4652, captioned 'Facial Training Course Niagara St. Catharines'."
+    },
+    "niagara-falls": {
+      "photo": "media/studios/niagara-falls-nail-room.jpg",
+      "alt": "The nail training room at the Niagara Falls studio",
+      "note": "Temporary (Jules, 10 Nov 2026): naeinc.ca wp-content/uploads/2026/06/IMG_2246, captioned 'Niagara Training Courses' on the Niagara Falls page."
+    },
+    "kitchener-waterloo": {
+      "photo": "",
+      "alt": "Inside the Kitchener-Waterloo studio"
+    }
   },
-  "niagara-falls": {
-   "photo": "media/studios/niagara-falls-nail-room.jpg",
-   "alt": "The nail training room at the Niagara Falls studio",
-   "note": "Temporary (Jules, 10 Nov 2026): naeinc.ca wp-content/uploads/2026/06/IMG_2246, captioned 'Niagara Training Courses' on the Niagara Falls page."
-  },
-  "kitchener-waterloo": {
-   "photo": "",
-   "alt": "Inside the Kitchener-Waterloo studio"
+  "team": [],
+  "people": {
+    "kalleigh-sharp": {
+      "photo": "media/people/kalleigh-sharp-headshot.jpg",
+      "alt": "Kalleigh Sharp, Founder and CEO of NAE, in a red dress, smiling",
+      "video": "",
+      "poster": "",
+      "youtube": "EWJn2A32dPw",
+      "youtube_title": "The Road to Becoming a Beautician",
+      "youtube_still": "media/people/kalleigh-road-to-beautician.jpg",
+      "youtube_note": "Kalleigh's own video (her YouTube channel), sent by Isha/Vagisha 28 Oct 2026. Plays only when a visitor presses play; nothing loads from YouTube before that.",
+      "photo_note": "'Headshot.jpg' from the October 2026 shoot, delivered as final images by Vagisha (Drive folder, 30 Oct 2026). 'Headshot2.jpg' is the alternative."
+    },
+    "tanisha": {
+      "photo": "media/people/tanisha-headshot.jpg",
+      "alt": "Tanisha smiling while doing a client's manicure",
+      "photo_note": "From naeinc.ca (wp-content/uploads/2021/11/IMG_9246.jpg), Jules 10 Nov 2026: use Tanisha's photo from the original site."
+    },
+    "kiran": {
+      "photo": "media/people/kiran-with-graduate.jpg",
+      "card_photo": "media/people/kiran-card.jpg",
+      "alt": "Kiran with a graduate holding her certificate of completion, in front of the NAE sign",
+      "photo_note": "Sent by Jules 10 Nov 2026, temporary. Kiran is the person in black scrubs (Jules, 11 Nov 2026); card_photo is a square crop of her from this photo."
+    }
   }
- },
- "team": [],
- "people": {
-  "kalleigh-sharp": {
-   "photo": "media/people/kalleigh-sharp-headshot.jpg",
-   "alt": "Kalleigh Sharp, Founder and CEO of NAE, in a red dress, smiling",
-   "video": "",
-   "poster": "",
-   "youtube": "EWJn2A32dPw",
-   "youtube_title": "The Road to Becoming a Beautician",
-   "youtube_still": "media/people/kalleigh-road-to-beautician.jpg",
-   "youtube_note": "Kalleigh's own video (her YouTube channel), sent by Isha/Vagisha 28 Oct 2026. Plays only when a visitor presses play; nothing loads from YouTube before that.",
-   "photo_note": "'Headshot.jpg' from the October 2026 shoot, delivered as final images by Vagisha (Drive folder, 30 Oct 2026). 'Headshot2.jpg' is the alternative."
-  },
-  "tanisha": {
-   "photo": "media/people/tanisha-headshot.jpg",
-   "alt": "Tanisha smiling while doing a client's manicure",
-   "photo_note": "From naeinc.ca (wp-content/uploads/2021/11/IMG_9246.jpg), Jules 10 Nov 2026: use Tanisha's photo from the original site."
-  },
-  "kiran": {
-   "photo": "media/people/kiran-with-graduate.jpg",
-   "card_photo": "",
-   "alt": "Kiran with a graduate holding her certificate of completion, in front of the NAE sign",
-   "photo_note": "Sent by Jules 10 Nov 2026, temporary. Two people in the photo: card_photo stays empty (initials) until Jules says which person is Kiran."
-  }
- }
 }
