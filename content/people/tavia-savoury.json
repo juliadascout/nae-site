@@ -1,0 +1,36 @@
+{
+ "slug": "tavia-savoury",
+ "order": 5,
+ "name": "Tavia Savoury",
+ "title": "Instructor: nails, brows, threading, makeup and waxing",
+ "card_label": "Nail, brow & waxing instructor",
+ "intro": "Tavia is an esthetician and brow artist who runs her own brow studio in Ajax, with experience across skin care, lashes and clinic management.",
+ "description": "Tavia Savoury, NAE instructor for nails, brows, threading, makeup and waxing.",
+ "cta_line": "See the courses Tavia teaches.",
+ "cta_href": "/courses/",
+ "sections": [
+  {
+   "id": "about",
+   "heading": "About Tavia",
+   "status": "approved",
+   "source": "Tavia's resume (ResumeTaviaSavoury.pdf, Drive, Aug 2026). Other employers not named; status wording left out. Tavia approves the wording. Published 11 Nov 2026: Kalleigh confirmed Tavia teaches with NAE (Jules).",
+   "body": [
+    "Tavia has worked as an esthetician since 2020, as a brow specialist for a major cosmetics brand and as the manager of a teaching clinic, where she supported students through their practical hours.",
+    "Today she runs her own brow studio, so students learn from someone who does the work for paying clients every week."
+   ]
+  },
+  {
+   "id": "experience",
+   "heading": "What Tavia teaches",
+   "status": "approved",
+   "source": "NAE welcome email to Tavia (3 Sep 2026): Nails, Brows, Threading, Makeup, Waxing.",
+   "list": [
+    "Manicures, pedicures and gel nails",
+    "Brow shaping and tinting",
+    "Threading",
+    "Makeup",
+    "Waxing"
+   ]
+  }
+ ]
+}
