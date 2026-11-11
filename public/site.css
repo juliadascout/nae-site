@@ -712,3 +712,27 @@ h1,h2{text-wrap:balance}
 }
 /* Beside the photo the headline has half the width: size it to that column. */
 @media (min-width:960px){.hero.has-media h1{font-size:clamp(2.3rem,3.4vw,2.85rem)}}
+
+/* ---- scholarship application (/scholarship/) ---- */
+.sch{max-width:860px;margin:0 auto;display:grid;gap:1.2rem}
+.sch-h{font-size:1.15rem;margin:1.6rem 0 .7rem;padding-top:1rem;border-top:1px solid var(--line, #eadfe7)}
+#apply form>.sch-h:first-child{margin-top:0;padding-top:0;border-top:0}
+.sch-h small,.sch-courses small{font:400 .8rem var(--body);color:var(--ink-2)}
+.sch-2{display:grid;gap:0 1rem}
+@media (min-width:720px){.sch-2{grid-template-columns:1fr 1fr}}
+.sch-hint{display:block;font-size:.84rem;line-height:1.45;color:var(--ink-2);margin:-.1rem 0 .4rem}
+.sch-courses{margin:.2rem 0 .4rem;border:1px solid var(--line, #eadfe7);border-radius:10px;padding:.7rem .9rem}
+.sch-courses summary{cursor:pointer;font-weight:700}
+.sch-grid{display:grid;gap:.1rem 1rem;margin-top:.7rem}
+@media (min-width:640px){.sch-grid{grid-template-columns:1fr 1fr}}
+.sch-c{margin:.2rem 0;font-size:.9rem}
+.sch-acct{margin-top:.4rem}
+.sch-go{width:100%;justify-content:center;margin-top:.4rem}
+#apply .co-msg{margin:0 0 .9rem}
+#apply .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#apply .co-msg[hidden],#apply [hidden]{display:none}
+#apply .fld input:focus,#apply .fld select:focus,#apply .fld textarea:focus{outline:2px solid var(--vir);outline-offset:1px}
+#apply .fld textarea{min-height:130px}
+#apply [aria-invalid="true"]{border-color:var(--plum)}
+.sch-intro .specs>.sch-wide{grid-column:1/-1}
+.sch-q>span{font:700 .98rem/1.4 var(--body);color:var(--ink);margin-bottom:.35rem}

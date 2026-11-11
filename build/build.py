@@ -1277,6 +1277,117 @@ def page_contact():
       <script src="/ask.js" defer></script>""")
 
 
+# ---------------------------------------------------------------- scholarship
+# The Lily Mather Scholarship (11 Nov 2026). The application goes to the
+# Worker (worker/scholarship.js): kept with NAE's records, every administrator
+# emailed, a receipt to the applicant, and - if they choose a password - an
+# account made in the same step. The wording of the questions is the final
+# copy agreed with the scholarship's sponsor; it is not to be reworded here.
+# No photograph of Lily and no memorial wording, at the family's request.
+SCHOLARSHIP_QS = [
+  ("q1", "1. Tell us about yourself and your beauty career dream.", True,
+   "What draws you to beauty? What would you like to learn or achieve? You may share a new idea, an existing business or a fresh start you hope to make."),
+  ("q2", "2. How would you use the $5,000 training scholarship?", True,
+   "Which beauty courses or skills interest you most, and why? Explain how they would support your goals. It is okay if you need help choosing courses."),
+  ("q3", "3. How could this opportunity change your life?", True,
+   "Tell us what the training could make possible for you, your family or your community. You may describe barriers you face, but private or difficult experiences are not required."),
+  ("q4", "4. What would your next steps be after training?", True,
+   "For example, would you seek work, offer a new service or start a business? Tell us how you hope to put your skills into practice."),
+  ("q5", "5. Is there anything else you would like us to know?", False,
+   "You may mention experience, support that would help you attend training, or anything important to your application."),
+]
+SCHOLARSHIP_EXPERIENCE = ["New to beauty", "Some beauty training", "Working in beauty now", "Run my own beauty business"]
+SCHOLARSHIP_HEARD = ["Instagram", "Facebook", "TikTok", "Google search", "A friend or family member",
+  "A current or past NAE student", "Cosmetic Brands of North America", "Other"]
+
+def page_scholarship():
+    fld = _fld
+    studios = "".join(f'<option value="{E(l["id"])}">{E(l["name"])}</option>' for l in OPEN)
+    courses = "".join(
+        f'<label class="agree sch-c"><input type="checkbox" name="sch-course" value="{E(c["id"])}"><span>{E(c["name"])}</span></label>'
+        for c in sorted(COURSES, key=lambda c: c["name"].lower()))
+    opts = lambda xs: "".join(f'<option>{E(x)}</option>' for x in xs)
+    qs = "".join(
+        f'''<label class="fld sch-q"><span>{E(label)}{"" if req else " (optional)"}</span>
+          <small class="sch-hint">{E(hint)}</small>
+          <textarea id="sch-{qid}"{" required" if req else ""} maxlength="4000" rows="5"></textarea></label>'''
+        for qid, label, req, hint in SCHOLARSHIP_QS)
+    return ("/scholarship/", f"The Lily Mather Scholarship | {SITE['short']}",
+      "Apply for the Lily Mather Scholarship: $5,000 toward beauty training with NAE. Applications close November 30, 2026.",
+      f"""<div class="wrap pad"><div class="sch">
+      <div class="card sch-intro">
+        <p class="eyebrow">Scholarship</p>
+        <h1 style="margin-bottom:.6rem">The Lily Mather Scholarship</h1>
+        <p class="lede">$5,000 toward beauty training with the National Association of Estheticians.</p>
+        <dl class="specs q"><div><dt>Award</dt><dd>$5,000 toward NAE courses</dd></div>
+          <div><dt>Apply by</dt><dd>November 30, 2026</dd></div>
+          <div class="sch-wide"><dt>How to apply</dt><dd>Please fill out the application below by November 30</dd></div></dl>
+        <p class="fine" style="margin-top:.8rem">It takes about 15 minutes. Your answers are saved on this device as you type,
+          so you can come back to finish. Questions? <a href="/contact/">Contact us</a> or call {E(SITE['phone'])}.</p>
+      </div>
+
+      <div class="card" id="apply">
+        <p class="co-msg" data-msg hidden></p>
+        <div data-closed hidden><h2>Applications have closed</h2>
+          <p>Applications closed on November 30, 2026. Thank you for your interest.</p></div>
+        <form data-form="scholarship" novalidate>
+          <h2 class="sch-h">About you</h2>
+          <div class="sch-2">
+            {fld("Full name", "sch-name", "text", "name", ' required maxlength="120"')}
+            {fld("Email address", "sch-email", "email", "email", ' required maxlength="254"')}
+            {fld("Phone number (optional)", "sch-phone", "tel", "tel", ' maxlength="40"')}
+            {fld("City / region and country", "sch-place", "text", "address-level2", ' required maxlength="160" placeholder="e.g. St. Catharines, ON, Canada"')}
+            {fld("Business name, if any (optional)", "sch-business", "text", "organization", ' maxlength="160"')}
+            {fld("Website or social media (optional)", "sch-web", "text", "url", ' maxlength="300" placeholder="e.g. @yourname"')}
+          </div>
+
+          <h2 class="sch-h">Your interests <small>(optional, but it helps us plan)</small></h2>
+          <div class="sch-2">
+            <label class="fld"><span>Studio you would most like to train at</span><select id="sch-studio">
+              <option value="">Choose one</option>{studios}<option value="unsure">Not sure yet</option></select></label>
+            <label class="fld"><span>Your experience so far</span><select id="sch-experience">
+              <option value="">Choose one</option>{opts(SCHOLARSHIP_EXPERIENCE)}</select></label>
+            <label class="fld"><span>How did you hear about the scholarship?</span><select id="sch-heard">
+              <option value="">Choose one</option>{opts(SCHOLARSHIP_HEARD)}</select></label>
+          </div>
+          <details class="sch-courses"><summary>Courses that interest you <small>(tick any)</small></summary>
+            <div class="sch-grid">{courses}</div></details>
+
+          <h2 class="sch-h">Your application</h2>
+          {qs}
+
+          <h2 class="sch-h">Declaration</h2>
+          <label class="agree"><input type="checkbox" id="sch-declared" required>
+            <span><strong>Applicant declaration:</strong> I confirm that the information I have provided is accurate to the best
+            of my knowledge. I understand that applying does not guarantee an award. I agree to be contacted about my
+            application. Any permission to publish my story or photograph will be requested separately.</span></label>
+          <div class="sch-2">
+            {fld("Applicant name / signature (type your full name)", "sch-signature", "text", "name", ' required maxlength="120"')}
+            <label class="fld"><span>Date</span><input id="sch-date" type="text" readonly tabindex="-1" aria-readonly="true"></label>
+          </div>
+
+          <div class="sch-acct" data-acct>
+            <h2 class="sch-h">Your NAE account <small>(optional)</small></h2>
+            <p class="fine" style="margin:0 0 .6rem">Choose a password and we will make your free NAE account with your application,
+              so you can sign in, see course details and hear about your application in one place. Leave it empty to skip.</p>
+            {fld("Password &mdash; at least 12 characters", "sch-password", "password", "new-password", ' minlength="12" maxlength="200"')}
+            <p class="fine" style="margin:-.3rem 0 .4rem">Making an account means you agree to the
+              <a href="/terms/" target="_blank" rel="noopener">Terms</a> and <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+          </div>
+          <p class="fine" data-signed hidden style="margin:.2rem 0 .8rem"></p>
+
+          <label class="agree"><input type="checkbox" id="sch-marketing">
+            <span>Email me NAE news, offers and future scholarships. I can unsubscribe at any time.</span></label>
+          <label class="hp" aria-hidden="true">Leave this empty <input id="sch-website" type="text" tabindex="-1" autocomplete="off"></label>
+          <button class="btn btn-p sch-go" type="submit">Submit my application</button>
+        </form>
+        <noscript><p class="fine">The application needs JavaScript. Please email {E(SITE['email'])} or call {E(SITE['phone'])} instead.</p></noscript>
+        <p class="fine">We use your application to consider you for the scholarship and to contact you about it, and keep it with
+          NAE's records. More in our <a href="/privacy/">privacy policy</a>.</p>
+      </div>
+      </div></div>
+      <script src="/scholarship.js" defer></script>""")
+
 # ---------------------------------------------------------------- team
 # No names and no photographs until each person signs off on their own name,
 # portrait and biography (content/media.json "team"). Silhouettes below are
@@ -1787,7 +1898,7 @@ def write_checkout_prices():
 
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
-         page_account()]
+         page_account(), page_scholarship()]
 PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]

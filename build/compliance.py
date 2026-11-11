@@ -5,7 +5,9 @@ import re, html
 BLOCK = {
   'status claim':        r'\b(accredited|accreditation|licensed (school|college|institution)|diploma)\b',
   'protected title':     r'\b(nurse|massage therapist|registered massage)\b',
-  'superlative':         r"\b(the best|top beauty|leading beauty|premier|canada'?s top|niagara'?s top|#1 beauty)\b",
+  # "To the best of my knowledge" is a declaration's legal wording, not a claim
+  # about NAE (the scholarship application, 11 Nov 2026); every other "the best" is.
+  'superlative':         r"\b(the best(?! of (?:my|our|their|your) knowledge)|top beauty|leading beauty|premier|canada'?s top|niagara'?s top|#1 beauty)\b",
   'career-outcome claim':r'\b(licensed (aesthetician|esthetician)|cosmetology licen[cs]e)\b',
   # The legal name is "National Association of Estheticians Inc." Variants that
   # look plausible are the dangerous ones - the privacy policy carried

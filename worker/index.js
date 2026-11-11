@@ -2,6 +2,7 @@ import prices from "./prices.json";
 import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
 import { myCourses } from "./mycourses.js";
 import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
+import { SCHOLARSHIP_PATH, handleScholarship } from "./scholarship.js";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 
 /* The site is static. This Worker serves it, and adds the endpoints a
@@ -113,6 +114,10 @@ export default {
       /* A question from the Contact page (enquiries.js). */
       if (path === ENQUIRY_PATH && request.method === "POST") {
         return handleEnquiry(request, env, ctx, prices);
+      }
+      /* A scholarship application from /scholarship/ (scholarship.js). */
+      if (path === SCHOLARSHIP_PATH && request.method === "POST") {
+        return handleScholarship(request, env, ctx, prices);
       }
       if (path === "/api/checkout/config" && request.method === "GET") {
         return json({ currency: prices.currency, mode: stripeMode(env), enabled: checkoutReady(env) });
