@@ -43,7 +43,9 @@ globalThis.fetch = async (url, init = {}) => {
     return new Response(JSON.stringify({ id: 'cs_test_NEW123456789', url: 'https://checkout.stripe.com/c/pay/cs_test_NEW123456789' }), { status: 200 });
   }
   const m = u.match(/\/v1\/checkout\/sessions\/(cs_[^/?]+)$/);
-  if (m) return new Response(JSON.stringify(sessionObj({ id: m[1] })), { status: 200 });
+  if (m) return new Response(JSON.stringify(sessionObj(/FREE/.test(m[1])
+    ? { id: m[1], payment_status: 'no_payment_required', payment_intent: null, amount_total: 0 }
+    : { id: m[1] })), { status: 200 });
   if (u.includes('/v1/tax_rates/')) return new Response(JSON.stringify(taxRate), { status: 200 });
   if (u.includes('/v1/tax_rates?')) return new Response(JSON.stringify({ data: existingRates }), { status: 200 });
   if (u.endsWith('/v1/tax_rates') && init.method === 'POST') {
@@ -290,6 +292,27 @@ for (const path of ['/api/checkout/order', '/api/checkout/capture']) {
   check('a promo code: the discount is recorded', pr?.discount === off && pr?.subtotal === sub, JSON.stringify(pr));
   check('...and the rows add up to what was paid', Math.abs(pr.subtotal - pr.discount + pr.tax - pr.total) < 0.005, `${pr?.subtotal}-${pr?.discount}+${pr?.tax} vs ${pr?.total}`);
   check('...and the confirmation carries it', told[0]?.discount === off.toFixed(2));
+}
+
+/* A 100%-off code (a scholarship award, a staff test): Stripe completes the
+   session with nothing to pay and no PaymentIntent. That is an enrolment. */
+{
+  told.length = 0;
+  const free = sessionObj({
+    id: 'cs_test_FREE123456', payment_intent: null, payment_status: 'no_payment_required',
+    customer_details: { name: 'Fee Free', email: 'free@inbox.example.ca', phone: '+15550100201' },
+    amount_total: 0, total_details: { amount_tax: 0, amount_discount: sub * 100 } });
+  const logs = []; const keep = console.error; console.error = (...a) => logs.push(a.join(' '));
+  await hook({ id: 'evt_free', type: 'checkout.session.completed', data: { object: free } });
+  await settle();
+  console.error = keep;
+  const fr = await rowFor('cs_test_FREE123456');
+  check('a no-cost order is recorded as paid', fr?.stage === 'paid' && fr?.total === 0 && fr?.discount === sub, JSON.stringify(fr));
+  check('...the student is confirmed, with the session as the reference', told.length === 1 && told[0]?.reference === 'cs_test_FREE123456' && told[0]?.total === '0.00', JSON.stringify(told[0]));
+  check('...and becomes an enrolled lead', (await env.ENROLMENTS.prepare("SELECT stage FROM leads WHERE email = 'free@inbox.example.ca'").first())?.stage === 'enrolled');
+  check('...without a false "price list" alarm', !logs.some((l) => /price list says/.test(l)), logs.join(' | '));
+  const back = await (await req('/api/checkout/session?id=cs_test_FREE123456')).json();
+  check('...and the page they return to says it is done', back.paid === true && back.pending === false && back.total === '0.00', JSON.stringify(back));
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed`);

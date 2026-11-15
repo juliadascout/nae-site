@@ -163,13 +163,20 @@ export async function createSession(request, env, quote, origin) {
 
 /* GET /api/checkout/session?id=cs_... - what the page shows when the buyer
    comes back. Read-only, and decides nothing: the webhook records the sale. */
+/* Settled: the money is in, or there is none to take. A 100%-off promotion
+   code (a scholarship award, a staff test) completes the session with
+   payment_status "no_payment_required" and no PaymentIntent; that is an
+   enrolment like any other (Stripe: Checkout no-cost orders). */
+const settled = (s) => s.payment_status === "paid"
+  || (s.status === "complete" && s.payment_status === "no_payment_required");
+
 export async function sessionStatus(env, id) {
   if (!/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(id || "")) return { status: 400, error: "Missing session id" };
   const s = await stripe(env, "GET", `/checkout/sessions/${id}`);
   const md = s.metadata || {};
   return {
     status: 200,
-    paid: s.payment_status === "paid",
+    paid: settled(s),
     /* Complete but not yet paid: a bank debit that takes days to clear. */
     pending: s.status === "complete" && s.payment_status === "unpaid",
     reference: s.payment_intent || s.id,
@@ -264,6 +271,8 @@ async function leadFromSale(env, sale, paid) {
    in between - or the tax rate in the Dashboard is not 13%. The money has
    moved either way, so it is recorded; the mismatch is made loud. */
 function checkAgainstQuote(sale, quote) {
+  /* A promotion code makes the total differ on purpose; Stripe applied it. */
+  if (sale.discount) return;
   const q = quote(sale.courseId, sale.withKit);
   if (q.error) {
     console.error("stripe: paid session names a course the price list refuses -", sale.sessionId, sale.courseId, q.error);
@@ -294,7 +303,7 @@ export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLa
   switch (event.type) {
     case "checkout.session.completed": {
       const sale = saleFrom(obj, catalogue);
-      const paid = obj.payment_status === "paid";
+      const paid = settled({ status: "complete", ...obj });
       sale.stage = paid ? "paid" : "payment pending";
       const rec = await recordEnrolment(env, sale);
       if (paid) checkAgainstQuote(sale, quote);
