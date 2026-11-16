@@ -8,7 +8,7 @@ const check = (n, c, d = '') => { c ? (pass++, console.log(`  PASS  ${n}`)) : (f
 
 const st = (id, type) => ({ id, name: id, type });
 const config = {
-  rules: { minNoticeHours: 48, maxDaysAhead: 90, gapDays: { min: 1, max: 30 }, bufferMinutes: 15 },
+  rules: { minNoticeHours: 24, maxDaysAhead: 90, gapDays: { min: 1, max: 30 }, bufferMinutes: 15 },
   defaultHours: { days: [1, 2, 3, 4, 5, 6], open: '09:00', close: '17:00' },
   studios: {
     'loc-a': { rooms: {
@@ -82,8 +82,8 @@ s = findSlots({ ...base, courseId: 'nails', bookings: [{ id: 'y', courseId: 'las
 check('the least-busy qualified instructor is offered', at(s, '2026-11-23T09:00')?.instructorId === 'ann');
 
 /* ------------------------------------------------------- notice and range */
-s = findSlots({ ...base, courseId: 'lash', now: '2026-11-21T12:00' });
-check('48 hours notice: nothing before Monday 12:00 when it is Saturday noon', s.every((x) => toMin(x.start) >= toMin('2026-11-23T12:00')) && s.length > 0);
+s = findSlots({ ...base, courseId: 'lash', now: '2026-11-22T12:00' });
+check('24 hours notice: nothing before Monday 12:00 when it is Sunday noon', s.every((x) => toMin(x.start) >= toMin('2026-11-23T12:00')) && s.length > 0);
 s = findSlots({ ...base, courseId: 'lash', from: '2027-03-01', now: '2026-11-19T10:00' });
 check('nothing more than 90 days ahead', s.length === 0);
 check('a course with no session length offers nothing', findSlots({ ...base, courseId: 'nope' }).length === 0);

@@ -1967,6 +1967,21 @@ def write_checkout_prices():
                    "booking": SITE["booking"], "site": SITE["domain"]}, f, indent=2)
     return len(out)
 
+def write_booking_config():
+    """The booking rules for the Worker (worker/booking.js): studios, rooms,
+       each course's session plan and who teaches what, from nae-data
+       (data/booking-config.json, made by tools/booking/make_config.py)."""
+    src = os.path.join(DATA, "booking-config.json")
+    dst = os.path.join(ROOT, "worker", "booking-config.json")
+    if not os.path.exists(src):
+        if not os.path.exists(dst):
+            with open(dst, "w", encoding="utf-8") as f: json.dump({}, f)
+        return 0
+    cfg = json.load(open(src, encoding="utf-8"))
+    with open(dst, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=1, ensure_ascii=False)
+    return len(cfg.get("courses", {}))
+
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
          page_account(), page_scholarship(), page_test_purchase()]
@@ -2488,6 +2503,7 @@ for a, b in sorted(MOVED.items()): print(f"    {a} -> {b}")
 
 
 print(f"checkout prices     : {write_checkout_prices()}")
+print(f"booking config      : {write_booking_config()} courses")
 if over:
     print(f"course cap warnings : {len(over)} (build not blocked)")
     for c, why in over:

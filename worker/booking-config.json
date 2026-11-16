@@ -1,0 +1,683 @@
+{
+ "version": 1,
+ "rules": {
+  "oneCoursePerRoom": true,
+  "minNoticeHours": 24,
+  "maxDaysAhead": 90,
+  "gapDays": {
+   "min": 1,
+   "max": 30
+  },
+  "bookAllSessionsAtOnce": true,
+  "requestFallback": true,
+  "approver": "admin"
+ },
+ "defaultHours": {
+  "days": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "open": "09:00",
+  "close": "17:00"
+ },
+ "studios": {
+  "loc-rch": {
+   "buildingId": "NAE-RH",
+   "name": "National Association of Estheticians - Richmond Hill",
+   "rooms": {
+    "Main Room": {
+     "stations": [
+      {
+       "id": "NAE-RH-HAIR-1",
+       "name": "Hair Station 1",
+       "type": "Hair Styling"
+      },
+      {
+       "id": "NAE-RH-HAIR-2",
+       "name": "Hair Station 2",
+       "type": "Hair Styling"
+      },
+      {
+       "id": "NAE-RH-NAIL-1",
+       "name": "Manicure Station 1",
+       "type": "Nail Care"
+      },
+      {
+       "id": "NAE-RH-NAIL-2",
+       "name": "Manicure Station 2",
+       "type": "Nail Care"
+      },
+      {
+       "id": "NAE-RH-WASH-1",
+       "name": "Wash Basin 1",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-RH-WASH-2",
+       "name": "Wash Basin 2",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-RH-WASH-3",
+       "name": "Wash Basin 3",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-RH-SPA-1",
+       "name": "Spa Chair 1",
+       "type": "Spa/Pedicure"
+      }
+     ]
+    },
+    "Treatment Room": {
+     "stations": [
+      {
+       "id": "NAE-RH-BED-1",
+       "name": "Esthetics Bed 1",
+       "type": "Treatment Bed"
+      },
+      {
+       "id": "NAE-RH-BED-2",
+       "name": "Esthetics Bed 2",
+       "type": "Treatment Bed"
+      },
+      {
+       "id": "NAE-RH-TAN-1",
+       "name": "Spray Tan Booth",
+       "type": "Spray Tan"
+      },
+      {
+       "id": "NAE-RH-SPA-2",
+       "name": "Spa Chair 2",
+       "type": "Spa/Pedicure"
+      }
+     ]
+    }
+   }
+  },
+  "loc-stc": {
+   "buildingId": "NAE-STC",
+   "name": "National Association of Estheticians - St. Catharines",
+   "rooms": {
+    "Main Room": {
+     "stations": [
+      {
+       "id": "NAE-STC-HAIR-1",
+       "name": "Hair Station 1",
+       "type": "Hair Styling"
+      },
+      {
+       "id": "NAE-STC-HAIR-2",
+       "name": "Hair Station 2",
+       "type": "Hair Styling"
+      },
+      {
+       "id": "NAE-STC-NAIL-1",
+       "name": "Manicure Station 1",
+       "type": "Nail Care"
+      },
+      {
+       "id": "NAE-STC-NAIL-2",
+       "name": "Manicure Station 2",
+       "type": "Nail Care"
+      },
+      {
+       "id": "NAE-STC-WASH-1",
+       "name": "Wash Basin 1",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-STC-WASH-2",
+       "name": "Wash Basin 2",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-STC-WASH-3",
+       "name": "Wash Basin 3",
+       "type": "Hair Washing"
+      },
+      {
+       "id": "NAE-STC-SPA-1",
+       "name": "Spa Chair 1",
+       "type": "Spa/Pedicure"
+      }
+     ]
+    },
+    "Treatment Room": {
+     "stations": [
+      {
+       "id": "NAE-STC-BED-1",
+       "name": "Esthetics Bed 1",
+       "type": "Treatment Bed"
+      },
+      {
+       "id": "NAE-STC-BED-2",
+       "name": "Esthetics Bed 2",
+       "type": "Treatment Bed"
+      },
+      {
+       "id": "NAE-STC-TAN-1",
+       "name": "Spray Tan Booth",
+       "type": "Spray Tan"
+      },
+      {
+       "id": "NAE-STC-SPA-2",
+       "name": "Spa Chair 2",
+       "type": "Spa/Pedicure"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "courses": {
+  "crs-classic-and-hybrid-lash-extensions": {
+   "name": "Classic & Hybrid Lash Extensions",
+   "group": "Lashes",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 14.0,
+   "sessions": 4,
+   "hoursPerSession": 3.5
+  },
+  "crs-hybrid-and-volume-lash-extensions": {
+   "name": "Hybrid & Volume Lash Extensions",
+   "group": "Lashes",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 5.5,
+   "sessions": 2,
+   "hoursPerSession": 3.0
+  },
+  "crs-classic-and-volume-lash-extensions": {
+   "name": "Classic & Volume Lash Extensions",
+   "group": "Lashes",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 20.0,
+   "sessions": 6,
+   "hoursPerSession": 3.5
+  },
+  "crs-lash-lift-and-tint": {
+   "name": "Lash Lift & Tint",
+   "group": "Lashes",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 6.0,
+   "sessions": 2,
+   "hoursPerSession": 3.0
+  },
+  "crs-grand-master-lash-artist-classic-volume-lift-and-tint": {
+   "name": "Grand Master Lash Artist (Classic, Volume, Lift & Tint)",
+   "group": "Lashes",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 25.5,
+   "sessions": 7,
+   "hoursPerSession": 4.0
+  },
+  "crs-fusion-hair-extensions": {
+   "name": "Fusion Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 3,
+   "hoursPerSession": 5.0
+  },
+  "crs-tape-in-hair-extensions": {
+   "name": "Tape-In Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 3,
+   "hoursPerSession": 5.0
+  },
+  "crs-micro-link-micro-loop-and-nano-ring-hair-extensions": {
+   "name": "Micro Link, Micro Loop & Nano Ring Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 3,
+   "hoursPerSession": 5.0
+  },
+  "crs-braid-in-hair-extensions": {
+   "name": "Braid-In Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 3,
+   "hoursPerSession": 5.0
+  },
+  "crs-classic-weave-hair-extensions": {
+   "name": "Classic Weave Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 3,
+   "hoursPerSession": 5.0
+  },
+  "crs-micro-bead-weave-hair-extensions": {
+   "name": "Micro Bead Weave Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 4,
+   "hoursPerSession": 3.5
+  },
+  "crs-locs-hair-extensions": {
+   "name": "Locs Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 14.0,
+   "sessions": 4,
+   "hoursPerSession": 3.5
+  },
+  "crs-classic-master-hair-extensions": {
+   "name": "Classic Master Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 21.0,
+   "sessions": 11,
+   "hoursPerSession": 2.0
+  },
+  "crs-camille-master-hair-extensions": {
+   "name": "Weave Master Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 21.0,
+   "sessions": 11,
+   "hoursPerSession": 2.0
+  },
+  "crs-grand-master-hair-extensions": {
+   "name": "Grand Master Hair Extensions",
+   "group": "Hair",
+   "station": "Hair Styling",
+   "needsWash": true,
+   "totalHours": 35.0,
+   "sessions": 18,
+   "hoursPerSession": 2.0
+  },
+  "crs-facial-training": {
+   "name": "Facial Training",
+   "group": "Skin",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 6.0,
+   "sessions": 1,
+   "hoursPerSession": 6.0
+  },
+  "crs-microdermabrasion-and-facial-training": {
+   "name": "Microdermabrasion & Facial Training",
+   "group": "Skin",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 9.0,
+   "sessions": 2,
+   "hoursPerSession": 4.5
+  },
+  "crs-basic-body-sugaring": {
+   "name": "Basic Body Sugaring",
+   "group": "Waxing & sugaring",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 5.5,
+   "sessions": 2,
+   "hoursPerSession": 3.0
+  },
+  "crs-sugaring-brazilian-women": {
+   "name": "Sugaring Brazilian (Women)",
+   "group": "Waxing & sugaring",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 3.0,
+   "sessions": 1,
+   "hoursPerSession": 3.0
+  },
+  "crs-sugaring-brazilian-women-and-men": {
+   "name": "Sugaring Brazilian (Women & Men)",
+   "group": "Waxing & sugaring",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 4.5,
+   "sessions": 2,
+   "hoursPerSession": 2.5
+  },
+  "crs-basic-body-waxing": {
+   "name": "Basic Body Waxing",
+   "group": "Waxing & sugaring",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 5.5,
+   "sessions": 2,
+   "hoursPerSession": 3.0
+  },
+  "crs-basic-body-wax-and-brazilian": {
+   "name": "Basic Body Wax & Brazilian",
+   "group": "Waxing & sugaring",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 7.0,
+   "sessions": 2,
+   "hoursPerSession": 3.5
+  },
+  "crs-brow-mapping": {
+   "name": "Brow Mapping",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 4.5,
+   "sessions": 1,
+   "hoursPerSession": 4.5
+  },
+  "crs-eyebrow-lamination-wax-and-tint": {
+   "name": "Eyebrow Lamination, Wax & Tint",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 6.5,
+   "sessions": 2,
+   "hoursPerSession": 3.5
+  },
+  "crs-brow-lamination-and-wax": {
+   "name": "Brow Lamination & Wax",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 4.5,
+   "sessions": 1,
+   "hoursPerSession": 4.5
+  },
+  "crs-brow-tint-and-wax": {
+   "name": "Brow Tint & Wax",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 4.5,
+   "sessions": 1,
+   "hoursPerSession": 4.5
+  },
+  "crs-microblading": {
+   "name": "Microblading",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 17.5,
+   "sessions": 4,
+   "hoursPerSession": 4.5
+  },
+  "crs-master-brow": {
+   "name": "Master Brow",
+   "group": "Brows",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 22.5,
+   "sessions": 6,
+   "hoursPerSession": 4.0
+  },
+  "crs-spray-tan": {
+   "name": "Spray Tan",
+   "group": "Spray tan",
+   "station": "Spray Tan",
+   "needsWash": false,
+   "totalHours": 9.0,
+   "sessions": 2,
+   "hoursPerSession": 4.5
+  },
+  "crs-relaxation-massage": {
+   "name": "Relaxation Massage",
+   "group": "Massage",
+   "station": "Treatment Bed",
+   "needsWash": false,
+   "totalHours": 9.0,
+   "sessions": 2,
+   "hoursPerSession": 4.5
+  },
+  "crs-threading": {
+   "name": "Threading",
+   "group": "Threading",
+   "station": "Hair Styling",
+   "needsWash": false,
+   "totalHours": 5.5,
+   "sessions": 2,
+   "hoursPerSession": 3.0
+  },
+  "crs-basic-nail-training": {
+   "name": "Basic Nail Training",
+   "group": "Nails",
+   "station": "Nail Care",
+   "needsWash": false,
+   "totalHours": 8.0,
+   "sessions": 2,
+   "hoursPerSession": 4.0
+  },
+  "crs-master-acrylic-nail-technician-tips-and-shaping": {
+   "name": "Master Acrylic Nail Technician, Tips & Shaping",
+   "group": "Nails",
+   "station": "Nail Care",
+   "needsWash": false,
+   "totalHours": 16.0,
+   "sessions": 3,
+   "hoursPerSession": 5.5
+  },
+  "crs-master-gel-and-gel-x-technician-tips-and-shaping": {
+   "name": "Master Gel & Gel X Technician, Tips & Shaping",
+   "group": "Nails",
+   "station": "Nail Care",
+   "needsWash": false,
+   "totalHours": 16.0,
+   "sessions": 3,
+   "hoursPerSession": 5.5
+  },
+  "crs-grand-master-nail-technician-acrylic-gel-tips": {
+   "name": "Grand Master Nail Technician (Acrylic, Gel, Tips)",
+   "group": "Nails",
+   "station": "Nail Care",
+   "needsWash": false,
+   "totalHours": 24.0,
+   "sessions": 4,
+   "hoursPerSession": 6.0
+  },
+  "crs-pedicure-training-course": {
+   "name": "Pedicure Training Course",
+   "group": "Pedicure",
+   "station": "Spa/Pedicure",
+   "needsWash": false,
+   "totalHours": 5.5,
+   "sessions": 1,
+   "hoursPerSession": 5.5
+  },
+  "crs-specialty-designs-nail-technician-advanced": {
+   "name": "Specialty Designs Nail Technician (Advanced)",
+   "group": "Nails",
+   "station": "Nail Care",
+   "needsWash": false,
+   "totalHours": 3.5,
+   "sessions": 1,
+   "hoursPerSession": 3.5
+  },
+  "crs-basic-makeup-training-on-self": {
+   "name": "Basic Makeup Training (on Self)",
+   "group": "Makeup",
+   "station": "Hair Styling",
+   "needsWash": false,
+   "totalHours": 8.0,
+   "sessions": 2,
+   "hoursPerSession": 4.0
+  },
+  "crs-makeup-artist-training-on-other": {
+   "name": "Makeup Artist Training (on Other)",
+   "group": "Makeup",
+   "station": "Hair Styling",
+   "needsWash": false,
+   "totalHours": 20.0,
+   "sessions": 4,
+   "hoursPerSession": 5.0
+  },
+  "crs-teeth-whitening-training": {
+   "name": "Teeth Whitening Training",
+   "group": "Teeth whitening",
+   "station": "Spa/Pedicure",
+   "needsWash": false,
+   "totalHours": 5.0,
+   "sessions": 2,
+   "hoursPerSession": 2.5
+  },
+  "crs-business-development": {
+   "name": "Business Development",
+   "group": "Other",
+   "station": null,
+   "needsWash": false,
+   "totalHours": 4.0,
+   "sessions": 2,
+   "hoursPerSession": 2.0
+  }
+ },
+ "instructors": {
+  "ins-kiran": {
+   "name": "Kiran",
+   "locationIds": [
+    "loc-rch"
+   ],
+   "courseIds": [
+    "crs-basic-body-wax-and-brazilian",
+    "crs-basic-body-waxing",
+    "crs-basic-makeup-training-on-self",
+    "crs-brow-lamination-and-wax",
+    "crs-brow-tint-and-wax",
+    "crs-classic-and-hybrid-lash-extensions",
+    "crs-classic-and-volume-lash-extensions",
+    "crs-eyebrow-lamination-wax-and-tint",
+    "crs-grand-master-lash-artist-classic-volume-lift-and-tint",
+    "crs-hybrid-and-volume-lash-extensions",
+    "crs-lash-lift-and-tint",
+    "crs-makeup-artist-training-on-other",
+    "crs-microblading",
+    "crs-threading",
+    "crs-business-development",
+    "crs-brow-mapping",
+    "crs-master-brow",
+    "crs-microdermabrasion-and-facial-training"
+   ],
+   "calendar": null,
+   "hours": null
+  },
+  "ins-maria": {
+   "name": "Maria",
+   "locationIds": [
+    "loc-stc"
+   ],
+   "courseIds": [
+    "crs-basic-body-wax-and-brazilian",
+    "crs-basic-body-waxing",
+    "crs-basic-makeup-training-on-self",
+    "crs-facial-training",
+    "crs-makeup-artist-training-on-other",
+    "crs-microdermabrasion-and-facial-training",
+    "crs-business-development",
+    "crs-teeth-whitening-training",
+    "crs-spray-tan"
+   ],
+   "calendar": null,
+   "hours": null
+  },
+  "ins-tavia": {
+   "name": "Tavia",
+   "locationIds": [
+    "loc-stc"
+   ],
+   "courseIds": [
+    "crs-basic-body-wax-and-brazilian",
+    "crs-basic-body-waxing",
+    "crs-basic-makeup-training-on-self",
+    "crs-basic-nail-training",
+    "crs-brow-lamination-and-wax",
+    "crs-brow-mapping",
+    "crs-brow-tint-and-wax",
+    "crs-eyebrow-lamination-wax-and-tint",
+    "crs-grand-master-nail-technician-acrylic-gel-tips",
+    "crs-makeup-artist-training-on-other",
+    "crs-master-acrylic-nail-technician-tips-and-shaping",
+    "crs-master-brow",
+    "crs-master-gel-and-gel-x-technician-tips-and-shaping",
+    "crs-pedicure-training-course",
+    "crs-specialty-designs-nail-technician-advanced",
+    "crs-teeth-whitening-training",
+    "crs-threading",
+    "crs-business-development"
+   ],
+   "calendar": null,
+   "hours": null
+  },
+  "ins-krystal": {
+   "name": "Krystal",
+   "locationIds": [
+    "loc-stc",
+    "loc-rch",
+    "loc-kw"
+   ],
+   "courseIds": [
+    "crs-spray-tan"
+   ],
+   "calendar": null,
+   "hours": null
+  },
+  "id7fmpjmsqlw1pt": {
+   "name": "Kalleigh",
+   "locationIds": [
+    "loc-stc",
+    "loc-rch",
+    "loc-nf"
+   ],
+   "courseIds": [
+    "crs-brow-lamination-and-wax",
+    "crs-brow-tint-and-wax",
+    "crs-classic-and-hybrid-lash-extensions",
+    "crs-classic-master-hair-extensions",
+    "crs-eyebrow-lamination-wax-and-tint",
+    "crs-fusion-hair-extensions",
+    "crs-lash-lift-and-tint",
+    "crs-micro-bead-weave-hair-extensions",
+    "crs-micro-link-micro-loop-and-nano-ring-hair-extensions",
+    "crs-microblading",
+    "crs-tape-in-hair-extensions",
+    "crs-brow-mapping",
+    "crs-classic-and-volume-lash-extensions",
+    "crs-master-brow",
+    "crs-business-development"
+   ],
+   "calendar": null,
+   "hours": null
+  },
+  "hremlsgmsqluuqq": {
+   "name": "Tanisha",
+   "locationIds": [
+    "loc-nf"
+   ],
+   "courseIds": [
+    "crs-basic-nail-training",
+    "crs-master-gel-and-gel-x-technician-tips-and-shaping",
+    "crs-grand-master-nail-technician-acrylic-gel-tips",
+    "crs-classic-and-volume-lash-extensions",
+    "crs-classic-and-hybrid-lash-extensions"
+   ],
+   "calendar": null,
+   "hours": null
+  }
+ },
+ "unmapped": [
+  "loc-nf"
+ ]
+}

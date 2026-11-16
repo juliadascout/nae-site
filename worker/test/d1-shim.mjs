@@ -17,6 +17,16 @@ export function makeDb(schemaSql) {
       };
       return api;
     },
+    /* D1's batch: every statement in one transaction, all or nothing. */
+    async batch(stmts) {
+      db.exec('BEGIN');
+      try {
+        const out = [];
+        for (const st of stmts) out.push(await st.run());
+        db.exec('COMMIT');
+        return out;
+      } catch (e) { db.exec('ROLLBACK'); throw e; }
+    },
   };
 }
 
