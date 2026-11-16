@@ -323,7 +323,7 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 # ---------------------------------------------------------------- shell
 # Pages with nothing on them for a search engine: kept out of the index and
 # out of the sitemap.
-NOINDEX = {"/account/"}
+NOINDEX = {"/account/", "/account/test-purchase/"}
 
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
        ("Our team","/our-team/"),("Contact","/contact/")]
@@ -1281,9 +1281,12 @@ def page_contact():
 # The Lily Mather Scholarship (11 Nov 2026). The application goes to the
 # Worker (worker/scholarship.js): kept with NAE's records, every administrator
 # emailed, a receipt to the applicant, and - if they choose a password - an
-# account made in the same step. The wording of the questions is the final
-# copy agreed with the scholarship's sponsor; it is not to be reworded here.
-# No photograph of Lily and no memorial wording, at the family's request.
+# account made in the same step. The wording on this page - the paragraph
+# about Lily, who can apply, and the questions - is the final copy agreed
+# with the scholarship's sponsor ('Final Copy Lily Scholarship', 11 Nov 2026);
+# it is not to be reworded here. Kalleigh asked for the paragraph about Lily
+# and the details to be on the page (email, 14 Nov 2026). No photograph of
+# Lily, at the family's request: the pink lily is the picture the family sent.
 SCHOLARSHIP_QS = [
   ("q1", "1. Tell us about yourself and your beauty career dream.", True,
    "What draws you to beauty? What would you like to learn or achieve? You may share a new idea, an existing business or a fresh start you hope to make."),
@@ -1313,13 +1316,36 @@ def page_scholarship():
           <textarea id="sch-{qid}"{" required" if req else ""} maxlength="4000" rows="5"></textarea></label>'''
         for qid, label, req, hint in SCHOLARSHIP_QS)
     return ("/scholarship/", f"The Lily Mather Scholarship | {SITE['short']}",
-      "Apply for the Lily Mather Scholarship: $5,000 toward beauty training with NAE. Applications close November 30, 2026.",
+      "The Lily Mather Scholarship, in loving memory of Lily: $5,000 toward beauty training with NAE. Apply by November 30, 2026.",
       f"""<div class="wrap pad"><div class="sch">
       <div class="card sch-intro">
         <p class="eyebrow">Scholarship</p>
         <h1 style="margin-bottom:.6rem">The Lily Mather Scholarship</h1>
-        <p class="lede">$5,000 toward beauty training with the National Association of Estheticians.</p>
-        <dl class="specs q"><div><dt>Award</dt><dd>$5,000 toward NAE courses</dd></div>
+        <p class="lede">$5,000 toward beauty training</p>
+        <div class="sch-lily">
+          <img src="/media/scholarship/pink-lily.jpg" alt="A bright pink lily in bloom" width="859" height="681" loading="lazy" decoding="async">
+          <div>
+            <h2 class="sch-h" style="border:0;padding:0;margin:0 0 .5rem">In loving memory of Lily</h2>
+            <p>Lily Helen Mather passed away on September 23, 2026, at the age of 16. A much-loved daughter, sister and
+              granddaughter, she is remembered with love by her family and those who knew her. She was fiercely intelligent
+              with a warmth, compassion and strength that made people gravitate toward her.</p>
+            <p>Lily loved bright pink flowers and everything beauty. Lily was a certified nail technician and loved nail art,
+              specializing in portraits. Her creativity and art were showcased in her nails, make up artistry and paintings.
+              She loved brows, lashes and making all who surrounded her feel beautiful. This scholarship is meant to pass on
+              her love of the beauty industry and making every person she encountered feel empowered.</p>
+          </div>
+        </div>
+        <h2 class="sch-h">A new opportunity in her honour</h2>
+        <p>Created in Lily's memory, this scholarship offers $5,000 toward beauty training through the National Association
+          of Estheticians. Its purpose is to help another girl or woman develop skills, build confidence and take a meaningful
+          step toward the future she hopes for.</p>
+        <h2 class="sch-h">Who can apply?</h2>
+        <p>Girls and women of any age, race and location are welcome to apply. You may be employed or unemployed, live with
+          family or independently, and have children or no children. Whether you are exploring a new career or developing an
+          existing beauty business, we would love to hear your goals.</p>
+        <p>Applying is simple: tell us about yourself, your beauty career goals and how you would use the scholarship. Answer
+          in your own words. Share only the personal details you feel comfortable sharing.</p>
+        <dl class="specs q" style="margin-top:1rem"><div><dt>Award</dt><dd>$5,000 toward NAE courses</dd></div>
           <div><dt>Apply by</dt><dd>November 30, 2026</dd></div>
           <div class="sch-wide"><dt>How to apply</dt><dd>Please fill out the application below by November 30</dd></div></dl>
         <p class="fine" style="margin-top:.8rem">It takes about 15 minutes. Your answers are saved on this device as you type,
@@ -1387,6 +1413,51 @@ def page_scholarship():
       </div>
       </div></div>
       <script src="/scholarship.js" defer></script>""")
+
+# ---------------------------------------------------------------- staff: test purchase
+# Everything after a payment, without Stripe (worker/simulate.js): for staff to
+# see what a student sees. Administrators only (the Worker checks); not linked
+# from anywhere, and kept out of search.
+def page_test_purchase():
+    fld = _fld
+    courses = "".join(f'<option value="{E(c["id"])}">{E(c["name"])} ({money(c["price"])})</option>'
+                      for c in sorted(COURSES, key=lambda c: c["name"].lower()) if sellable_online(c))
+    studios = "".join(f'<option value="{E(l["id"])}">{E(l["name"])}</option>' for l in OPEN)
+    return ("/account/test-purchase/", f"Test purchase (staff) | {SITE['short']}",
+      "Staff tool: see what a student sees after paying, without a payment.",
+      f"""<div class="wrap pad"><div class="sch"><div class="card" id="tp">
+      <p class="eyebrow">Staff only</p><h1 style="margin-bottom:.6rem">Test purchase</h1>
+      <p>Runs everything that happens after a student pays, without Stripe: the enrolment, the student's confirmation
+        email, the course in their account, the administrators' alert and the lead. Every email says
+        <strong>[Test]</strong> and no money moves. Live checkout is not touched.</p>
+      <p class="fine">You must be signed in on this site with an administrator account.</p>
+      <p class="co-msg" data-msg hidden></p>
+      <form data-form="tp" novalidate>
+        <div class="sch-2">
+          {fld("Student email", "tp-email", "email", "off", ' required value="jules@juleshq.ca"')}
+          {fld("Student name", "tp-name", "text", "off", ' value="Jules TEST" maxlength="120"')}
+          <label class="fld"><span>Course</span><select id="tp-course" required><option value="">Choose a course</option>{courses}</select></label>
+          <label class="fld"><span>Studio</span><select id="tp-studio"><option value="">Not chosen</option>{studios}</select></label>
+        </div>
+        <label class="agree"><input type="checkbox" id="tp-kit"><span>With the kit (if the course has one)</span></label>
+        <button class="btn btn-p" type="submit">Make a test purchase</button>
+      </form>
+      <div data-done hidden>
+        <h2 class="sch-h">What to look at</h2>
+        <ol>
+          <li><a data-landing href="#">The page the student lands on after paying</a></li>
+          <li>The student's inbox: the confirmation email (subject starts with [Test])</li>
+          <li>Sign out, then sign in as the student on <a href="/account/">Account</a>: the course is under My courses
+            (the student's email address has to be confirmed first)</li>
+          <li>Your inbox and Kalleigh's: the New enrolment alert</li>
+          <li>The apps: Leads, where the student shows as enrolled</li>
+        </ol>
+      </div>
+      <hr class="r">
+      <p class="fine" style="margin:0 0 .6rem">When you are done, remove every test purchase (the leads stay; mark them lost on the Leads board if you like).</p>
+      <button class="btn" type="button" data-clear>Remove all test purchases</button>
+      </div></div></div>
+      <script src="/test-purchase.js" defer></script>""")
 
 # ---------------------------------------------------------------- team
 # No names and no photographs until each person signs off on their own name,
@@ -1898,7 +1969,7 @@ def write_checkout_prices():
 
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
-         page_account(), page_scholarship()]
+         page_account(), page_scholarship(), page_test_purchase()]
 PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]

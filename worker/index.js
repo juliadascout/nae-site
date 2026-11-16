@@ -3,6 +3,7 @@ import { ACCOUNT_PATHS, toAccounts } from "./accounts.js";
 import { myCourses } from "./mycourses.js";
 import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
 import { SCHOLARSHIP_PATH, handleScholarship } from "./scholarship.js";
+import { SIMULATE_PATH, handleTestPurchase, isSimulated, simulatedStatus } from "./simulate.js";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 
 /* The site is static. This Worker serves it, and adds the endpoints a
@@ -155,12 +156,22 @@ export default {
       }
       if (path === "/api/checkout/session" && request.method === "GET") {
         try {
-          const r = await sessionStatus(env, url.searchParams.get("id") || "");
+          const id = url.searchParams.get("id") || "";
+          /* A staff test purchase never went near Stripe (simulate.js). */
+          const r = isSimulated(id) ? await simulatedStatus(env, id) : await sessionStatus(env, id);
           if (r.error) return fail(r.status, r.error);
           const { status, ...body } = r;
           return json(body);
         } catch (e) {
           return fail(502, "Could not check the payment", e.message);
+        }
+      }
+      /* Staff only: everything after a payment, without Stripe (simulate.js). */
+      if (path === SIMULATE_PATH && request.method === "POST") {
+        try {
+          return await handleTestPurchase(request, env, ctx, { catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)` });
+        } catch (e) {
+          return fail(500, "The test purchase did not go through", e.message);
         }
       }
       /* Stripe's signed notice that a session is paid, a debit cleared or

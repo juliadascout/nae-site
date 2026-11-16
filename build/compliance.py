@@ -52,11 +52,23 @@ REVIEW = {
   'unestablished entity': r'\b(nv\s*beauty\w*|nvbeautyboutique|beauty\s*bar\s*one|europa\s+beauty\w*)\b',
 }
 
+# Exact sentences that trip a rule but are not what the rule is about. Each one
+# is a fact about a person, in wording somebody with the authority approved, and
+# says nothing about NAE. Only the whole sentence passes: the same word anywhere
+# else is still caught.
+ALLOW = [
+  # The scholarship's sponsor wrote it about Lily ('Final Copy Lily Scholarship',
+  # 11 Nov 2026); Kalleigh asked for the paragraph on the page (14 Nov 2026).
+  "Lily was a certified nail technician",
+]
+
 def check(text, strict=False, path=""):
     # Stripping a tag leaves a space behind, so "the <strong>best</strong>"
     # became "the  best" and slipped past every multi-word rule below. Collapse
     # runs of whitespace first: inline markup must not be a way through the gate.
     plain = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text)))
+    for ok in ALLOW:
+        plain = plain.replace(ok, " ")
     # Words a reader sees that are not body text: the page's address, image alt
     # text, and the description and share titles - which live inside <meta> tags,
     # so stripping tags above threw them away unread. The search-result snippet
