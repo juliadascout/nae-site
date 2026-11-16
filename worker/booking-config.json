@@ -677,6 +677,11 @@
    "hours": null
   }
  },
+ "locationNames": {
+  "loc-stc": "St. Catharines",
+  "loc-nf": "Niagara Falls",
+  "loc-rch": "Richmond Hill"
+ },
  "unmapped": [
   "loc-nf"
  ]

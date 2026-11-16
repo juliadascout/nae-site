@@ -15,6 +15,7 @@ const config = {
     'Main Room': { stations: [st('H1', 'Hair Styling'), st('N1', 'Nail Care')] },
     'Treatment Room': { stations: [st('B1', 'Treatment Bed'), st('B2', 'Treatment Bed')] } } } },
   unmapped: ['loc-nf'],
+  locationNames: { 'loc-a': 'Alpha', 'loc-nf': 'Niagara Falls' },
   courses: {
     lash: { name: 'Lash', station: 'Treatment Bed', sessions: 2, hoursPerSession: 3 },
     nails: { name: 'Nails', station: 'Nail Care', sessions: 1, hoursPerSession: 4 },
@@ -60,6 +61,7 @@ await enrol('sam@example.ca', 'lash');
 r = await call('options?course=lash');
 check('enrolled: the plan and the studios', r.status === 200 && r.j.course.sessions === 2 && r.j.studios.some((s) => s.id === 'loc-a' && s.bookable)
   && r.j.studios.some((s) => s.id === 'loc-nf' && !s.bookable), JSON.stringify(r.j));
+check('studios carry the short names students know', r.j.studios.map((s) => s.name).join() === 'Alpha,Niagara Falls');
 
 r = await call(`slots?course=lash&studio=loc-a&from=${D1}&days=1`);
 check('slots come from the engine, with the instructor by name', r.status === 200 && r.j.slots[0]?.start === `${D1}T09:00` && r.j.slots[0]?.instructor === 'Ann', JSON.stringify(r.j).slice(0, 200));
@@ -105,7 +107,7 @@ r = await call('mine');
 check('the student sees their request', r.j.bookings.length === 1 && r.j.bookings[0].status === 'requested' && r.j.bookings[0].course === 'Nails');
 user = { email: 'sam@example.ca', name: 'Sam', emailVerified: true };
 r = await call('mine');
-check('...and Sam sees both sessions, in order', r.j.bookings.length === 2 && r.j.bookings[0].start === `${D1}T09:00` && r.j.bookings[1].studio === 'Studio A');
+check('...and Sam sees both sessions, in order', r.j.bookings.length === 2 && r.j.bookings[0].start === `${D1}T09:00` && r.j.bookings[1].studio === 'Alpha');
 
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
