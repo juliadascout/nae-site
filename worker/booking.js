@@ -135,7 +135,7 @@ export async function handleBooking(request, env, url, config) {
     ).bind(email).all();
     return json({ bookings: (results || []).map((b) => ({
       ...b, course: (config.courses[b.course_id] || {}).name || b.course_id,
-      studio: ((config.studios || {})[b.location_id] || {}).name || b.location_id,
+      studio: (config.locationNames || {})[b.location_id] || ((config.studios || {})[b.location_id] || {}).name || b.location_id,
       wishes: b.wishes ? JSON.parse(b.wishes) : null,
     })) });
   }
@@ -155,8 +155,9 @@ export async function handleBooking(request, env, url, config) {
   ).bind(email, courseId).first();
 
   if (path === "options" && request.method === "GET") {
-    const studios = Object.entries(config.studios || {}).map(([id, s]) => ({ id, name: s.name, bookable: true }));
-    for (const id of config.unmapped || []) studios.push({ id, name: id, bookable: false });
+    const names = config.locationNames || {};
+    const studios = Object.entries(config.studios || {}).map(([id, s]) => ({ id, name: names[id] || s.name, bookable: true }));
+    for (const id of config.unmapped || []) studios.push({ id, name: names[id] || id, bookable: false });
     return json({
       course: { id: courseId, name: course.name, sessions: course.sessions, hoursPerSession: course.hoursPerSession },
       studios, alreadyBooked: already?.n || 0,

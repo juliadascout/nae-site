@@ -743,3 +743,15 @@ h1,h2{text-wrap:balance}
 .sch-lily img{width:100%;height:auto;border-radius:12px;object-fit:cover;aspect-ratio:859/681}
 .sch-lily p{margin:0 0 .8rem}
 @media (min-width:720px){.sch-lily{grid-template-columns:240px 1fr}}
+/* ---- booking sessions (/account/book/) ---- */
+#book .co-msg{margin:0 0 .9rem}
+#book .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#book .co-msg[hidden],#book [hidden]{display:none}
+.bk-nav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:.4rem 0 .6rem}
+.bk-days{display:grid;gap:.9rem;margin:.6rem 0 1rem}
+.bk-day h3{font-size:.95rem;margin:0 0 .35rem}
+.bk-times{display:flex;flex-wrap:wrap;gap:.4rem}
+.bk-time{border:1px solid var(--line,#eadfe7);background:var(--card,#fff);border-radius:999px;padding:.4rem .75rem;font:500 .88rem var(--body);cursor:pointer}
+.bk-time[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:#fff}
+.bk-time small{opacity:.75;margin-left:.3rem}
+.dash-book{margin-left:auto;white-space:nowrap}

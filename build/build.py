@@ -323,7 +323,7 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 # ---------------------------------------------------------------- shell
 # Pages with nothing on them for a search engine: kept out of the index and
 # out of the sitemap.
-NOINDEX = {"/account/", "/account/test-purchase/"}
+NOINDEX = {"/account/", "/account/test-purchase/", "/account/book/"}
 
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
        ("Our team","/our-team/"),("Contact","/contact/"),("Scholarship", "/scholarship/"),]
@@ -1459,6 +1459,41 @@ def page_test_purchase():
       </div></div></div>
       <script src="/test-purchase.js" defer></script>""")
 
+# ---------------------------------------------------------------- booking (students)
+# Booking the sessions of a course the student has paid for (worker/booking.js,
+# worker/booking-engine.js). Reached from My courses; kept out of search.
+def page_book():
+    return ("/account/book/", f"Book your sessions | {SITE['short']}",
+      "Choose the dates and times for your course sessions.",
+      f"""<div class="wrap pad"><div class="sch"><div class="card" id="book">
+      <p class="eyebrow">Your course</p><h1 style="margin-bottom:.4rem" data-title>Book your sessions</h1>
+      <p class="lede" data-plan></p>
+      <p class="co-msg" data-msg hidden></p>
+      <div data-mine hidden><h2 class="sch-h">Your sessions</h2><ul class="dash-list" data-mine-list></ul>
+        <p class="fine">Need to change a session? Call {E(SITE['phone'])} or email {E(SITE['email'])}.</p></div>
+      <div data-pick hidden>
+        <label class="fld"><span>Studio</span><select id="bk-studio"></select></label>
+        <div class="bk-nav"><button class="btn" type="button" data-prev>&larr; Earlier</button>
+          <strong data-range></strong><button class="btn" type="button" data-next>Later &rarr;</button></div>
+        <p class="fine" data-count></p>
+        <div class="bk-days" data-days></div>
+        <p class="fine" data-none hidden>No open times in these two weeks. Try later dates, or ask for a time below.</p>
+        <button class="btn btn-p sch-go" type="button" data-confirm disabled>Book these sessions</button>
+        <h2 class="sch-h">Can't find a time that works?</h2>
+        <p class="fine" style="margin:0 0 .6rem">Tell us when you'd like to come. We will check with the instructors and get back to you by email.</p>
+        <form data-form="request" novalidate>
+          <div class="sch-2">
+            <label class="fld"><span>Date</span><input type="date" data-wd></label><label class="fld"><span>Start time</span><input type="time" data-wt step="1800"></label>
+            <label class="fld"><span>Another date (optional)</span><input type="date" data-wd></label><label class="fld"><span>Start time</span><input type="time" data-wt step="1800"></label>
+          </div>
+          <label class="fld"><span>Anything we should know? (optional)</span><textarea id="bk-note" maxlength="1000" rows="3"></textarea></label>
+          <button class="btn" type="submit">Request these times</button>
+        </form>
+      </div>
+      <p data-out hidden><a class="btn btn-p" href="/account/">Sign in</a></p>
+      </div></div></div>
+      <script src="/book.js" defer></script>""")
+
 # ---------------------------------------------------------------- team
 # No names and no photographs until each person signs off on their own name,
 # portrait and biography (content/media.json "team"). Silhouettes below are
@@ -1984,7 +2019,7 @@ def write_booking_config():
 
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
-         page_account(), page_scholarship(), page_test_purchase()]
+         page_account(), page_scholarship(), page_test_purchase(), page_book()]
 PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]

@@ -254,6 +254,10 @@
           what.appendChild(el("span", null, bits.join(" · ")));
           li.appendChild(what);
           li.appendChild(el("span", { class: "dash-status" }, c.status));
+          /* Paid: the student books their sessions (/account/book/, worker/booking.js). */
+          if (c.courseId && /paid|enrolled|confirmed/i.test(c.status || "")) {
+            li.appendChild(el("a", { class: "btn btn-p dash-book", href: BASE + "/account/book/?course=" + encodeURIComponent(c.courseId) }, "Book your sessions"));
+          }
           list.appendChild(li);
         });
         $("[data-courses-empty]").hidden = cs.length > 0 || !!r.body.confirmEmail;
