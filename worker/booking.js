@@ -111,10 +111,32 @@ async function liveBookings(db) {
 
 /* Instructors' weekly teaching hours, from the config (the setup sheet).
    Their calendars' busy times join this once Google Calendar is connected. */
+const studioName = (config, id) => (config.locationNames || {})[id] || ((config.studios || {})[id] || {}).name || "";
+
 const hoursOf = (config) => Object.fromEntries(Object.entries(config.instructors || {})
   .filter(([, i]) => Array.isArray(i.hours) && i.hours.length).map(([id, i]) => [id, i.hours]));
 
-export async function handleBooking(request, env, url, config) {
+/* The student's confirmation and every administrator's alert, sent by the
+   apps (nae-inc worker/notify.js, Notify.booking). What is stored is the
+   record; an email that does not go never undoes a booking. */
+async function tell(env, opts, details) {
+  const send = (async () => {
+    if (!env.NOTIFY || typeof env.NOTIFY.booking !== "function") {
+      console.error(`booking ${details.kind}, but nobody was emailed: no NOTIFY.booking`);
+      return;
+    }
+    try {
+      const r = await env.NOTIFY.booking(details);
+      if (!r || !r.admins) console.error(`booking ${details.kind}, but no administrator was emailed:`, JSON.stringify(r));
+    } catch (e) {
+      console.error(`booking ${details.kind}, but nobody was emailed:`, e.message);
+    }
+  })();
+  if (opts.ctx && typeof opts.ctx.waitUntil === "function") opts.ctx.waitUntil(send);
+  else await send;
+}
+
+export async function handleBooking(request, env, url, config, opts = {}) {
   const db = env.ENROLMENTS;
   if (!db) return fail(503, "Booking is not available just now");
   if (!config || !config.courses) return fail(503, "Booking is not set up yet");
@@ -203,8 +225,11 @@ export async function handleBooking(request, env, url, config) {
          session_no, student_email, student_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'booked')`,
     ).bind(crypto.randomUUID(), at, planId, courseId, studio, r.room, r.instructorId, r.start, r.end, r.n,
            email, who.user.name || null)));
-    return json({ ok: true, planId, sessions: rows.map((r) => ({ start: r.start, end: r.end, room: r.room,
-      instructor: ((config.instructors || {})[r.instructorId] || {}).name || "" })) });
+    const sessions = rows.map((r) => ({ start: r.start, end: r.end, room: r.room,
+      instructor: ((config.instructors || {})[r.instructorId] || {}).name || "" }));
+    await tell(env, opts, { kind: "booked", name: who.user.name || "", email, course: course.name, studio: studioName(config, studio),
+      sessions, sentAt: at, site: (opts.catalogue && opts.catalogue.site) || "", seller: (opts.catalogue && opts.catalogue.seller) || null });
+    return json({ ok: true, planId, sessions });
   }
 
   if (path === "request" && request.method === "POST") {
@@ -216,11 +241,14 @@ export async function handleBooking(request, env, url, config) {
     if (wishes.some((w) => toMin(`${w.date}T${w.time}`) < toMin(now))) return fail(400, "Those dates have to be in the future.");
     const note = typeof body.note === "string" ? body.note.replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").trim().slice(0, 1000) : "";
     const id = crypto.randomUUID();
+    const at = new Date().toISOString();
     await db.prepare(
       `INSERT INTO class_bookings (id, created_at, plan_id, course_id, location_id, student_email, student_name,
          status, wishes, note) VALUES (?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?)`,
-    ).bind(id, new Date().toISOString(), id, courseId, studio || "any", email, who.user.name || null,
+    ).bind(id, at, id, courseId, studio || "any", email, who.user.name || null,
            JSON.stringify(wishes), note || null).run();
+    await tell(env, opts, { kind: "requested", name: who.user.name || "", email, course: course.name, studio: studioName(config, studio),
+      wishes, note, sentAt: at, site: (opts.catalogue && opts.catalogue.site) || "", seller: (opts.catalogue && opts.catalogue.seller) || null });
     return json({ ok: true, requestId: id });
   }
 

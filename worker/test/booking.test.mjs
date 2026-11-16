@@ -27,7 +27,9 @@ const config = {
 };
 
 let user = null;
+const told = [];
 const env = {
+  NOTIFY: { async booking(d) { told.push(d); return { admins: 2, student: 'sent' }; } },
   ENROLMENTS: makeDb(SCHEMA),
   ACCOUNTS: { async fetch() { return user ? new Response(JSON.stringify({ user }), { status: 200 }) : new Response('{}', { status: 401 }); } },
 };
@@ -37,7 +39,7 @@ const enrol = (email, course) => env.ENROLMENTS.prepare(`INSERT INTO enrolments 
 const call = async (path, { method = 'GET', body } = {}) => {
   const url = new URL('https://beautycourse.ca/api/booking/' + path);
   const res = await handleBooking(new Request(url, { method, headers: { 'content-type': 'application/json', cookie: 's=1' },
-    body: body ? JSON.stringify(body) : undefined }), env, url, config);
+    body: body ? JSON.stringify(body) : undefined }), env, url, config, { catalogue: { site: 'https://beautycourse.ca', seller: { address: '1 Test St' } } });
   return { status: res.status, j: await res.json() };
 };
 
@@ -73,6 +75,9 @@ check('a good plan is booked, both sessions', r.status === 200 && r.j.sessions.l
 const rows = (await env.ENROLMENTS.prepare("SELECT * FROM class_bookings ORDER BY starts_at").all()).results;
 check('...stored once each, one plan, numbered, with the instructor', rows.length === 2 && rows[0].plan_id === rows[1].plan_id
   && rows[0].session_no === 1 && rows[1].session_no === 2 && rows[0].instructor_id === 'ann' && rows[0].student_email === 'sam@example.ca');
+check('...and the student and admins are told, with the sessions, studio and address',
+  told.length === 1 && told[0].kind === 'booked' && told[0].email === 'sam@example.ca' && told[0].course === 'Lash'
+  && told[0].studio === 'Alpha' && told[0].sessions.length === 2 && told[0].sessions[0].instructor === 'Ann' && told[0].seller.address === '1 Test St', JSON.stringify(told[0]));
 r = await call('book', { method: 'POST', body: { course: 'lash', studio: 'loc-a', starts: [`${D1}T09:00`, `${D2}T13:00`] } });
 check('the same course cannot be booked twice', r.status === 409);
 
@@ -95,14 +100,16 @@ r = await call(`slots?course=nails&studio=loc-a&from=${D2}&days=1`);
 check('nails are not offered while hair has the Main Room on day 2', !r.j.slots.some((s) => s.start < `${D2}T13:15`), r.j.slots.map((s) => s.start).join());
 r = await call('book', { method: 'POST', body: { course: 'nails', studio: 'loc-a', starts: [`${D2}T09:00`] } });
 check('...and booking that time anyway is refused', r.status === 409 && /no longer free/.test(r.j.error));
+const toldBefore = told.length;
 
 /* A request when nothing fits. */
 r = await call('request', { method: 'POST', body: { course: 'nails', studio: 'loc-a', wishes: [{ date: D1, time: '18:00' }, { date: 'x', time: '1' }], note: 'Evenings only please' } });
 check('a request is kept, with its valid wishes and note', r.status === 200);
 const req = await env.ENROLMENTS.prepare("SELECT * FROM class_bookings WHERE status = 'requested'").first();
+check('...and the admins hear about the request, with the note', told.at(-1).kind === 'requested' && told.at(-1).wishes.length === 1 && told.at(-1).note === 'Evenings only please');
 check('...as requested, not booked', req?.student_email === 'max@example.ca' && JSON.parse(req.wishes).length === 1 && req.note === 'Evenings only please' && req.starts_at === null);
 r = await call('request', { method: 'POST', body: { course: 'nails', studio: 'loc-a', wishes: [{ date: D1, time: '18:00' }] } });
-check('...and only once per course', r.status === 409);
+check('...and only once per course', r.status === 409 && told.length === toldBefore + 1);
 r = await call('mine');
 check('the student sees their request', r.j.bookings.length === 1 && r.j.bookings[0].status === 'requested' && r.j.bookings[0].course === 'Nails');
 user = { email: 'sam@example.ca', name: 'Sam', emailVerified: true };

@@ -171,7 +171,7 @@ export default {
       /* Booking course sessions, for students who have paid (booking.js). */
       if (path.startsWith(BOOKING_PREFIX)) {
         try {
-          return await handleBooking(request, env, new URL(base ? url.origin + path + url.search : url), bookingConfig);
+          return await handleBooking(request, env, new URL(base ? url.origin + path + url.search : url), bookingConfig, { ctx, catalogue: prices });
         } catch (e) {
           return fail(500, "Booking did not go through", e.message);
         }
