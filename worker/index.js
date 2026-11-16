@@ -4,6 +4,8 @@ import { myCourses } from "./mycourses.js";
 import { ENQUIRY_PATH, handleEnquiry } from "./enquiries.js";
 import { SCHOLARSHIP_PATH, handleScholarship } from "./scholarship.js";
 import { SIMULATE_PATH, handleTestPurchase, isSimulated, simulatedStatus } from "./simulate.js";
+import { BOOKING_PREFIX, handleBooking } from "./booking.js";
+import bookingConfig from "./booking-config.json";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 
 /* The site is static. This Worker serves it, and adds the endpoints a
@@ -164,6 +166,14 @@ export default {
           return json(body);
         } catch (e) {
           return fail(502, "Could not check the payment", e.message);
+        }
+      }
+      /* Booking course sessions, for students who have paid (booking.js). */
+      if (path.startsWith(BOOKING_PREFIX)) {
+        try {
+          return await handleBooking(request, env, new URL(base ? url.origin + path + url.search : url), bookingConfig);
+        } catch (e) {
+          return fail(500, "Booking did not go through", e.message);
         }
       }
       /* Staff only: everything after a payment, without Stripe (simulate.js). */

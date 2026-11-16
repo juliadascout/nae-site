@@ -14,7 +14,9 @@
    - An instructor is offered only when they teach that course at that studio,
      have said when they teach (their hours), and are not busy then - in
      another booking anywhere, or on their own calendar.
-   - Studio class hours, notice and how far ahead come from the config.
+   - Studio class hours, notice (24 hours: Jules, 16 Nov 2026 - busy time on
+     instructors' calendars already blocks clashes) and how far ahead come
+     from the config.
    Anything the engine cannot offer, the student can still ask for
    ("request this date/time"); a person decides those.
 
@@ -91,7 +93,7 @@ export function findSlots(input) {
   const teachers = teachersFor(config, courseId, locationId);
   const open = (config.studioHours || {})[locationId] || config.defaultHours;
   const now = toMin(input.now);
-  const earliest = now + (rules.minNoticeHours ?? 48) * 60;
+  const earliest = now + (rules.minNoticeHours ?? 24) * 60;
   const latest = Math.floor(now / DAY) * DAY + ((rules.maxDaysAhead ?? 90) + 1) * DAY;
   const first = toMin(input.from);
   const out = [];
