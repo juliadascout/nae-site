@@ -6,6 +6,7 @@ data/
 *.xlsx
 *.parquet
 *.json
+!worker/booking-config.json
 *.sqlite
 *.db
 *.pkl
