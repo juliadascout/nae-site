@@ -326,7 +326,7 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 NOINDEX = {"/account/", "/account/test-purchase/"}
 
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
-       ("Our team","/our-team/"),("Contact","/contact/"),("Scholarship", "https://beautycourse.ca/scholarship/"),]
+       ("Our team","/our-team/"),("Contact","/contact/"),("Scholarship", "/scholarship/"),]
 
 def ld(*objs):
     """Structured data, emitted in the body because a page is a 4-tuple and
