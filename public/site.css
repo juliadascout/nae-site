@@ -736,3 +736,10 @@ h1,h2{text-wrap:balance}
 #apply [aria-invalid="true"]{border-color:var(--plum)}
 .sch-intro .specs>.sch-wide{grid-column:1/-1}
 .sch-q>span{font:700 .98rem/1.4 var(--body);color:var(--ink);margin-bottom:.35rem}
+#tp .co-msg{margin:0 0 .9rem}
+#tp .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#tp .co-msg[hidden],#tp [hidden]{display:none}
+.sch-lily{display:grid;gap:1rem;margin:1rem 0 .4rem;align-items:start}
+.sch-lily img{width:100%;height:auto;border-radius:12px;object-fit:cover;aspect-ratio:859/681}
+.sch-lily p{margin:0 0 .8rem}
+@media (min-width:720px){.sch-lily{grid-template-columns:240px 1fr}}

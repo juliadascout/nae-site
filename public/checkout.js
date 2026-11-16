@@ -301,6 +301,12 @@
           var key = "nae-purchase-" + sid;
           var seen = false;
           try { seen = sessionStorage.getItem(key) === "1"; sessionStorage.setItem(key, "1"); } catch (e) { /* private mode */ }
+          if (s.simulated) {
+            /* A staff test purchase (worker/simulate.js): no money moved, and
+               nothing goes to analytics. */
+            tell("TEST PURCHASE (no money moved). A student sees: Paid" + (amt ? " — " + amt : "") + ". Your confirmation is on its way by email; if it isn't in your inbox within 10 minutes, check your junk folder. We will be in touch to book your dates.", "done");
+            return;
+          }
           if (!seen) {
             /* The conversion. transaction_id is Stripe's payment id, the same
                reference the enrolments table and the confirmation email carry. */
