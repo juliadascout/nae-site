@@ -10,10 +10,15 @@
   },
   "bookAllSessionsAtOnce": true,
   "requestFallback": true,
-  "approver": "admin"
+  "approver": "admin",
+  "closedDates": [
+   "12-25",
+   "01-01"
+  ]
  },
  "defaultHours": {
   "days": [
+   0,
    1,
    2,
    3,
@@ -171,7 +176,9 @@
       }
      ]
     }
-   }
+   },
+   "oneAtATime": true,
+   "maxStudents": 3
   }
  },
  "courses": {
