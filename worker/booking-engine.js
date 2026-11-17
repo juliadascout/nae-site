@@ -17,6 +17,11 @@
    - Studio class hours, notice (24 hours: Jules, 16 Nov 2026 - busy time on
      instructors' calendars already blocks clashes) and how far ahead come
      from the config.
+   - A studio may run one workshop at a time across all its rooms
+     (oneAtATime: St. Catharines and Niagara Falls, from Kalleigh's
+     Conflicts tab, 17 Nov 2026), and may cap the students in one workshop
+     (maxStudents: 3 at St. Catharines).
+   - Closed dates (rules.closedDates, "MM-DD" every year) offer nothing.
    Anything the engine cannot offer, the student can still ask for
    ("request this date/time"); a person decides those.
 
@@ -49,8 +54,9 @@ export function roomsFor(config, courseId, locationId) {
   const studio = (config.studios || {})[locationId];
   if (!course || !studio) return [];
   const out = [];
+  const cap = studio.maxStudents || Infinity;
   for (const [room, r] of Object.entries(studio.rooms)) {
-    const seats = course.station ? r.stations.filter((s) => s.type === course.station).length : 4;
+    const seats = Math.min(course.station ? r.stations.filter((s) => s.type === course.station).length : 4, cap);
     if (seats > 0) out.push({ room, seats });
   }
   return out;
@@ -96,22 +102,25 @@ export function findSlots(input) {
   const earliest = now + (rules.minNoticeHours ?? 24) * 60;
   const latest = Math.floor(now / DAY) * DAY + ((rules.maxDaysAhead ?? 90) + 1) * DAY;
   const first = toMin(input.from);
+  const oneAtATime = !!((config.studios || {})[locationId] || {}).oneAtATime;
+  const closed = new Set(rules.closedDates || []);
   const out = [];
   if (!rooms.length || !teachers.length || !open) return out;
 
   for (let d = 0; d < (input.days || 14); d++) {
     const day = first + d * DAY;
     if (!open.days.includes(weekday(day))) continue;
+    if (closed.has(fromMin(day).slice(5, 10))) continue;
     for (let s = day + hm(open.open); s + len <= day + hm(open.close); s += STEP) {
       const e = s + len;
       if (s < earliest || e > latest) continue;
       let pick = null;
       for (const { room, seats } of rooms) {
-        const inRoom = here.filter((b) => b.room === room
+        const inRoom = here.filter((b) => (oneAtATime || b.room === room)
           && overlaps(s - buffer, e + buffer, toMin(b.start), toMin(b.end)));
         if (inRoom.length) {
           /* Joinable only as the very same session of the same course. */
-          const same = inRoom.length === 1 && inRoom[0].courseId === courseId
+          const same = inRoom.length === 1 && inRoom[0].courseId === courseId && inRoom[0].room === room
             && toMin(inRoom[0].start) === s && toMin(inRoom[0].end) === e
             && (inRoom[0].students || 1) < seats;
           if (same) { pick = { room, instructorId: inRoom[0].instructorId, join: true, bookingId: inRoom[0].id }; break; }

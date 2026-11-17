@@ -89,6 +89,18 @@ check('nothing more than 90 days ahead', s.length === 0);
 check('a course with no session length offers nothing', findSlots({ ...base, courseId: 'nope' }).length === 0);
 check('a cancelled booking frees the room', !!at(findSlots({ ...base, courseId: 'nails', bookings: [{ ...hairBooked[0], status: 'cancelled' }] }), '2026-11-23T09:00'));
 
+/* --------------------------- Kalleigh's setup sheet (17 Nov 2026) */
+const one = { ...config, studios: { 'loc-a': { ...config.studios['loc-a'], oneAtATime: true, maxStudents: 1 } } };
+s = findSlots({ ...base, config: one, courseId: 'lash', bookings: hairBooked });
+check('one workshop at a time: no lashes in the Treatment Room while hair runs in the Main Room', !s.some((x) => toMin(x.start) < toMin('2026-11-23T14:15')), s.map((x) => x.start).join());
+s = findSlots({ ...base, config: one, courseId: 'hair', bookings: hairBooked });
+check('...and maxStudents caps a session (1 here): nobody joins the hair class', !at(s, '2026-11-23T09:00'));
+s = findSlots({ ...base, courseId: 'hair', bookings: hairBooked });
+check('without the cap the second hair station is still offered', at(s, '2026-11-23T09:00')?.join === true);
+const shut = { ...config, rules: { ...config.rules, closedDates: ['12-25', '01-01'] } };
+check('closed on Christmas Day', findSlots({ ...base, config: shut, courseId: 'lash', from: '2026-12-25', now: '2026-12-01T10:00' }).length === 0
+  && findSlots({ ...base, config: shut, courseId: 'lash', from: '2026-12-24', now: '2026-12-01T10:00' }).length > 0);
+
 /* -------------------------------------------------------------- the plan */
 check('a plan needs exactly the course\'s sessions', checkPlan(config, 'hair', ['2026-11-23T09:00']) === 'Choose 3 sessions');
 check('...on different days', checkPlan(config, 'nails', ['2026-11-23T09:00', '2026-11-23T13:00']) === 'Leave at least 1 day between sessions');
