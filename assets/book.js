@@ -146,6 +146,9 @@
     api("book", { course: courseId, studio: studioSel.value, starts: starts }).then(function (r) {
       if (!r.ok) { b.disabled = false; return say(r.j.error || "That did not work."); }
       pick.hidden = true;
+      /* Counted, never identified: the course and how many sessions. */
+      if (typeof window.gtag === "function") window.gtag("event", "book_sessions", { course_id: courseId, sessions: starts.length });
+      if (typeof window.naeMeta === "function") window.naeMeta("book_sessions", { course_id: courseId });
       say("Booked. Your sessions are listed below, and a confirmation is on its way to your email.", "done");
       return api("mine").then(function (m) { showMine((m.j.bookings || []).filter(function (x) { return x.course_id === courseId; })); });
     }).catch(function () { b.disabled = false; say("Could not reach the website just now."); });
