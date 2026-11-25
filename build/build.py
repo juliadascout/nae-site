@@ -52,6 +52,11 @@ GA4_ID = os.environ.get("NAE_GA4_ID", "G-T7PT7JBB74").strip()
 # do not double-count. NAE_GTM_ID overrides it; set it empty to leave GTM out.
 GTM_ID = os.environ.get("NAE_GTM_ID", "GTM-5KKRMVWX").strip()
 
+# Meta pixel (dataset from Vagisha, 24 Nov 2026). Not a secret: it is in the
+# source of every page that carries it. NAE_META_PIXEL overrides it; set it
+# empty to leave the pixel out.
+META_PIXEL_ID = os.environ.get("NAE_META_PIXEL", "467950154719847").strip()
+
 SITE = {"legal":"National Association of Estheticians Inc.","short":"NAE",
         "phone":"289-968-2028","email":"info@naeinc.ca","domain":"https://beautycourse.ca",
         # Kalleigh's Google Calendar appointment schedule (a phone call with
@@ -454,6 +459,38 @@ def gtm_tag():
             "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);"
             f"}})(window,document,'script','dataLayer','{GTM_ID}');</script>")
 
+def meta_tag():
+    """Meta's standard base code (PageView), plus window.naeMeta: the one place
+       the site's own event names become Meta's standard events. Every page
+       script that reports to Google Analytics hands the same event here.
+
+       Only what the visitor did goes to Meta - an event name, a course id, a
+       value in CAD - never a name, email, phone or anything typed: no advanced
+       matching. Staff test purchases send nothing (checkout.js, blackfriday.js).
+       No noscript image: a visitor without JavaScript is not tracked at all,
+       and the compliance gate refuses third-party images.
+
+       Emitted after the account page's link guard, so a one-time code in the
+       address is gone before the pixel can read the URL."""
+    if not META_PIXEL_ID:
+        return ""
+    return ("\n<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?"
+            "n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;"
+            "n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;"
+            "s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',"
+            "'https://connect.facebook.net/en_US/fbevents.js');"
+            f"fbq('init','{META_PIXEL_ID}');fbq('track','PageView');"
+            "window.naeMeta=function(name,p){p=p||{};if(typeof fbq!=='function')return;"
+            "var M={view_item:'ViewContent',generate_lead:'Lead',sign_up:'CompleteRegistration',"
+            "begin_checkout:'InitiateCheckout',add_payment_info:'AddPaymentInfo',purchase:'Purchase',"
+            "book_call_click:'Contact',phone_click:'Contact',email_click:'Contact',book_sessions:'Schedule'};"
+            "var ev=M[name];if(!ev)return;var d={};"
+            "var ids=(p.items||[]).map(function(i){return i&&i.item_id}).filter(Boolean);"
+            "if(ids.length){d.content_ids=ids;d.content_type='product';}"
+            "if(p.value!=null&&!isNaN(p.value)){d.value=Number(p.value);d.currency=p.currency||'CAD';}"
+            "if(p.course_id)d.content_ids=[p.course_id];"
+            "fbq('track',ev,d,p.transaction_id?{eventID:String(p.transaction_id)}:undefined);};</script>")
+
 def gtm_noscript():
     """The no-JavaScript half of the standard install, first thing in <body>."""
     if not GTM_ID:
@@ -515,7 +552,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{E(canon)}">
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
-<meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}{gtm_tag()}
+<meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}{gtm_tag()}{meta_tag()}
 </head><body>
 {gtm_noscript()}{bf_banner(path)}<header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
