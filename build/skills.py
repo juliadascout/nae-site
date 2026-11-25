@@ -351,9 +351,10 @@ ABOUT = {
         "fine facial hair. Practised on a live model with your trainer beside you.",
     # ---------------------------------------------------------------- nails
     "crs-basic-nail-training":
-        "The foundations of nail work: hygiene and tool cleaning, nail preparation, "
-        "manicures and polish. You build up preparation, shaping and finish until the "
-        "result is consistent.",
+        # Kalleigh, 14 Nov: an easier first sentence, written for Gen Z.
+        "Learn to do clean, polished nails from scratch. You cover hygiene and tool "
+        "cleaning, nail prep, manicures and polish, and practise prep, shaping and "
+        "finish until your results look the same every time.",
     "crs-master-acrylic-nail-technician-tips-and-shaping":
         "Acrylic nail enhancements: preparing the natural nail, applying tips, building and "
         "shaping acrylic, and finishing. You practise until the shape and thickness are "

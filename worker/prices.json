@@ -251,8 +251,8 @@
       "capAck": false
     },
     "crs-basic-nail-training": {
-      "slug": "basic-nail-training",
-      "name": "Basic Nail Training",
+      "slug": "basic-nail-tech-training",
+      "name": "Basic Nail Tech Training",
       "price": 700,
       "kitCost": 400,
       "hasKit": true,
