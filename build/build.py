@@ -330,8 +330,8 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 # out of the sitemap.
 NOINDEX = {"/account/", "/account/test-purchase/", "/account/book/", "/black-friday/"}
 
-NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
-       ("Our team","/our-team/"),("Contact","/contact/"),("Scholarship", "/scholarship/"),]
+NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas Served","/areas-served/"),
+       ("Our Team","/our-team/"),("Contact","/contact/"),("Scholarship", "/scholarship/"),]
 
 def ld(*objs):
     """Structured data, emitted in the body because a page is a 4-tuple and
@@ -560,7 +560,7 @@ def shell(title, desc, path, body, canonical=None):
     <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
   <nav class="nav">{nav_html}</nav>
   <a class="acct" href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a>
-  <a class="btn btn-p" href="{SITE['booking']}" rel="noopener">Book a call</a>
+  <a class="btn btn-p" href="{SITE['booking']}" rel="noopener">Book a Call</a>
   <details class="mnav"><summary aria-label="Menu"><span class="mnav-ic" aria-hidden="true"></span>Menu</summary>
     <nav class="mnav-list">{nav_html}<a href="/account/"{' aria-current="page"' if path == "/account/" else ""}>Account</a></nav></details>
 </div></header>
@@ -569,7 +569,7 @@ def shell(title, desc, path, body, canonical=None):
   <div><strong style="color:var(--ink)">{E(SITE['legal'])}</strong><br>
     <a href="tel:+1{re.sub(r'\D', '', SITE['phone'])}">{E(SITE['phone'])}</a> &nbsp;&middot;&nbsp;
     <a href="mailto:{E(SITE['email'])}">{E(SITE['email'])}</a><br>
-    <a href="{SITE['booking']}" rel="noopener">Book a call or tour</a>{legacy_line}</div>
+    <a href="{SITE['booking']}" rel="noopener">Book a Call or Tour</a>{legacy_line}</div>
   <div>{open_names}</div>
   <div>Kits are optional and priced separately.<br>Certificate of completion issued on every course.</div>
 </div></footer>{REVEAL_JS}</body></html>"""
@@ -2476,12 +2476,47 @@ CANONICAL = {"/home/": "/"}
 # NAE_STRICT=1 - set when the site republishes itself with nobody watching - a
 # page the gate refuses stops the build before public/ is touched, instead of
 # the site going out without it.
+# Title Case for the site's own headings and buttons (Kalleigh, 14 Nov:
+# "review site and capitalize where appropriate"), the way naeinc.ca writes
+# them: "Book a Call", "Our Team". Running text stays in sentence case, and the
+# journal posts carried over from WordPress keep their own headings.
+_SMALL = {"a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into", "nor", "of", "on", "or",
+          "per", "the", "to", "via", "vs", "with"}
+def _tc_word(w, first, last):
+    def part(x, edge):
+        if not x or not x[0].isalpha() or any(ch.isupper() for ch in x[1:]):
+            return x                      # numbers, entities, NAE, eGift: as written
+        if x.lower() in _SMALL and not edge:
+            return x.lower()
+        return x[0].upper() + x[1:]
+    if any(ch.isupper() for ch in w[1:]):
+        return w                          # e-Transfer, McKenzie: as written
+    bits = w.split("-")
+    return "-".join(part(b, (first and i == 0) or (last and i == len(bits) - 1) or i > 0) for i, b in enumerate(bits))
+def title_case(text):
+    words = text.split(" ")
+    idx = [i for i, w in enumerate(words) if re.search(r"[A-Za-z]", w)]
+    out = []
+    for i, w in enumerate(words):
+        # A word after a colon or dash starts a new phrase.
+        after = i > 0 and re.search(r"[:\u2014]$|&mdash;$|^-$", words[i - 1] or "")
+        out.append(_tc_word(w, bool(idx) and (i == idx[0] or after), bool(idx) and i == idx[-1]) if i in idx else w)
+    return " ".join(out)
+def _tc_text(inner):
+    # Only the text between tags; never attributes or markup.
+    return re.sub(r">([^<]+)<", lambda m: ">" + title_case(m.group(1)) + "<", ">" + inner + "<")[1:-1]
+def title_headings(body):
+    body = re.sub(r"(<(h[1-3])\b[^>]*>)(.*?)(</\2>)", lambda m: m.group(1) + _tc_text(m.group(3)) + m.group(4), body, flags=re.S)
+    return re.sub(r'(<(a|button)\b[^>]*class="btn[^"]*"[^>]*>)([^<]+)(</\2>)',
+                  lambda m: m.group(1) + title_case(m.group(3)) + m.group(4), body)
+
 STRICT = os.environ.get("NAE_STRICT") == "1"
 docs, quarantined, warned = [], [], []
 seen = set()
 for path, title, desc, body in ALL:
     if path in seen: continue
     seen.add(path)
+    if path in GENERATED: body = title_headings(body)
     doc = shell(title, desc, path, body,
                 canonical=(LEGACY + CANONICAL.get(path, path)) if path in COPIED else CANONICAL.get(path))
     blocks, warns = check(doc, strict=path in GENERATED, path=path)
