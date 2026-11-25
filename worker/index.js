@@ -7,6 +7,7 @@ import { SIMULATE_PATH, handleTestPurchase, isSimulated, simulatedStatus } from 
 import { BOOKING_PREFIX, handleBooking } from "./booking.js";
 import bookingConfig from "./booking-config.json";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
+import { BF_PATH, saleOpen } from "./blackfriday.js";
 
 /* The site is static. This Worker serves it, and adds the endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
@@ -150,7 +151,7 @@ export default {
       if (path === "/api/checkout/session" && request.method === "POST") {
         if (!checkoutReady(env)) return fail(503, "Checkout is not open yet");
         try {
-          const r = await createSession(request, env, quote, url.origin + base);
+          const r = await createSession(request, env, quote, url.origin + base, prices);
           return r.error ? fail(r.status, r.error) : json({ url: r.url });
         } catch (e) {
           return fail(502, "Could not start the payment", e.message);
@@ -179,7 +180,7 @@ export default {
       /* Staff only: everything after a payment, without Stripe (simulate.js). */
       if (path === SIMULATE_PATH && request.method === "POST") {
         try {
-          return await handleTestPurchase(request, env, ctx, { catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)` });
+          return await handleTestPurchase(request, env, ctx, { catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`, bookingConfig });
         } catch (e) {
           return fail(500, "The test purchase did not go through", e.message);
         }
@@ -192,7 +193,7 @@ export default {
            (for up to three days) rather than it being lost. */
         try {
           const r = await handleWebhook(request, env, ctx, {
-            catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`,
+            catalogue: prices, quote, taxLabel: `HST (${TAX_PERCENT}%)`, bookingConfig,
           });
           return json(r.body, r.status);
         } catch (e) {
@@ -200,6 +201,13 @@ export default {
         }
       }
       return fail(404, "No such endpoint");
+    }
+
+    /* The Black Friday page outlives the sale only as a pointer to the
+       courses: after it ends nobody lands on offers that cannot be bought.
+       (A person who paid comes back to it with ?paid=, and still sees it.) */
+    if ((path === BF_PATH || path === BF_PATH.slice(0, -1)) && !saleOpen(prices) && !url.searchParams.has("paid")) {
+      return Response.redirect(url.origin + base + "/courses/", 302);
     }
 
     return env.ASSETS.fetch(request);

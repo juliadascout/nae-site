@@ -366,5 +366,80 @@
     ]
   },
   "booking": "https://calendar.app.google/LCuCVyxqmcADXTeH6",
-  "site": "https://beautycourse.ca"
+  "site": "https://beautycourse.ca",
+  "blackFriday": {
+    "ends": "2026-12-03T05:00:00Z",
+    "offers": [
+      {
+        "id": "bf-waxing",
+        "courseId": "crs-basic-body-waxing",
+        "title": "Basic Body Waxing",
+        "date": "2026-12-07",
+        "start": "15:00",
+        "end": "19:00",
+        "price": 300,
+        "locations": [
+          "loc-rch",
+          "loc-stc"
+        ],
+        "kit": true
+      },
+      {
+        "id": "bf-sugaring",
+        "courseId": "crs-basic-body-sugaring",
+        "title": "Basic Body Sugaring",
+        "date": "2026-12-07",
+        "start": "10:00",
+        "end": "14:00",
+        "price": 350,
+        "locations": [
+          "loc-rch",
+          "loc-stc"
+        ],
+        "kit": true
+      },
+      {
+        "id": "bf-microderm",
+        "courseId": "crs-microdermabrasion-and-facial-training",
+        "title": "Microdermabrasion",
+        "date": "2026-12-11",
+        "start": "10:00",
+        "end": "14:00",
+        "price": 400,
+        "locations": [
+          "loc-rch",
+          "loc-stc"
+        ],
+        "kit": false
+      },
+      {
+        "id": "bf-threading",
+        "courseId": "crs-threading",
+        "title": "Threading",
+        "date": "2026-12-11",
+        "start": "15:00",
+        "end": "19:00",
+        "price": 250,
+        "locations": [
+          "loc-rch",
+          "loc-stc"
+        ],
+        "kit": true
+      },
+      {
+        "id": "bf-lamination",
+        "courseId": "crs-eyebrow-lamination-wax-and-tint",
+        "title": "Eyebrow Lamination, Wax & Tint",
+        "date": "2026-12-14",
+        "start": "10:00",
+        "end": "15:00",
+        "price": 300,
+        "locations": [
+          "loc-rch",
+          "loc-stc"
+        ],
+        "kit": true
+      }
+    ]
+  }
 }

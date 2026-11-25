@@ -1,5 +1,7 @@
 import { recordEnrolment, setStage, enrolmentNotice, tellEnrolment } from "./enrolments.js";
 import { noteLead } from "./leads.js";
+import { offerQuote, findOffer, whenText, BF_PATH } from "./blackfriday.js";
+import { recordWorkshop } from "./booking.js";
 
 /* Stripe Checkout: how the site takes payment (29 Oct 2026, replacing PayPal).
 
@@ -117,19 +119,23 @@ const itemsFromTag = (s) => String(s || "").split("|").filter(Boolean).map((p) =
 });
 
 /* POST /api/checkout/session { courseId, withKit, locationId, returnPath }
+   or, for a Black Friday workshop, { offer, locationId, withKit }
    -> { url } of Stripe's hosted payment page. */
-export async function createSession(request, env, quote, origin) {
+export async function createSession(request, env, quote, origin, catalogue = {}) {
   let body;
   try { body = await request.json(); } catch (e) { return { status: 400, error: "Expected JSON" }; }
 
-  const courseId = String(body.courseId || "");
   const withKit = body.withKit === true;
-  const q = quote(courseId, withKit);
-  if (q.error) return { status: 400, error: q.error };
-
   const locationId = typeof body.locationId === "string" ? body.locationId.slice(0, 40) : "";
-  const back = origin + returnPath(body.returnPath);
+  const offerId = typeof body.offer === "string" ? body.offer.slice(0, 40) : "";
+  /* An offer's price is the offer's (blackfriday.js), never the request's. */
+  const q = offerId ? offerQuote(catalogue, offerId, locationId, withKit) : quote(String(body.courseId || ""), withKit);
+  if (q.error) return { status: q.status || 400, error: q.error };
+  const courseId = offerId ? q.courseId : String(body.courseId || "");
+
+  const back = origin + returnPath(offerId ? BF_PATH : body.returnPath);
   const meta = { course_id: courseId, with_kit: withKit ? "1" : "0", location_id: locationId, items: itemsTag(q) };
+  if (offerId) meta.offer = offerId;
   const taxRate = await hstRate(env);
 
   const session = await stripe(env, "POST", "/checkout/sessions", {
@@ -150,11 +156,13 @@ export async function createSession(request, env, quote, origin) {
        Stripe dashboard (Product catalogue > Coupons), so an offer such as
        "$100 off" is honoured without changing a price here. HST is charged
        on the price after the discount. */
-    allow_promotion_codes: true,
+    /* Not on a Black Friday workshop: its price is already the offer, and
+       BF20 is "not applicable on the above packages" (Vagisha, 24 Nov). */
+    allow_promotion_codes: !offerId,
     metadata: meta,
     /* On the payment too: refunds and disputes arrive naming the payment,
        and this says which course it was without a lookup. */
-    payment_intent_data: { metadata: { course_id: courseId, with_kit: meta.with_kit } },
+    payment_intent_data: { metadata: { course_id: courseId, with_kit: meta.with_kit, ...(offerId ? { offer: offerId } : {}) } },
     success_url: `${back}?paid={CHECKOUT_SESSION_ID}`,
     cancel_url: `${back}?checkout=cancelled`,
   });
@@ -227,12 +235,21 @@ function saleFrom(s, catalogue) {
   const cd = s.customer_details || {};
   const course = (catalogue.courses || {})[md.course_id || ""] || {};
   const money = (c) => (c == null ? null : c / 100);
+  /* A Black Friday workshop: named as the workshop, not the full course it
+     belongs to, and carrying its date for the booking and the email. */
+  const offer = md.offer ? findOffer(catalogue, md.offer) : null;
+  const studio = ((catalogue.studios || {})[md.location_id || ""] || {}).name || "";
   return {
     provider: "stripe",
     sessionId: s.id,
     paymentIntent: typeof s.payment_intent === "string" ? s.payment_intent : (s.payment_intent && s.payment_intent.id) || null,
     courseId: md.course_id || "",
-    courseName: course.name || md.course_id || "",
+    courseName: offer ? `${offer.title} (Black Friday workshop)` : (course.name || md.course_id || ""),
+    offer: offer ? offer.id : null,
+    workshop: offer ? {
+      startsAt: `${offer.date}T${offer.start}`, endsAt: `${offer.date}T${offer.end}`,
+      text: `${whenText(offer)}${studio ? ", " + studio : ""}`,
+    } : null,
     withKit: md.with_kit === "1",
     locationId: md.location_id || null,
     currency: (s.currency || "cad").toUpperCase(),
@@ -270,10 +287,12 @@ async function leadFromSale(env, sale, paid) {
    only differ from today's quote if the price list or the tax rate changed
    in between - or the tax rate in the Dashboard is not 13%. The money has
    moved either way, so it is recorded; the mismatch is made loud. */
-function checkAgainstQuote(sale, quote) {
+function checkAgainstQuote(sale, quote, catalogue) {
   /* A promotion code makes the total differ on purpose; Stripe applied it. */
   if (sale.discount) return;
-  const q = quote(sale.courseId, sale.withKit);
+  const q = sale.offer
+    ? offerQuote(catalogue, sale.offer, sale.locationId, sale.withKit, { ignoreEnd: true })
+    : quote(sale.courseId, sale.withKit);
   if (q.error) {
     console.error("stripe: paid session names a course the price list refuses -", sale.sessionId, sale.courseId, q.error);
     return;
@@ -287,7 +306,22 @@ function checkAgainstQuote(sale, quote) {
 /* POST /api/stripe/webhook. Answers 2xx for anything verified, handled or
    not, so Stripe stops retrying; 400 for anything it cannot prove came from
    Stripe. Database work is a few milliseconds; email goes after the answer. */
-export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLabel }) {
+/* A paid workshop books the student into it: it shows in their courses, and
+   the booking engine keeps the studio's room for it. A failure is logged and
+   never undoes the sale; the Students app shows the enrolment either way. */
+async function bookWorkshop(env, sale, bookingConfig) {
+  if (!sale.workshop || !env.ENROLMENTS) return;
+  try {
+    await recordWorkshop(env.ENROLMENTS, bookingConfig, {
+      courseId: sale.courseId, locationId: sale.locationId, start: sale.workshop.startsAt, end: sale.workshop.endsAt,
+      email: sale.payerEmail, name: sale.payerName, note: `Black Friday workshop (${sale.offer})`,
+    });
+  } catch (e) {
+    console.error("workshop paid but not booked:", sale.sessionId, e.message);
+  }
+}
+
+export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLabel, bookingConfig = {} }) {
   const payload = await request.text();
   const ok = await verifySignature(payload, request.headers.get("stripe-signature"), env.STRIPE_WEBHOOK_SECRET);
   if (!ok) {
@@ -306,9 +340,10 @@ export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLa
       const paid = settled({ status: "complete", ...obj });
       sale.stage = paid ? "paid" : "payment pending";
       const rec = await recordEnrolment(env, sale);
-      if (paid) checkAgainstQuote(sale, quote);
+      if (paid) checkAgainstQuote(sale, quote, catalogue);
       /* Confirmed once: a redelivered event finds the row already there. */
       if (rec !== "repeat") await leadFromSale(env, sale, paid);
+      if (paid && rec !== "repeat") await bookWorkshop(env, sale, bookingConfig);
       if (paid && rec !== "repeat") confirm(sale);
       break;
     }
@@ -319,8 +354,9 @@ export async function handleWebhook(request, env, ctx, { catalogue, quote, taxLa
       sale.stage = "paid";
       const rec = await recordEnrolment(env, sale);
       const moved = rec === "new" ? 1 : await setStage(env, { sessionId: obj.id }, "paid", obj.payment_status);
-      checkAgainstQuote(sale, quote);
+      checkAgainstQuote(sale, quote, catalogue);
       if (moved) await leadFromSale(env, sale, true);
+      if (moved && rec !== "failed") await bookWorkshop(env, sale, bookingConfig);
       if (moved && rec !== "failed") confirm(sale);
       break;
     }

@@ -1,4 +1,4 @@
-import { findSlots, checkPlan, toMin, fromMin } from "./booking-engine.js";
+import { findSlots, checkPlan, roomsFor, toMin, fromMin } from "./booking-engine.js";
 
 /* Booking course sessions, for a student who has paid for the course.
 
@@ -60,6 +60,29 @@ let ready = null;
 async function ensureTable(db) {
   if (!ready) ready = db.batch(SCHEMA.map((q) => db.prepare(q))).catch((e) => { ready = null; throw e; });
   return ready;
+}
+
+/* A dated workshop someone paid for (Black Friday, blackfriday.js): one
+   session at a fixed time, booked as soon as the payment is in. Students in
+   the same workshop share a row's start, end and room, so the engine counts
+   them as one session and keeps the room for it. Written once per student
+   and workshop, however often Stripe repeats the event. The instructor is
+   assigned later, in the apps. */
+export async function recordWorkshop(db, config, { courseId, locationId, start, end, email, name, note }) {
+  if (!db || !email || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(start || "") || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(end || "")) return "skipped";
+  await ensureTable(db);
+  const who = String(email).toLowerCase();
+  const there = await db.prepare(
+    "SELECT 1 FROM class_bookings WHERE student_email = ? AND course_id = ? AND starts_at = ? AND status = 'booked' LIMIT 1",
+  ).bind(who, courseId, start).first();
+  if (there) return "repeat";
+  const room = ((config && config.courses && roomsFor(config, courseId, locationId)[0]) || {}).room || null;
+  const id = crypto.randomUUID();
+  await db.prepare(
+    `INSERT INTO class_bookings (id, created_at, plan_id, course_id, location_id, room, instructor_id, starts_at, ends_at,
+       session_no, student_email, student_name, status, note) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, 1, ?, ?, 'booked', ?)`,
+  ).bind(id, new Date().toISOString(), id, courseId, locationId || "any", room, start, end, who, name || null, note || null).run();
+  return "new";
 }
 
 /* Now, on the Ontario wall clock. */

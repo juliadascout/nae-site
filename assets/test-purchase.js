@@ -21,9 +21,11 @@
   }
   form.addEventListener("submit", function (ev) {
     ev.preventDefault();
-    if (!$("course").value) return say("Choose a course.");
+    var offer = $("offer") ? $("offer").value : "";
+    if (!offer && !$("course").value) return say("Choose a course or a Black Friday workshop.");
+    if (offer && !$("studio").value) return say("Choose the studio for the workshop.");
     var b = form.querySelector("button"); b.disabled = true; say("Working…", "info");
-    send({ email: $("email").value.trim(), name: $("name").value.trim(), courseId: $("course").value,
+    send({ email: $("email").value.trim(), name: $("name").value.trim(), courseId: $("course").value, offer: offer || undefined,
            locationId: $("studio").value, withKit: $("kit").checked })
       .then(function (res) {
         b.disabled = false;

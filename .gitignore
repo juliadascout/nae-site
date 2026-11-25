@@ -258,6 +258,8 @@ __marimo__/
 # to resolve from the repo. Without it the deploy fails outright.
 !content/editorial/taxonomy.json
 !worker/prices.json
+# The Black Friday offers (build.py, worker/blackfriday.js): source.
+!content/black-friday.json
 
 # The redirect map is part of the website, not data: old public addresses and
 # where they go now. Named here so the *.csv rule above cannot drop it.

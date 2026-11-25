@@ -692,3 +692,26 @@ h1,h2{text-wrap:balance}
 .bk-time[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:#fff}
 .bk-time small{opacity:.75;margin-left:.3rem}
 .dash-book{margin-left:auto;white-space:nowrap}
+/* ---- Black Friday 2026 (temporary: /black-friday/ and the banner) ---- */
+.bfbar{background:var(--ink);color:var(--paper);font-size:.9rem;padding:.5rem 0;text-align:center}
+.bfbar a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px;margin-left:.35rem}
+#bf h1{font-size:clamp(2rem,5vw,3rem);margin:.1rem 0 .5rem}
+#bf .lede{max-width:46rem}
+#bf .co-msg{margin:1rem 0}
+#bf .co-msg[data-kind="error"]{background:var(--plum-soft);padding:.6rem .7rem;border-radius:8px}
+#bf [hidden]{display:none}
+.bf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1rem;margin:1.5rem 0}
+.bf-card{display:flex;flex-direction:column;gap:.15rem;padding:1.25rem}
+.bf-card h2{font-size:1.35rem;margin:.1rem 0 .2rem}
+.bf-date{margin:0;font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--plum)}
+.bf-time{margin:0 0 .6rem;color:var(--ink-2);font-size:.95rem}
+.bf-price{margin:0;font-family:var(--display);font-size:2rem;line-height:1}
+.bf-price span{font-family:var(--body);font-size:.85rem;color:var(--muted)}
+.bf-was{margin:.25rem 0 .9rem;font-size:.9rem;color:var(--ink-2)}
+.bf-card .fld{margin-bottom:.5rem}
+.bf-card .agree{margin:0 0 .8rem}
+.bf-go{margin-top:auto;width:100%}
+.bf-more{margin-top:.6rem;font-size:.88rem;text-align:center}
+.bf-code{padding:1.25rem;display:grid;gap:.5rem;justify-items:start}
+.bf-code h2{font-size:1.25rem;margin:0}
+.bf-code p{margin:0}
