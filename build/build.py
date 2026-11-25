@@ -15,7 +15,7 @@ Every page passes through compliance.check() before it is written. A page that
 trips a BLOCK rule is not written at all - it is quarantined and listed in the
 report. The build is the enforcement point.
 """
-import os, re, csv, json, html, sys, shutil, glob
+import os, re, csv, json, html, sys, shutil, glob, datetime
 from urllib.parse import quote
 sys.path.insert(0, os.path.dirname(__file__))
 from compliance import check
@@ -323,7 +323,7 @@ OPEN = [l for l in LOCS if l["status"] == "open"]
 # ---------------------------------------------------------------- shell
 # Pages with nothing on them for a search engine: kept out of the index and
 # out of the sitemap.
-NOINDEX = {"/account/", "/account/test-purchase/", "/account/book/"}
+NOINDEX = {"/account/", "/account/test-purchase/", "/account/book/", "/black-friday/"}
 
 NAV = [("Courses","/courses/"),("Locations","/locations/"),("Areas served","/areas-served/"),
        ("Our team","/our-team/"),("Contact","/contact/"),("Scholarship", "/scholarship/"),]
@@ -517,7 +517,7 @@ def shell(title, desc, path, body, canonical=None):
 <meta property="og:image" content="{SITE['url']}/brand/nae-og-share-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">{robots}{guard}{ga_tag()}{gtm_tag()}
 </head><body>
-{gtm_noscript()}<header class="hdr"><div class="wrap">
+{gtm_noscript()}{bf_banner(path)}<header class="hdr"><div class="wrap">
   <a class="brand" href="/"><picture>
     <source srcset="/brand/nae-wordmark-white.png" media="(prefers-color-scheme:dark)">
     <img src="/brand/nae-wordmark-black.png" alt="NAE" width="128" height="46" decoding="async"></picture><span>Ontario</span></a>
@@ -1423,6 +1423,8 @@ def page_test_purchase():
     courses = "".join(f'<option value="{E(c["id"])}">{E(c["name"])} ({money(c["price"])})</option>'
                       for c in sorted(COURSES, key=lambda c: c["name"].lower()) if sellable_online(c))
     studios = "".join(f'<option value="{E(l["id"])}">{E(l["name"])}</option>' for l in OPEN)
+    bf_opts = "".join(f'<option value="{E(o["id"])}">{E(o["title"])}, {E(_bf_when(o)[0])} ({money(o["price"])})</option>'
+                      for o in BF["offers"])
     return ("/account/test-purchase/", f"Test purchase (staff) | {SITE['short']}",
       "Staff tool: see what a student sees after paying, without a payment.",
       f"""<div class="wrap pad"><div class="sch"><div class="card" id="tp">
@@ -1438,6 +1440,7 @@ def page_test_purchase():
           {fld("Student name", "tp-name", "text", "off", ' value="Jules TEST" maxlength="120"')}
           <label class="fld"><span>Course</span><select id="tp-course" required><option value="">Choose a course</option>{courses}</select></label>
           <label class="fld"><span>Studio</span><select id="tp-studio"><option value="">Not chosen</option>{studios}</select></label>
+          <label class="fld"><span>Or a Black Friday workshop (needs a studio)</span><select id="tp-offer"><option value="">No</option>{bf_opts}</select></label>
         </div>
         <label class="agree"><input type="checkbox" id="tp-kit"><span>With the kit (if the course has one)</span></label>
         <button class="btn btn-p" type="submit">Make a test purchase</button>
@@ -1458,6 +1461,78 @@ def page_test_purchase():
       <button class="btn" type="button" data-clear>Remove all test purchases</button>
       </div></div></div>
       <script src="/test-purchase.js" defer></script>""")
+
+# ---------------------------------------------------------------- Black Friday 2026
+# Five dated workshops at a fixed price (content/black-friday.json; Kalleigh
+# 23 Nov, Vagisha 24 Nov). Temporary: the Worker sends /black-friday/ to the
+# courses page once the sale ends (worker/blackfriday.js), and the banner
+# hides itself then too.
+BF = json.load(open(os.path.join(ROOT, "content", "black-friday.json"), encoding="utf-8"))
+_BY_ID = {c["id"]: c for c in COURSES}
+for _o in BF["offers"]:
+    _c = _BY_ID.get(_o["courseId"])
+    if not _c:
+        raise SystemExit(f"black-friday.json: {_o['id']} names a course that is not in the catalogue: {_o['courseId']}")
+    # "50% off" has to be true against the regular catalogue price
+    # (Competition Act: a sale price compared with the ordinary price).
+    if _o.get("half") and _o["price"] * 2 != _c["price"]:
+        raise SystemExit(f"black-friday.json: {_o['id']} says 50% off, but {money(_o['price'])} is not half of "
+                         f"{_c['name']}'s regular {money(_c['price'])}")
+BF_LOCS = [l for l in LOCS if l["id"] in BF["locations"]]
+
+def _bf_when(o):
+    d = datetime.date.fromisoformat(o["date"])
+    clock = lambda hm: f"{int(hm[:2]) % 12 or 12}:{hm[3:]} {'am' if int(hm[:2]) < 12 else 'pm'}"
+    hrs = (int(o["end"][:2]) * 60 + int(o["end"][3:]) - int(o["start"][:2]) * 60 - int(o["start"][3:])) / 60
+    return (d.strftime("%A, %B ") + str(d.day), f"{clock(o['start'])} to {clock(o['end'])}",
+            (f"{hrs:g}-hour workshop"))
+
+def bf_banner(path):
+    if path == "/black-friday/" or path.startswith("/account/"):
+        return ""
+    return (f'<div class="bfbar" data-until="{E(BF["ends"])}"><div class="wrap">'
+            f'<strong>Black Friday:</strong> hands-on workshops, up to 50% off, December 7 to 14. '
+            f'<a href="/black-friday/">See the workshops</a></div></div>'
+            '<script>(function(){var b=document.currentScript.previousElementSibling;'
+            'if(b&&Date.now()>Date.parse(b.getAttribute("data-until")))b.remove();})();</script>\n')
+
+def page_black_friday():
+    studios = "".join(f'<option value="{E(l["id"])}">{E(l["name"])}</option>' for l in BF_LOCS)
+    cards = []
+    for o in sorted(BF["offers"], key=lambda o: (o["date"], o["start"])):
+        c = _BY_ID[o["courseId"]]
+        day, time, length = _bf_when(o)
+        deal = (f'<p class="bf-was">Regular {money(c["price"])} &middot; <strong>50% off</strong></p>' if o.get("half")
+                else '<p class="bf-was">Black Friday price</p>')
+        kit = (f'<label class="agree"><input type="checkbox" data-kit><span>Add the kit '
+               f'(+{money(c["kitCost"])}, yours to keep)</span></label>') if c.get("hasKit") and c.get("kitCost") and o.get("kit", True) else ""
+        cards.append(f"""<article class="card bf-card" data-offer="{E(o['id'])}">
+        <p class="bf-date">{E(day)}</p>
+        <h2>{E(o['title'])}</h2>
+        <p class="bf-time">{E(time)} &middot; {E(length)}</p>
+        <p class="bf-price"><b class="tnum">{money(o['price'])}</b> <span>+ HST</span></p>{deal}
+        <label class="fld"><span>Studio</span><select data-studio>{studios}</select></label>
+        {kit}
+        <button class="btn btn-p bf-go" type="button" data-go>Reserve My Spot</button>
+        <a class="bf-more" href="/courses/{E(c['slug'])}/">About this course</a>
+      </article>""")
+    return ("/black-friday/", f"Black Friday Workshops | {SITE['short']}",
+      f"Black Friday at NAE: hands-on workshops, up to 50% off, in Richmond Hill and St. Catharines, December 7 to 14. On sale until {BF['endsText']}.",
+      f"""<div class="wrap pad" id="bf">
+      <p class="eyebrow">Black Friday</p>
+      <h1>Black Friday Workshops</h1>
+      <p class="lede">Hands-on workshops in small groups, up to 50% off, in Richmond Hill or St. Catharines. Pick your workshop and studio, pay online, and your spot is booked. On sale until {E(BF['endsText'])}.</p>
+      <p class="co-msg" data-msg hidden></p>
+      <div class="bf-grid">{''.join(cards)}</div>
+      <div class="card bf-code">
+        <h2>Looking for a different course?</h2>
+        <p>Use code <strong>BF20</strong> at checkout for 20% off your first course of $200 or more, until {E(BF['endsText'])}. The code isn't valid on the workshops above.</p>
+        <a class="btn" href="/courses/">Browse Courses</a>
+      </div>
+      <p class="fine">Prices are per person, plus HST. Kits are optional and priced separately. A certificate of completion is issued when you finish.
+        Questions? Call {E(SITE['phone'])} or email {E(SITE['email'])}.</p>
+      </div>
+      <script src="/blackfriday.js" defer></script>""")
 
 # ---------------------------------------------------------------- booking (students)
 # Booking the sessions of a course the student has paid for (worker/booking.js,
@@ -1999,7 +2074,11 @@ def write_checkout_prices():
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"currency": "CAD", "cap": CAP_PRICE, "courses": out, "studios": studios,
                    "seller": seller, "refundPolicy": refund_policy(),
-                   "booking": SITE["booking"], "site": SITE["domain"]}, f, indent=2)
+                   "booking": SITE["booking"], "site": SITE["domain"],
+                   # Black Friday offers (worker/blackfriday.js): the price is decided here.
+                   "blackFriday": {"ends": BF["ends"], "offers": [
+                       {k: o[k] for k in ("id", "courseId", "title", "date", "start", "end", "price")}
+                       | {"locations": BF["locations"], "kit": o.get("kit", True)} for o in BF["offers"]]}}, f, indent=2)
     return len(out)
 
 def write_booking_config():
@@ -2019,7 +2098,7 @@ def write_booking_config():
 
 # ---------------------------------------------------------------- build
 PAGES = [page_home(), page_courses(), page_locations(), page_areas(), page_contact(), page_team(),
-         page_account(), page_scholarship(), page_test_purchase(), page_book()]
+         page_account(), page_scholarship(), page_test_purchase(), page_book(), page_black_friday()]
 PAGES += [page_profile(x) for x in PEOPLE]
 PAGES += [page_location(l) for l in LOCS]
 PAGES += [page_course(c) for c in COURSES]

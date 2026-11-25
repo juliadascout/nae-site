@@ -1,5 +1,7 @@
 import { recordEnrolment, enrolmentNotice, tellEnrolment } from "./enrolments.js";
 import { noteLead } from "./leads.js";
+import { offerQuote, whenText } from "./blackfriday.js";
+import { recordWorkshop } from "./booking.js";
 
 /* Test purchases, for staff: everything that happens after a student pays,
    without Stripe.
@@ -59,7 +61,7 @@ async function admin(request, env) {
 
 /* POST {email, name, courseId, withKit, locationId}  -> make one
    POST {clear: true}                                  -> remove them all */
-export async function handleTestPurchase(request, env, ctx, { catalogue, quote, taxLabel }) {
+export async function handleTestPurchase(request, env, ctx, { catalogue, quote, taxLabel, bookingConfig = {} }) {
   /* A JSON body only: a form on another site cannot send one with this
      browser's cookie without the browser asking first. */
   if (!/^application\/json\b/i.test(request.headers.get("content-type") || "")) {
@@ -77,6 +79,8 @@ export async function handleTestPurchase(request, env, ctx, { catalogue, quote, 
   if (b.clear === true) {
     const r = await db.prepare("DELETE FROM enrolments WHERE provider = 'simulated'").run();
     await db.prepare("DELETE FROM lead_events WHERE kind = 'test purchase'").run();
+    /* Workshop seats booked by test purchases. The table is made on first use. */
+    try { await db.prepare("DELETE FROM class_bookings WHERE note LIKE 'TEST %'").run(); } catch (e) { /* no bookings yet */ }
     const n = (r && r.meta && r.meta.changes) ?? (r && r.changes) ?? 0;
     console.log("test purchases removed by", who.email, "-", n);
     return json({ ok: true, removed: n });
@@ -85,11 +89,14 @@ export async function handleTestPurchase(request, env, ctx, { catalogue, quote, 
   const email = line(b.email, 254).toLowerCase();
   const name = line(b.name, 120) || "Test Student";
   if (!ADDRESS.test(email)) return json({ error: "Enter the student's email address." }, 400);
-  const courseId = typeof b.courseId === "string" ? b.courseId : "";
-  const q = quote(courseId, b.withKit === true);
-  if (q.error) return json({ error: q.error === "Unknown course" ? "Choose a course." : q.error }, 400);
   const studios = catalogue.studios || {};
   const locationId = typeof b.locationId === "string" && Object.hasOwn(studios, b.locationId) ? b.locationId : null;
+  /* A Black Friday workshop is tested the way it is sold (blackfriday.js). */
+  const offerId = typeof b.offer === "string" && b.offer ? b.offer.slice(0, 40) : "";
+  const q = offerId ? offerQuote(catalogue, offerId, locationId, b.withKit === true)
+                    : quote(typeof b.courseId === "string" ? b.courseId : "", b.withKit === true);
+  if (q.error) return json({ error: q.error === "Unknown course" ? "Choose a course." : q.error }, 400);
+  const courseId = offerId ? q.courseId : b.courseId;
 
   const sessionId = sid();
   const sale = {
@@ -97,7 +104,9 @@ export async function handleTestPurchase(request, env, ctx, { catalogue, quote, 
     sessionId,
     paymentIntent: null,
     courseId,
-    courseName: q.course.name,
+    courseName: offerId ? `${q.offer.title} (Black Friday workshop)` : q.course.name,
+    offer: offerId || null,
+    workshop: offerId ? { startsAt: q.startsAt, endsAt: q.endsAt, text: `${whenText(q.offer)}, ${q.studio}` } : null,
     withKit: q.items.length > 1,
     locationId,
     currency: q.amount.currency_code,
@@ -124,13 +133,19 @@ export async function handleTestPurchase(request, env, ctx, { catalogue, quote, 
     try { await db.prepare("UPDATE enrolments SET lead_id = ? WHERE stripe_session_id = ?").bind(lead.id, sessionId).run(); }
     catch (e) { console.error("test enrolment not linked to its lead:", e.message); }
   }
+  if (sale.workshop) {
+    try {
+      await recordWorkshop(db, bookingConfig, { courseId, locationId, start: sale.workshop.startsAt, end: sale.workshop.endsAt,
+        email, name, note: `TEST Black Friday workshop (${offerId})` });
+    } catch (e) { console.error("test workshop not booked:", e.message); }
+  }
   tellEnrolment(env, ctx, enrolmentNotice(sale, catalogue, taxLabel));
   console.log("test purchase made by", who.email, "-", sessionId);
 
   const slug = q.course.slug || "";
   return json({
     ok: true, sessionId,
-    landing: slug ? `/courses/${slug}/?paid=${sessionId}` : null,
+    landing: offerId ? `/black-friday/?paid=${sessionId}` : slug ? `/courses/${slug}/?paid=${sessionId}` : null,
     total: q.amount.value, currency: q.amount.currency_code,
   });
 }

@@ -17,7 +17,9 @@ not_found_handling = "404-page"
 # opened and died instantly, and the only symptom was a generic apology.
 # Assets still win for everything else, so pages keep being served straight
 # from the asset store without waking the Worker.
-run_worker_first = [ "/api/*" ]
+# /black-friday/ too, so the Worker can send it to /courses/ once the sale
+# ends (worker/blackfriday.js) without a deploy on the day.
+run_worker_first = [ "/api/*", "/black-friday", "/black-friday/*" ]
 
 [vars]
 # Online payment is Stripe Checkout (worker/stripe.js), from 29 Oct 2026.
