@@ -61,7 +61,7 @@ function form(obj, prefix = "", out = new URLSearchParams()) {
   return out;
 }
 
-async function stripe(env, method, path, params) {
+export async function stripe(env, method, path, params) {
   const problem = keyProblem(env);
   if (problem) throw new Error(problem);
   const r = await fetch(`${API}${path}`, {

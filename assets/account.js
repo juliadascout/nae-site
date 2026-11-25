@@ -212,21 +212,52 @@
     box.textContent = "";
     var role = me.user.role, staff = !!ROLE[role];
     var list = [];
-    if (staff && me.apps) list.push(["#tools", "Work tools", "What your role opens"]);
-    if (!staff || courseCount) list.push(["#courses", "My courses", courseCount ? courseCount + (courseCount === 1 ? " course" : " courses") : "What you have booked"]);
+    if (staff && me.apps) list.push(["#tools", "Work Tools", "What your role opens"]);
+    if (!staff || courseCount) list.push(["#courses", "My Courses", courseCount ? courseCount + (courseCount === 1 ? " course" : " courses") : "What you have booked"]);
     if (!staff) {
-      list.push([BASE + "/courses/", "Browse courses", "Find your next course"]);
+      list.push([BASE + "/courses/", "Browse Courses", "Find your next course"]);
+      /* Kalleigh, 14 Nov: more personal than "book a call" - she is the
+         student's mentor. The same booking link. */
       var book = $("[data-courses-empty] a[rel]");
-      if (book) list.push([book.href, "Book a call", "Talk it through with us"]);
+      if (book) list.push([book.href, "Connect with Kalleigh", "Your personal mentor: talk through your goals and plan your training"]);
+      list.push(["#profile", "My Profile", "Why you're here, your goals and your plan"]);
     }
-    list.push(["#details", "Your details", "Name and phone"]);
-    list.push(["#security", "Sign-in & security", me.google ? "Google connected" : (me.user.hasPassword ? "Password" : "Signed in with Google")]);
+    list.push(["#details", "Your Details", "Name and phone"]);
+    list.push(["#security", "Sign-In & Security", me.google ? "Google connected" : (me.user.hasPassword ? "Password" : "Signed in with Google")]);
     list.forEach(function (t) {
       var a = el("a", { class: "dash-tile", href: t[0] });
       a.appendChild(el("strong", null, t[1]));
       a.appendChild(el("span", null, t[2]));
       box.appendChild(a);
     });
+  }
+
+  /* My profile: three short answers, kept with the account (nae-inc). */
+  function loadGoals() {
+    call("goals").then(function (r) {
+      if (!r.ok) return;
+      document.getElementById("pf-why").value = r.body.why || "";
+      document.getElementById("pf-goals").value = r.body.goals || "";
+      document.getElementById("pf-plan").value = r.body.plan || "";
+    });
+  }
+
+  /* The $50 welcome code (worker/welcome.js), once the email is confirmed. */
+  function loadGift(user) {
+    var box = $("[data-gift]");
+    box.hidden = true;
+    if (!user.emailVerified) return;
+    fetch(BASE + "/api/account/welcome", { credentials: "same-origin", cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (g) {
+        if (!g || !g.code) return;
+        $("[data-gift-amount]").textContent = "$" + g.amount;
+        $("[data-gift-min]").textContent = "$" + g.minimum;
+        $("[data-gift-until]").textContent = new Date(g.expiresAt).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" });
+        $("[data-gift-code]").textContent = g.code;
+        box.hidden = false;
+      })
+      .catch(function () { /* the page works without it */ });
   }
 
   function loadCourses(force) {
@@ -332,6 +363,8 @@
     /* A student's courses are the point of the page; for staff the tab waits
        until there is something in it (loadCourses). */
     tabLink("courses").hidden = !!ROLE[user.role];
+    tabLink("profile").hidden = !!ROLE[user.role];
+    if (!ROLE[user.role]) { loadGoals(); loadGift(user); }
     security();
     courseCount = null;
     tiles();
@@ -348,6 +381,13 @@
   }
 
   root.addEventListener("click", function (e) {
+    var cp = e.target.closest("[data-gift-copy]");
+    if (cp) {
+      var code = $("[data-gift-code]").textContent;
+      var done = function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = "Copy"; }, 2000); };
+      try { navigator.clipboard.writeText(code).then(done, function () {}); } catch (x) { /* select it by hand */ }
+      return;
+    }
     var t = e.target.closest("[data-show]");
     if (t) { e.preventDefault(); show(t.getAttribute("data-show")); return; }
     if (e.target.closest("[data-signout]")) {
@@ -532,6 +572,16 @@
         temporary = "";
         set("ch-next", ""); set("ch-again", ""); set("ch-current", "");
         refresh();
+      });
+      return;
+    }
+
+    if (kind === "profile") {
+      busy(form, true);
+      call("goals", { why: val("pf-why"), goals: val("pf-goals"), plan: val("pf-plan") }, "PUT").then(function (r) {
+        busy(form, false);
+        if (!r.ok) return say("profile", r.body.error || "Could not save.");
+        say("profile", "Saved. Thank you!", "done");
       });
       return;
     }

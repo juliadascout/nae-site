@@ -778,3 +778,10 @@ h1,h2{text-wrap:balance}
 .bf-code{padding:1.25rem;display:grid;gap:.5rem;justify-items:start}
 .bf-code h2{font-size:1.25rem;margin:0}
 .bf-code p{margin:0}
+/* ---- account: welcome gift ---- */
+.dash-gift{border:1.5px dashed var(--plum);background:var(--plum-soft);border-radius:12px;padding:1rem 1.1rem;margin:0 0 1rem}
+.dash-gift p{margin:0 0 .35rem}
+.dash-gift-h{font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--plum)}
+.dash-gift-code{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.dash-gift-code code{font-family:var(--mono);font-size:1.1rem;font-weight:500;letter-spacing:.04em;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:.35rem .6rem}
+#acct .dash-gift[hidden]{display:none}
