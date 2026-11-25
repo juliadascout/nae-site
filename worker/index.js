@@ -8,6 +8,7 @@ import { BOOKING_PREFIX, handleBooking } from "./booking.js";
 import bookingConfig from "./booking-config.json";
 import { checkoutReady, stripeMode, createSession, sessionStatus, handleWebhook, health } from "./stripe.js";
 import { BF_PATH, saleOpen } from "./blackfriday.js";
+import { WELCOME_PATH, handleWelcome } from "./welcome.js";
 
 /* The site is static. This Worker serves it, and adds the endpoints a
    checkout needs, because a checkout cannot be done safely from the page alone:
@@ -113,6 +114,11 @@ export default {
 
     if (path.startsWith("/api/")) {
       if (ACCOUNT_PATHS.has(path)) return toAccounts(request, env, path);
+      /* A student's $50 welcome code (welcome.js). */
+      if (path === WELCOME_PATH) {
+        try { return await handleWelcome(request, env); }
+        catch (e) { return fail(500, "Not available just now", e.message); }
+      }
       /* What this signed-in person has bought, for the account page. */
       if (path === "/api/account/courses" && request.method === "GET") return myCourses(request, env, prices);
       /* A question from the Contact page (enquiries.js). */

@@ -1947,8 +1947,9 @@ def page_account():
         <p class="co-msg" data-msg="me" hidden></p>
         <nav class="dash-tabs" role="tablist" aria-label="Your account">
           <a href="#home" role="tab" data-tab="home">Home</a>
-          <a href="#courses" role="tab" data-tab="courses" hidden>My courses</a>
-          <a href="#tools" role="tab" data-tab="tools" hidden>Work tools</a>
+          <a href="#courses" role="tab" data-tab="courses" hidden>My Courses</a>
+          <a href="#tools" role="tab" data-tab="tools" hidden>Work Tools</a>
+          <a href="#profile" role="tab" data-tab="profile" hidden>My Profile</a>
           <a href="#details" role="tab" data-tab="details">Details</a>
           <a href="#security" role="tab" data-tab="security">Security</a>
         </nav>
@@ -1958,6 +1959,12 @@ def page_account():
             <p>Please confirm your email address: we sent you a link when you made your account.</p>
             <p class="co-msg" data-msg="verify" hidden></p>
             <button class="btn" type="button" data-resend>Send the link again</button>
+          </div>
+          <div class="dash-gift" data-gift hidden>
+            <p class="dash-gift-h">Your welcome gift</p>
+            <p><strong data-gift-amount></strong> off your first course of <span data-gift-min></span> or more, until <span data-gift-until></span>.</p>
+            <p class="dash-gift-code"><code data-gift-code></code> <button class="btn" type="button" data-gift-copy>Copy</button></p>
+            <p class="fine" style="margin:.3rem 0 0">Enter it at checkout. One use; not valid on Black Friday workshops.</p>
           </div>
           <div class="dash-tiles" data-tiles></div>
         </section>
@@ -1981,6 +1988,19 @@ def page_account():
           <p>Your role opens these. Each one opens in a new tab and may ask you to sign in there too.</p>
           <div class="dash-tiles" data-tools></div>
           <p class="fine">Need something your role does not open? Ask an administrator.</p>
+        </section>
+
+        <section class="dash-panel" role="tabpanel" data-tabpanel="profile" hidden>
+          <h2>My profile</h2>
+          <p>A few lines about you, so Kalleigh and your instructors can help you get where you want to go.
+            Only NAE's team sees this.</p>
+          <p class="co-msg" data-msg="profile" hidden></p>
+          <form data-form="profile" novalidate>
+            <label class="fld"><span>Why do you want to become a beautician?</span><textarea id="pf-why" rows="3" maxlength="1500"></textarea></label>
+            <label class="fld"><span>Your goals</span><textarea id="pf-goals" rows="3" maxlength="1500" placeholder="For example: open my own lash studio, work in a salon, add brows to my services"></textarea></label>
+            <label class="fld"><span>Your plan to get there</span><textarea id="pf-plan" rows="3" maxlength="1500" placeholder="Which courses, by when, and anything you need help with"></textarea></label>
+            <button class="btn btn-p" type="submit">Save</button>
+          </form>
         </section>
 
         <section class="dash-panel" role="tabpanel" data-tabpanel="details" hidden>
