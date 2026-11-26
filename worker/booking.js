@@ -57,7 +57,7 @@ const SCHEMA = [
   "CREATE INDEX IF NOT EXISTS class_bookings_status ON class_bookings(status, created_at)",
 ];
 let ready = null;
-async function ensureTable(db) {
+export async function ensureTable(db) {
   if (!ready) ready = db.batch(SCHEMA.map((q) => db.prepare(q))).catch((e) => { ready = null; throw e; });
   return ready;
 }
@@ -120,7 +120,7 @@ async function enrolled(db, email, courseId) {
 
 /* Every live booking, one per session: students in the same session are
    counted together, which is what the engine's "join" rule needs. */
-async function liveBookings(db) {
+export async function liveBookings(db) {
   const { results } = await db.prepare(
     `SELECT MIN(id) AS id, course_id, location_id, room, instructor_id, starts_at, ends_at, COUNT(*) AS students
        FROM class_bookings WHERE status = 'booked' AND starts_at IS NOT NULL
@@ -134,15 +134,15 @@ async function liveBookings(db) {
 
 /* Instructors' weekly teaching hours, from the config (the setup sheet).
    Their calendars' busy times join this once Google Calendar is connected. */
-const studioName = (config, id) => (config.locationNames || {})[id] || ((config.studios || {})[id] || {}).name || "";
+export const studioName = (config, id) => (config.locationNames || {})[id] || ((config.studios || {})[id] || {}).name || "";
 
-const hoursOf = (config) => Object.fromEntries(Object.entries(config.instructors || {})
+export const hoursOf = (config) => Object.fromEntries(Object.entries(config.instructors || {})
   .filter(([, i]) => Array.isArray(i.hours) && i.hours.length).map(([id, i]) => [id, i.hours]));
 
 /* The student's confirmation and every administrator's alert, sent by the
    apps (nae-inc worker/notify.js, Notify.booking). What is stored is the
    record; an email that does not go never undoes a booking. */
-async function tell(env, opts, details) {
+export async function tell(env, opts, details) {
   const send = (async () => {
     if (!env.NOTIFY || typeof env.NOTIFY.booking !== "function") {
       console.error(`booking ${details.kind}, but nobody was emailed: no NOTIFY.booking`);
