@@ -105,7 +105,7 @@ export async function catalogue(c) {
   const names = config.locationNames || {};
   return {
     ok: true,
-    courses: Object.fromEntries(Object.entries(config.courses || {}).map(([id, x]) => [id, { name: x.name, sessions: x.sessions, hoursPerSession: x.hoursPerSession }])),
+    courses: Object.fromEntries(Object.entries(config.courses || {}).map(([id, x]) => [id, { name: x.name, group: x.group || "", sessions: x.sessions, hoursPerSession: x.hoursPerSession }])),
     studios: Object.fromEntries([...Object.keys(config.studios || {}), ...(config.unmapped || [])]
       .map((id) => [id, { name: names[id] || ((config.studios || {})[id] || {}).name || id, bookable: !!(config.studios || {})[id] }])),
     instructors: Object.fromEntries(Object.entries(config.instructors || {}).map(([id, i]) => [id, {
