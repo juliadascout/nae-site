@@ -835,6 +835,7 @@ def page_course(c):
     <h1 style="margin:.7rem 0 .8rem">{E(c['name'])}</h1>
     <p class="lede">{E(c['lede'])} The programme runs {E(c['duration'].replace(' / ',' across '))}, scheduled around your availability.</p>
     {skills_html}</div>
+  {video_card(_video(course=c["id"], subject=c["subject"]))}
   <div class="card c-specs"><h2 style="margin-bottom:1rem">At a glance</h2><dl class="specs">{spec_html}</dl></div>
   {parts_html}
   {kit_html}
@@ -986,6 +987,23 @@ def _section(key):
     MEDIA_NOTES.append(f'"{key}" in content/media.json should be {{ ... }} - ignored')
     return {}
 
+def _video(course=None, subject=None, home=False):
+    """The video for a page from content/media.json "videos": a course's own,
+       else its subject's; a subject page's; or the home page's. {} if none."""
+    v = _section("videos")
+    if home:
+        x = v.get("home")
+    else:
+        cs, ss = v.get("courses"), v.get("subjects")
+        x = ((cs if isinstance(cs, dict) else {}).get(course) if course else None) \
+            or ((ss if isinstance(ss, dict) else {}).get(subject) if subject else None)
+    return x if isinstance(x, dict) else {}
+
+def video_card(x, wrap='<div class="card c-video">{}</div>'):
+    """A page's video as a card (yt_section), or nothing."""
+    sec = yt_section("video", x.get("youtube"), x.get("title") or "Watch", media_url(x.get("still")), cls="")
+    return wrap.format(sec) if sec else ""
+
 def _studio(l):
     v = _section("studios").get(slugify(l["name"]))
     if isinstance(v, str):            # "richmond-hill": "media/x.jpg" - plainly meant as the photo
@@ -1102,6 +1120,7 @@ def page_home():
     <div><b class="tnum">{hours_span()}</b><span>Hours per course</span></div></div>
   </div>{media}
 </div>
+{video_card(_video(home=True), '<div class="wrap pad"><div class="card c-video">{}</div></div>')}
 <div class="wrap pad"><p class="eyebrow">Pick a subject</p>
   <h2 style="margin-bottom:1.4rem">What do you want to learn?</h2><div class="grid3">{tiles}</div></div>
 <div class="wrap pad"><p class="eyebrow">Where we teach</p>
@@ -1151,6 +1170,7 @@ def page_subject(k):
             f'<h1 style="margin-bottom:.7rem">{E(title)}</h1>'
             f'<p class="lede" style="margin-bottom:1.2rem">{E(BLURB[k])} '
             f'<strong>Kits are optional</strong> and never part of the course fee.</p>{skills}'
+            + video_card(_video(subject=k), '<div class="card c-video" style="margin-bottom:1.4rem">{}</div>')
             + "".join(crow(c) for c in cs)
             + f'<div class="cta reveal" style="margin-top:2rem"><div><strong>Not sure which course?</strong>'
               f'<span>Book a call and we will help you choose.</span></div>'
