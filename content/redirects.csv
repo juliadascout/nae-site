@@ -55,8 +55,8 @@ from,to,why
 /contact-form/,/contact/,linked from old posts; WordPress used to redirect it quietly
 /sugaring-artist-training-course/,/courses/basic-body-sugaring/,linked from old posts; WordPress used to redirect it quietly
 /teeth-whitening-artist-training-course/,/courses/teeth-whitening-training/,linked from old posts; WordPress used to redirect it quietly
-/about-national-association-of-estheticians-beauty-institution/,/about-national-association-of-estheticians-beauty-school/,linked from old posts; WordPress used to redirect it quietly
-/about-us,/about-national-association-of-estheticians-beauty-school/,linked from old posts; WordPress used to redirect it quietly
+/about-national-association-of-estheticians-beauty-institution/,/our-team/,linked from old posts; WordPress used to redirect it quietly
+/about-us,/our-team/,linked from old posts; WordPress used to redirect it quietly
 /apply-now,/courses/,linked from old posts; WordPress used to redirect it quietly
 /apply-now/,/courses/,linked from old posts; WordPress used to redirect it quietly
 /sitemap_index.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
@@ -68,8 +68,8 @@ from,to,why
 /product_cat-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
 /author-sitemap.xml,/sitemap.xml,old Yoast sitemap; search engines are told about the new one
 /feed/,/blog/,old WordPress feed
-/about,/about-national-association-of-estheticians-beauty-school/,"short address people type; 31 visits Oct 23 - Nov 6 found nothing"
-/about/,/about-national-association-of-estheticians-beauty-school/,"short address people type; the about page lives at its old WordPress address"
+/about,/our-team/,"short address people type; 31 visits Oct 23 - Nov 6 found nothing"
+/about/,/our-team/,"short address people type; the about page lives at its old WordPress address"
 /press/,/blog/,"old WordPress section name; the journal is at /blog/"
 /news/,/blog/,"old WordPress section name; the journal is at /blog/"
 /salon-spa-business-commercial-room-rentals-downtown-stcatharines-niagara/,/locations/st-catharines/,"retired: rooms at 255 Church St, an address NAE left; the studio is 249 Carlton St (Jules, 6 Nov 2026)"
@@ -87,3 +87,22 @@ from,to,why
 /tag/rent/,/blog/,"tag emptied: NAE no longer rents (Jules, 10 Nov 2026)"
 /tag/rental/,/blog/,"tag emptied: NAE no longer rents (Jules, 10 Nov 2026)"
 /tag/for-rent/,/blog/,"tag emptied: NAE no longer rents (Jules, 10 Nov 2026)"
+/niagara-falls-home-salon-beauty-school-esthetician-training/,/locations/niagara-falls/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/richmond-hill-facial-training-course-beauty-certification/,/courses/facial-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/niagara-st-catharines-facial-training-course-beauty-certification-programs/,/courses/facial-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/st-catharines-niagara-facial-training-course/,/courses/facial-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/niagara-stcatharines-facial-training-course/,/courses/facial-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/facial-training-course/,/courses/facial-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/richmond-hill-nail-technician-training-acrylic-gel-manicures-pedicures-training-course/,/nail-technician-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/nail-technician-training-courses/,/nail-technician-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/niagara-stcatharines-nail-technician-training-courses/,/nail-technician-training/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/home/,/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/beauty-course-training-by-zone-glam-squad/,/areas-served/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/about-national-association-of-estheticians-beauty-school/,/our-team/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/relaxation-massage-beauty-certification-programs/,/courses/relaxation-massage/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/hair-extensions-technician/,/courses/grand-master-hair-extensions/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/grand-master-hair-extensions-technician-beauty-certification-programs/,/courses/grand-master-hair-extensions/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/weft-in-hair-extensions-beauty-certification-programs/,/courses/classic-weave-hair-extensions/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/braid-in-hair-extension-course/,/courses/braid-in-hair-extensions/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/contact-canadas-top-beauty-school/,/contact/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
+/media/,/locations/,"naeinc.ca now sends its own page here (Jules, 26 Nov 2026: naeinc.ca funnels to beautycourse.ca), so this copy goes too"
