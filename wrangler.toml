@@ -3,7 +3,9 @@
 # the Worker answers /api/ and hands everything else to the assets, which are
 # the same committed files as before.
 name = "nae-site"
-main = "worker/index.js"
+# main.js is index.js plus Booking, the entrypoint the apps' Worker calls to
+# answer requests and move, cancel or staff sessions (worker/main.js).
+main = "worker/main.js"
 compatibility_date = "2026-09-01"
 
 [assets]
