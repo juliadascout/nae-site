@@ -26,7 +26,7 @@ export function findOffer(catalogue, id) {
   return (bf && (bf.offers || []).find((o) => o.id === id)) || null;
 }
 
-/* "Sunday, December 7, 10:00 am to 2:00 pm" from Ontario wall-clock parts. */
+/* "Tuesday, December 8, 10:00 am to 2:00 pm" from Ontario wall-clock parts. */
 const clock = (hm) => { const h = +hm.slice(0, 2); return `${h % 12 || 12}:${hm.slice(3, 5)} ${h < 12 ? "am" : "pm"}`; };
 export function whenText(o) {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric" })

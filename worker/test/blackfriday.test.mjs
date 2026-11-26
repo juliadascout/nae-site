@@ -57,7 +57,7 @@ check('every offer is a real course, at both studios', bf.offers.length === 5
   && bf.offers.every((o) => prices.courses[o.courseId] && o.locations.join() === 'loc-rch,loc-stc'));
 check('the sale is open now and closes after December 2 (Toronto)', saleOpen(prices) && bf.ends === '2026-12-03T05:00:00Z'
   && saleOpen(prices, Date.parse('2026-12-02T23:59:00-05:00')) && !saleOpen(prices, Date.parse('2026-12-03T00:00:00-05:00')));
-check('the workshop reads as it will be held', whenText(offer) === 'Monday, December 7, 10:00 am to 2:00 pm', whenText(offer));
+check('the workshop reads as it will be held', whenText(offer) === 'Tuesday, December 8, 10:00 am to 2:00 pm', whenText(offer));
 let q = offerQuote(prices, 'bf-sugaring', 'loc-stc', false);
 check('an offer is priced from the list, HST on top', q.items.length === 1 && q.items[0].unit_amount.value === '350.00'
   && q.amount.value === (350 * 1.13).toFixed(2), JSON.stringify(q.amount));
@@ -110,11 +110,11 @@ check('the webhook takes a paid workshop', res.status === 200);
 const row = await env.ENROLMENTS.prepare('SELECT * FROM enrolments WHERE stripe_session_id = ?').bind(session.id).first();
 check('...recorded as the workshop, not the full course', row?.course_name === 'Basic Body Sugaring (Black Friday workshop)' && row?.stage === 'paid', JSON.stringify(row));
 const seat = await env.ENROLMENTS.prepare('SELECT * FROM class_bookings WHERE student_email = ?').bind('riley@inbox.example.ca').first();
-check('...the student is booked into the dated session', seat?.starts_at === '2026-12-07T10:00' && seat?.ends_at === '2026-12-07T14:00'
+check('...the student is booked into the dated session', seat?.starts_at === '2026-12-08T10:00' && seat?.ends_at === '2026-12-08T14:00'
   && seat?.location_id === 'loc-stc' && seat?.status === 'booked' && seat?.instructor_id === null, JSON.stringify(seat));
 check('...in a room that can hold it', !!seat?.room, seat?.room);
 check('...the confirmation names the workshop and when it is', told[0]?.course === 'Basic Body Sugaring (Black Friday workshop)'
-  && told[0]?.workshop === 'Monday, December 7, 10:00 am to 2:00 pm, St. Catharines', JSON.stringify(told[0]));
+  && told[0]?.workshop === 'Tuesday, December 8, 10:00 am to 2:00 pm, St. Catharines', JSON.stringify(told[0]));
 check('...and no false price alarm', !logs.some((l) => /price list says/.test(l)), logs.join(' | '));
 await req('/api/stripe/webhook', signed({ id: 'evt_bf2', type: 'checkout.session.completed', data: { object: session } }));
 await Promise.all(waits);
