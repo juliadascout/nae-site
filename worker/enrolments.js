@@ -96,7 +96,7 @@ export function enrolmentNotice(sale, catalogue, taxLabel) {
     email: sale.payerEmail || "",
     /* A Black Friday workshop is named as the workshop, not its full course. */
     course: (sale.offer && sale.courseName) || course.name || sale.courseName || sale.courseId || "",
-    /* Its date, time and studio: "Sunday, December 7, 10:00 am to 2:00 pm, St. Catharines". */
+    /* Its date, time and studio: "Tuesday, December 8, 10:00 am to 2:00 pm, St. Catharines". */
     workshop: sale.workshop && sale.workshop.text ? sale.workshop.text : null,
     withKit: !!sale.withKit,
     studio: Object.hasOwn(studios, locationId) ? studios[locationId] : null,

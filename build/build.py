@@ -1524,11 +1524,20 @@ def _bf_when(o):
     return (d.strftime("%A, %B ") + str(d.day), f"{clock(o['start'])} to {clock(o['end'])}",
             (f"{hrs:g}-hour workshop"))
 
+def _bf_range():
+    """'December 8 to 15', from the first and last workshop dates, so the banner
+    and the page description can never disagree with the cards."""
+    ds = sorted(datetime.date.fromisoformat(o["date"]) for o in BF["offers"])
+    a, b = ds[0], ds[-1]
+    if a == b: return a.strftime("%B ") + str(a.day)
+    tail = str(b.day) if a.month == b.month else b.strftime("%B ") + str(b.day)
+    return a.strftime("%B ") + str(a.day) + " to " + tail
+
 def bf_banner(path):
     if path == "/black-friday/" or path.startswith("/account/"):
         return ""
     return (f'<div class="bfbar" data-until="{E(BF["ends"])}"><div class="wrap">'
-            f'<strong>Black Friday:</strong> hands-on workshops, up to 50% off, December 7 to 14. '
+            f'<strong>Black Friday:</strong> hands-on workshops, up to 50% off, {_bf_range()}. '
             f'<a href="/black-friday/">See the workshops</a></div></div>'
             '<script>(function(){var b=document.currentScript.previousElementSibling;'
             'if(b&&Date.now()>Date.parse(b.getAttribute("data-until")))b.remove();})();</script>\n')
@@ -1554,7 +1563,7 @@ def page_black_friday():
         <a class="bf-more" href="/courses/{E(c['slug'])}/">About this course</a>
       </article>""")
     return ("/black-friday/", f"Black Friday Workshops | {SITE['short']}",
-      f"Black Friday at NAE: hands-on workshops, up to 50% off, in Richmond Hill and St. Catharines, December 7 to 14. On sale until {BF['endsText']}.",
+      f"Black Friday at NAE: hands-on workshops, up to 50% off, in Richmond Hill and St. Catharines, {_bf_range()}. On sale until {BF['endsText']}.",
       f"""<div class="wrap pad" id="bf">
       <p class="eyebrow">Black Friday</p>
       <h1>Black Friday Workshops</h1>

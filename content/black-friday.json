@@ -1,13 +1,13 @@
 {
-  "_comment": "Black Friday 2026 workshops (Kalleigh 23 Nov, Vagisha 24 Nov). Source for /black-friday/ and the Worker's offer prices (written into worker/prices.json by the build). Times are Ontario wall clock. 'half' means the price is exactly half the course's regular catalogue price; the build refuses the page if that stops being true. Microdermabrasion is the microdermabrasion workshop only, without the facial (Jules, 25 Nov), so it makes no 50% claim, and the full course's kit is not offered with it.",
+  "_comment": "Black Friday 2026 workshops (Kalleigh 23 Nov, Vagisha 24 Nov). Source for /black-friday/ and the Worker's offer prices (written into worker/prices.json by the build). Times are Ontario wall clock. 'half' means the price is exactly half the course's regular catalogue price; the build refuses the page if that stops being true. Microdermabrasion is the microdermabrasion workshop only, without the facial (Jules, 25 Nov), so it makes no 50% claim, and the full course's kit is not offered with it. The Monday workshops moved to the Tuesday after (Kalleigh, 25 Nov: Dec 7 becomes Dec 8, Dec 14 becomes Dec 15).",
   "ends": "2026-12-03T05:00:00Z",
   "endsText": "December 2",
   "locations": ["loc-rch", "loc-stc"],
   "offers": [
-    { "id": "bf-waxing", "courseId": "crs-basic-body-waxing", "title": "Basic Body Waxing", "date": "2026-12-07", "start": "15:00", "end": "19:00", "price": 300, "half": true },
-    { "id": "bf-sugaring", "courseId": "crs-basic-body-sugaring", "title": "Basic Body Sugaring", "date": "2026-12-07", "start": "10:00", "end": "14:00", "price": 350, "half": true },
+    { "id": "bf-waxing", "courseId": "crs-basic-body-waxing", "title": "Basic Body Waxing", "date": "2026-12-08", "start": "15:00", "end": "19:00", "price": 300, "half": true },
+    { "id": "bf-sugaring", "courseId": "crs-basic-body-sugaring", "title": "Basic Body Sugaring", "date": "2026-12-08", "start": "10:00", "end": "14:00", "price": 350, "half": true },
     { "id": "bf-microderm", "courseId": "crs-microdermabrasion-and-facial-training", "title": "Microdermabrasion", "date": "2026-12-11", "start": "10:00", "end": "14:00", "price": 400, "half": false, "kit": false },
     { "id": "bf-threading", "courseId": "crs-threading", "title": "Threading", "date": "2026-12-11", "start": "15:00", "end": "19:00", "price": 250, "half": true },
-    { "id": "bf-lamination", "courseId": "crs-eyebrow-lamination-wax-and-tint", "title": "Eyebrow Lamination, Wax & Tint", "date": "2026-12-14", "start": "10:00", "end": "15:00", "price": 300, "half": true }
+    { "id": "bf-lamination", "courseId": "crs-eyebrow-lamination-wax-and-tint", "title": "Eyebrow Lamination, Wax & Tint", "date": "2026-12-15", "start": "10:00", "end": "15:00", "price": 300, "half": true }
   ]
 }
