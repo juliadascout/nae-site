@@ -89,6 +89,7 @@ the team page, a home page with no picture), so nothing ever shows as broken.
 | Home video | `home.video` | Home page, under the numbers | Landscape MP4 (H.264), 16:9, 20-40 s, no sound needed, under 12 MB. It plays on desktop only, muted and looping; phones, "reduce motion" and data-saver users see the still |
 | Home still | `home.poster` | Home page (phones, and while the video loads) | A frame of the same scene, JPG, 1,600 px wide |
 | Studio photo | `studios.<studio>.photo` | The studio's card (home, Locations) and the top of its page | Wide JPG, 1,600 px wide; it is cropped to 16:7 on the page and to a strip on the card, so keep the subject in the middle |
+| YouTube video | `videos.home`, `videos.subjects.<subject>`, `videos.courses.<course id>`: `youtube` (the 11-character id), `title`, `still` | Home page; every course in a subject and its subject page; one course (a course's own wins over its subject's) | The still is the video's thumbnail saved as JPG in `assets/media/videos/`; nothing loads from YouTube until someone presses play |
 | Headshot | `team[]`: `name`, `role`, `group` (`lead` or `inst`), `photo` | Our team page | Square JPG, 400 px, face centred. Once anyone is listed, the page shows the listed people instead of the placeholders |
 
 Studio keys are the studio's name as it appears in its address: `richmond-hill`,

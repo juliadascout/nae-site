@@ -53,5 +53,32 @@
       "alt": "Kiran with a graduate holding her certificate of completion, in front of the NAE sign",
       "photo_note": "Sent by Jules 10 Nov 2026, temporary. Kiran is the person in black scrubs (Jules, 11 Nov 2026); card_photo is a square crop of her from this photo."
     }
+  },
+  "videos": {
+    "about": "YouTube videos shown on course, subject and home pages (Jules, 26 Nov 2026: Kalleigh's channel). Each is a still with a play button; nothing loads from YouTube until someone presses play. 'courses' is keyed by course id and wins over 'subjects' (lash, brow, hair, skin, nails, remove, makeup, body), which covers every course in that subject and its subject page. Put the still in assets/media/videos/.",
+    "home": {
+      "youtube": "65fB5u1wjBE",
+      "title": "Graduating High School? Start Your Beauty Career",
+      "still": "media/videos/graduating.jpg"
+    },
+    "subjects": {
+      "skin": {
+        "youtube": "SL2-aPHg6j4",
+        "title": "Facial and Skincare Training at NAE",
+        "still": "media/videos/skincare.jpg"
+      },
+      "nails": {
+        "youtube": "CtHrCrxaIGY",
+        "title": "Nail Technician Training at NAE",
+        "still": "media/videos/nails.jpg"
+      }
+    },
+    "courses": {
+      "crs-teeth-whitening-training": {
+        "youtube": "TMfcmKAAhEE",
+        "title": "Teeth Whitening Training at NAE",
+        "still": "media/videos/teeth-whitening.jpg"
+      }
+    }
   }
 }
